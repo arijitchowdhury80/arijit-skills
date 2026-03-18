@@ -424,21 +424,73 @@ a:hover .src-tag { opacity: 1; }
 .tef-expected strong { color: var(--green); }
 .tef-found    { background: #FEF2F2; border-left: 3px solid var(--red);   }
 .tef-found strong   { color: var(--red); }
-.impact-bar {
-  display: flex; align-items: center; gap: 14px;
-  background: linear-gradient(135deg, #F0F4FF, #EDE9FE);
-  border: 1px solid #C7D2FE; border-radius: 6px; padding: 10px 16px; margin-bottom: 14px;
+/* ── Finding card sections ─── */
+.finding-section-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
 }
-.impact-stat { font-size: 1.8rem; font-weight: 600; color: var(--blue); line-height: 1; }
-.impact-label { font-size: 14px; color: var(--gray); flex: 1; line-height: 1.4; }
+.industry-context-box {
+  background: linear-gradient(135deg, #F0F4FF, #EDE9FE);
+  border: 1px solid #C7D2FE; border-radius: 8px; padding: 16px 18px; margin-bottom: 14px;
+}
+.industry-context-box .ic-label-row {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+}
+.industry-context-box .ic-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--blue);
+}
+.industry-context-box .ic-source-link {
+  font-size: 12px; font-weight: 600; color: var(--blue); text-decoration: none;
+  background: white; border: 1px solid #C7D2FE; border-radius: 20px; padding: 3px 10px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.industry-context-box .ic-source-link:hover { text-decoration: underline; }
+.industry-context-box .ic-source-missing {
+  font-size: 12px; font-weight: 600; color: var(--amber); background: #FFFBEB;
+  border: 1px solid #FDE68A; border-radius: 20px; padding: 3px 10px;
+}
+.industry-context-box .ic-stat {
+  font-size: 1.5rem; font-weight: 600; color: var(--blue); line-height: 1.2; margin-bottom: 8px;
+}
+.industry-context-box .ic-narrative {
+  font-size: 14px; color: var(--gray); line-height: 1.5;
+}
 .solution-box {
   background: #F0FDF4; border: 1px solid #BBF7D0;
-  border-radius: 6px; padding: 12px 16px;
+  border-radius: 8px; padding: 16px 18px;
 }
-.solution-box h4 { color: var(--green); font-size: 14px; text-transform: uppercase;
-  letter-spacing: 0.08em; margin-bottom: 6px; }
-.solution-box p { font-size: 14px; color: var(--gray); line-height: 1.5; }
-.solution-box a { color: var(--green); font-weight: 600; }
+.solution-box .sol-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--green); margin-bottom: 8px;
+}
+.solution-box p { font-size: 14px; color: var(--gray); line-height: 1.5; margin-bottom: 10px; }
+.solution-box .case-study-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(5,150,105,0.08); border: 1px solid rgba(5,150,105,0.25); border-radius: 6px;
+  padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--green);
+  text-decoration: none;
+}
+.solution-box .case-study-link:hover { text-decoration: underline; }
+/* ── Algolia Angle badge ─── */
+.algolia-angle-box {
+  background: rgba(0,61,255,0.05); border: 1px solid rgba(0,61,255,0.15);
+  border-radius: 8px; padding: 12px 14px;
+}
+.algolia-angle-label {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em;
+  color: var(--blue); margin-bottom: 6px;
+}
+/* ── Said vs Found ─── */
+.gap-screenshot-thumb {
+  width: 100%; max-width: 480px; border-radius: 6px; border: 1px solid var(--border);
+  margin: 10px 0; display: block; cursor: pointer;
+}
+.gap-found-link {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600;
+  color: var(--blue); text-decoration: none; margin-top: 8px;
+}
+.gap-found-link:hover { text-decoration: underline; }
 
 /* ═══════════════════════════════════════════════════════
    INTELLIGENCE SIGNALS
@@ -1386,6 +1438,88 @@ function escHtml(str) {
 }
 
 /* ═══════════════════════════════════════════════════
+   SHARED HELPERS
+═══════════════════════════════════════════════════ */
+
+// Resolve a source URL to a readable publisher name
+function sourceName(url) {
+  if (!url) return 'Source';
+  try {
+    const h = new URL(url).hostname.replace('www.','');
+    const map = {
+      'baymard.com':'Baymard Institute','mckinsey.com':'McKinsey & Company',
+      'forrester.com':'Forrester Research','algolia.com':'Algolia',
+      'digitalcommerce360.com':'Digital Commerce 360','builtwith.com':'BuiltWith',
+      'similarweb.com':'SimilarWeb','retaildive.com':'Retail Dive',
+      'fashionunited.com':'FashionUnited','theorg.com':'The Org',
+      'linkedin.com':'LinkedIn','sec.gov':'SEC EDGAR',
+    };
+    return map[h] || h;
+  } catch(e) { return 'Source'; }
+}
+
+// Algolia logomark SVG + "ALGOLIA ANGLE" label — shared across all cards
+function algoliaAngleBadge() {
+  return `<div class="algolia-angle-label">
+    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="10" r="10" fill="#003DFF"/>
+      <text x="10" y="14.5" text-anchor="middle" font-size="11" font-weight="700" fill="white" font-family="Sora,sans-serif">a</text>
+    </svg>
+    Algolia Angle
+  </div>`;
+}
+
+// LinkedIn button with official logo mark
+function linkedinBtn(url) {
+  if (!url) return '';
+  return `<a href="${url}" target="_blank"
+    style="display:inline-flex;align-items:center;gap:5px;background:#0A66C2;color:white;
+           padding:5px 11px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;
+           white-space:nowrap;flex-shrink:0;">
+    <svg width="13" height="13" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+      <path fill="white" d="M0 1.146C0 .513.526 0 1.175 0h17.65C19.474 0 20 .513 20 1.146v17.708c0 .633-.526 1.146-1.175 1.146H1.175C.526 20 0 19.487 0 18.854V1.146zm6.143 15.496V7.716H3.81v8.926h2.333zm-1.167-10.14c.813 0 1.32-.539 1.32-1.213-.015-.689-.507-1.213-1.305-1.213-.797 0-1.32.524-1.32 1.213 0 .674.508 1.213 1.29 1.213h.015zm4.717 10.14V11.36c0-.21.015-.42.077-.57.17-.419.555-.853 1.202-.853.849 0 1.188.647 1.188 1.596v5.11h2.332V11.27c0-2.155-1.15-3.157-2.684-3.157-1.256 0-1.81.698-2.115 1.176v.025h-.015l.015-.025V7.717H7.36c.031.659 0 8.926 0 8.926h2.333z"/>
+    </svg>
+    LinkedIn
+  </a>`;
+}
+
+// Golden angle card — single shared component used in Overview AND Business Case
+function renderGoldenAngleCard(ga) {
+  if (!ga) return '';
+  const gaComps = ga.competitors_using_algolia || [];
+  if (!gaComps.length && !ga.talk_track) return '';
+  const gaNames = gaComps.map(c => c.name);
+  const count = gaNames.length;
+  const bodyText = ga.talk_track
+    ? escHtml(ga.talk_track)
+    : `${escHtml(gaNames.join(' + '))} — ${count > 1 ? 'both are' : 'a'} direct competitor${count > 1 ? 's' : ''} — confirmed using Algolia via BuiltWith. ${escHtml(ga.positioning||'')}`;
+  return `<div class="card" style="background:linear-gradient(135deg,#003DFF,#5468FF);color:white;border:none;padding:20px 24px;">
+    <div style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;opacity:0.7;margin-bottom:8px;">🏆 The Golden Angle</div>
+    <div style="font-size:18px;font-weight:600;line-height:1.5;margin-bottom:14px;">${bodyText}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.20);">
+      ${gaComps.map(c=>`
+        <a href="${c.source_url||'https://builtwith.com/'+c.domain}" target="_blank"
+           style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.15);
+                  border:1px solid rgba(255,255,255,0.25);border-radius:20px;
+                  padding:4px 12px;font-size:13px;font-weight:600;color:white;text-decoration:none;"
+           onmouseenter="this.style.background='rgba(255,255,255,0.25)'"
+           onmouseleave="this.style.background='rgba(255,255,255,0.15)'">
+          BuiltWith: ${escHtml(c.name)}
+        </a>`).join('')}
+      ${ga.footwear_case_study?.source_url ? `
+        <a href="${ga.footwear_case_study.source_url}" target="_blank"
+           style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.15);
+                  border:1px solid rgba(255,255,255,0.25);border-radius:20px;
+                  padding:4px 12px;font-size:13px;font-weight:600;color:white;text-decoration:none;"
+           onmouseenter="this.style.background='rgba(255,255,255,0.25)'"
+           onmouseleave="this.style.background='rgba(255,255,255,0.15)'">
+          ${escHtml(ga.footwear_case_study.company||'Case Study')}: ${escHtml(ga.footwear_case_study.result||'')}
+        </a>` : ''}
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════
    TOPBAR
 ═══════════════════════════════════════════════════ */
 function renderTopbar(D) {
@@ -1394,8 +1528,10 @@ function renderTopbar(D) {
   document.title = `${s(D.meta?.company)} Search Audit — Algolia`;
   document.getElementById('topbar').innerHTML = `
     <div class="tb-logos">
-      <img src="${s(D.cover?.algolia_logo_white || '{{ALGOLIA_LOGO_WHITE}}')}" alt="Algolia"
-           style="filter:brightness(0) invert(1);">
+      <a href="/" style="display:flex;align-items:center;text-decoration:none;">
+        <img src="${s(D.cover?.algolia_logo_white || '{{ALGOLIA_LOGO_WHITE}}')}" alt="Algolia — Hub"
+             style="filter:brightness(0) invert(1);">
+      </a>
       <div class="tb-div"></div>
       <span class="tb-company">${escHtml(D.meta?.company)}</span>
     </div>
@@ -1835,35 +1971,7 @@ function sectionExecSummary(D) {
         <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--mid);margin-bottom:4px;">Competitive Intelligence</div>
         <div style="font-size:16px;font-weight:600;color:var(--gray);margin-bottom:16px;">Who in your competitive set is already using Algolia</div>
       </div>
-      <div class="card" style="background:linear-gradient(135deg,#003DFF,#5468FF);color:white;border:none;padding:20px 24px;margin-bottom:80px;">
-        <div style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;opacity:0.7;margin-bottom:8px;">🏆 The Golden Angle</div>
-        <div style="font-size:18px;font-weight:600;line-height:1.5;margin-bottom:14px;">
-          ${goldenNames.length ? goldenNames.join(' + ') : 'Nike + Asics'} — ${goldenNames.length > 1 ? 'both are' : 'a'} direct competitor${goldenNames.length > 1 ? 's' : ''} — confirmed using Algolia via BuiltWith (March 2026).
-          Brooks is the outlier. Shoe Carnival (footwear): +4.5% conversion lift first Cyber Week on Algolia.
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.20);">
-          ${(ga.competitors_using_algolia||[]).map(c=>`
-            <a href="${c.source_url||'https://builtwith.com/'+c.domain}" target="_blank"
-               style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.15);
-                      border:1px solid rgba(255,255,255,0.25);border-radius:20px;
-                      padding:4px 12px;font-size:13px;font-weight:600;color:white;
-                      text-decoration:none;transition:background 0.15s;"
-               onmouseenter="this.style.background='rgba(255,255,255,0.25)'"
-               onmouseleave="this.style.background='rgba(255,255,255,0.15)'">
-              BuiltWith: ${escHtml(c.name)}
-            </a>`).join('')}
-          ${ga.footwear_case_study?.source_url ? `
-            <a href="${ga.footwear_case_study.source_url}" target="_blank"
-               style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.15);
-                      border:1px solid rgba(255,255,255,0.25);border-radius:20px;
-                      padding:4px 12px;font-size:13px;font-weight:600;color:white;
-                      text-decoration:none;transition:background 0.15s;"
-               onmouseenter="this.style.background='rgba(255,255,255,0.25)'"
-               onmouseleave="this.style.background='rgba(255,255,255,0.15)'">
-              Shoe Carnival Case Study
-            </a>` : ''}
-        </div>
-      </div>
+      <div style="margin-bottom:80px;">${renderGoldenAngleCard(ga)}</div>
 
       <!-- ── Why Act Now — from intelligence_signals ── -->
       <div style="margin-bottom:8px;">
@@ -2004,12 +2112,20 @@ function sectionCompanySnapshot(D) {
       <div class="card" style="grid-column:span 2;padding:28px 28px 24px;
            background:linear-gradient(135deg,#F8F9FF 0%,#EEF2FF 100%);border:1px solid #C7D2FE;">
         <div style="display:flex;align-items:flex-start;gap:20px;">
-          <!-- Company monogram — always clean, never a broken logo -->
-        <div style="width:56px;height:56px;border-radius:12px;background:var(--blue);
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:20px;font-weight:600;color:white;flex-shrink:0;">
-          ${(D.meta?.company||'?').split(' ').slice(0,2).map((w)=>w[0]).join('').toUpperCase()}
-        </div>
+          <!-- Company logo — browser fetches at display time; falls back to initials -->
+          ${(() => {
+            const logoUrl = D.cover?.company_logo_url || cs.logo_url || '';
+            const initials = (D.meta?.company||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+            const fallbackStyle = `width:56px;height:56px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:white;flex-shrink:0;`;
+            if (logoUrl) {
+              return `<div style="width:56px;height:56px;border-radius:12px;overflow:hidden;background:white;border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+                <img src="${escHtml(logoUrl)}" alt="${escHtml(D.meta?.company||'')} logo"
+                     style="width:100%;height:100%;object-fit:contain;padding:4px;"
+                     onerror="this.parentElement.style.background='#003DFF';this.style.display='none';this.parentElement.innerHTML='<span style=\\'font-size:20px;font-weight:600;color:white;\\'>${initials}</span>';">
+              </div>`;
+            }
+            return `<div style="${fallbackStyle}">${initials}</div>`;
+          })()}
         <div style="flex:1;">
             <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.10em;color:var(--blue);margin-bottom:10px;">
               ${escHtml(cs.industry||'—')}
@@ -2041,50 +2157,61 @@ function sectionCompanySnapshot(D) {
           Direct-to-consumer specialty commerce.
           ${hir.build_vs_buy ? `<br><br>
             <span style="font-weight:600;color:var(--gray);">${escHtml(hir.build_vs_buy.split('—')[0].trim())}</span>
-            ${hir.build_vs_buy_source ? `<br><a href="${hir.build_vs_buy_source}" target="_blank" style="font-size:13px;color:var(--blue);">
-              ${escHtml(hir.build_vs_buy_source_label||'Source')}
-            </a>` : ''}` : ''}
+            <br><span style="font-size:12px;color:var(--mid);font-style:italic;">Algolia analysis — based on hiring signals &amp; platform choices</span>` : ''}
         </div>
       </div>
 
       <!-- EXEC TEAM — spans full 3 cols if execs exist -->
       ${execs.length ? `
       <div class="card" style="grid-column:span 3;padding:24px 28px;">
-        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.10em;color:var(--mid);margin-bottom:18px;">Executive Team</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">
+        <!-- Honest label — not "Executive Team", just what we found publicly -->
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
+          <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.10em;color:var(--mid);">Leadership — Publicly Identified</div>
+          <div style="font-size:12px;color:var(--mid);font-style:italic;">Public sources only · ${execs.length} contact${execs.length!==1?'s':''} found</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px;">
           ${execs.map(e=>`
-          <div style="background:var(--light);border-radius:10px;padding:18px 20px;border:1px solid var(--border);">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-              <div style="width:44px;height:44px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;
-                          font-size:16px;font-weight:600;color:white;flex-shrink:0;">
-                ${(e.name||'?').split(' ').map((w)=>w[0]).slice(0,2).join('')}
-              </div>
+          <div style="background:white;border-radius:10px;padding:20px;border:1px solid var(--border);
+                      box-shadow:0 2px 8px rgba(33,36,61,0.06);display:flex;flex-direction:column;gap:12px;">
+
+            <!-- Name / Title row + LinkedIn pinned top-right -->
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
               <div style="flex:1;min-width:0;">
-                <div style="font-size:16px;font-weight:600;color:var(--gray);">${escHtml(e.name||'—')}</div>
-                <div style="font-size:14px;color:var(--mid);">${escHtml(e.title||'—')}</div>
-                ${e.tenure ? `<div style="font-size:13px;color:var(--mid);opacity:0.7;margin-top:2px;">${escHtml(e.tenure)}</div>` : ''}
+                <div style="font-size:17px;font-weight:600;color:var(--gray);line-height:1.25;margin-bottom:2px;">${escHtml(e.name||'—')}</div>
+                <div style="font-size:14px;color:var(--mid);margin-bottom:2px;">${escHtml(e.title||'—')}</div>
+                ${e.tenure ? `<div style="font-size:12px;color:var(--mid);opacity:0.7;">${escHtml(e.tenure)}</div>` : ''}
               </div>
-              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;">
-                ${e.linkedin_url ? `<a href="${e.linkedin_url}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;
-                  background:#0A66C2;color:white;padding:4px 10px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;">
-                  in LinkedIn</a>` : ''}
-                ${e.source_url ? `<a href="${e.source_url}" target="_blank" style="font-size:12px;color:var(--mid);text-decoration:none;"
-                  onmouseenter="this.style.textDecoration='underline'" onmouseleave="this.style.textDecoration='none'">
-                  ${escHtml(e.source_label||'Source')}</a>` : ''}
-              </div>
+              ${linkedinBtn(e.linkedin_url)}
             </div>
+
+            <!-- Source citation — prominent blue link, not gray metadata -->
+            ${e.source_url ? `
+            <div style="font-size:12px;">
+              <span style="color:var(--mid);font-weight:600;">Source: </span>
+              <a href="${e.source_url}" target="_blank"
+                 style="color:var(--blue);font-weight:600;text-decoration:none;"
+                 onmouseenter="this.style.textDecoration='underline'" onmouseleave="this.style.textDecoration='none'">
+                ${escHtml(e.source_label || sourceName(e.source_url))}
+              </a>
+            </div>` : ''}
+
+            <!-- Quote (if exists) -->
             ${e.quote ? `
-            <blockquote style="font-size:15px;color:var(--gray);font-style:italic;line-height:1.6;
-                               border-left:3px solid var(--blue);padding-left:12px;margin:0 0 10px 0;">
-              "${escHtml(e.quote)}"
-            </blockquote>` : ''}
-            ${e.quote_source ? `
-            <a href="${e.quote_source}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;
-              font-size:13px;font-weight:600;color:var(--blue);text-decoration:none;">
-              ${escHtml(e.quote_source_label||'View source')} · ${escHtml(e.quote_date||'')}
-            </a>` : ''}
-            ${e.relevance ? `<div style="font-size:13px;color:var(--mid);padding:8px 12px;background:var(--light);border-radius:6px;margin-top:8px;line-height:1.5;">
-              ${escHtml(e.relevance)}</div>` : ''}
+            <div style="border-left:3px solid var(--blue);padding-left:12px;">
+              <div style="font-size:14px;color:var(--gray);font-style:italic;line-height:1.5;">"${escHtml(e.quote)}"</div>
+              ${e.quote_source ? `<a href="${e.quote_source}" target="_blank"
+                style="font-size:12px;color:var(--blue);text-decoration:none;margin-top:4px;display:block;"
+                onmouseenter="this.style.textDecoration='underline'" onmouseleave="this.style.textDecoration='none'">
+                ${escHtml(e.quote_source_label||sourceName(e.quote_source))} · ${escHtml(e.quote_date||'')}</a>` : ''}
+            </div>` : ''}
+
+            <!-- Algolia Angle — shared component -->
+            ${e.relevance ? `
+            <div class="algolia-angle-box">
+              ${algoliaAngleBadge()}
+              <div style="font-size:14px;color:var(--gray);line-height:1.5;">${escHtml(e.relevance)}</div>
+            </div>` : ''}
+
           </div>`).join('')}
         </div>
       </div>` : ''}
@@ -2376,15 +2503,7 @@ function sectionFinding(f) {
       <span class="finding-title">${escHtml(f.title)}</span>
     </div>
 
-    ${f.screenshot_file ? `
-    <div class="finding-screenshot" title="Click to zoom">
-      <img src="${escHtml(f.screenshot_file)}"
-           alt="${escHtml(f.title)}"
-           data-caption="${escHtml(f.id + ': ' + f.title)}"
-           loading="lazy">
-      <div class="finding-screenshot-hint">🔍 Click to zoom</div>
-    </div>` : ''}
-
+    <!-- SECTION 1: WHAT WE FOUND -->
     <div class="tef-grid">
       <div class="tef-cell tef-tested">
         <strong>Query Tested</strong>${escHtml(f.tested_query)}
@@ -2397,19 +2516,40 @@ function sectionFinding(f) {
       </div>
     </div>
 
-    <div class="impact-bar">
-      <div class="impact-stat">${escHtml(f.impact_stat)}</div>
-      <div class="impact-label">
-        ${escHtml(f.prospect_description || '')}
-        ${f.impact_stat_source ? `<a href="${f.impact_stat_source}" target="_blank" rel="noopener" class="inline-src"> Source</a>` : ''}
-      </div>
-    </div>
+    <!-- Screenshot below the TEF grid -->
+    ${f.screenshot_file ? `
+    <div class="finding-screenshot" title="Click to zoom" style="margin-bottom:14px;">
+      <img src="${escHtml(f.screenshot_file)}"
+           alt="${escHtml(f.title)}"
+           data-caption="${escHtml(f.id + ': ' + f.title)}"
+           loading="lazy">
+      <div class="finding-screenshot-hint">🔍 Click to zoom</div>
+    </div>` : ''}
 
+    <!-- SECTION 2: INDUSTRY CONTEXT (why this costs money — with verified source) -->
+    ${f.impact_stat ? `
+    <div class="industry-context-box">
+      <div class="ic-label-row">
+        <span class="ic-label">Industry Context</span>
+        ${f.impact_stat_source
+          ? `<a href="${f.impact_stat_source}" target="_blank" rel="noopener" class="ic-source-link">
+               ↗ ${escHtml(sourceName(f.impact_stat_source))}
+             </a>`
+          : `<span class="ic-source-missing">⚠ Source needed</span>`}
+      </div>
+      <div class="ic-stat">${escHtml(f.impact_stat)}</div>
+      ${f.prospect_description ? `<div class="ic-narrative">${escHtml(f.prospect_description)}</div>` : ''}
+    </div>` : ''}
+
+    <!-- SECTION 3: HOW ALGOLIA FIXES THIS -->
     <div class="solution-box">
-      <h4>Algolia Solution</h4>
-      <p>${escHtml(f.algolia_solution)}
-        ${f.algolia_case_study_url ? `<a href="${f.algolia_case_study_url}" target="_blank" rel="noopener" class="inline-src" style="color:var(--green);background:rgba(5,150,105,0.07);border-color:rgba(5,150,105,0.2);"> ${escHtml(f.algolia_case_study_company)}: ${escHtml(f.algolia_case_study_result)}</a>` : ''}
-      </p>
+      <div class="sol-label">How Algolia Fixes This</div>
+      <p>${escHtml(f.algolia_solution)}</p>
+      ${f.algolia_case_study_url ? `
+      <a href="${f.algolia_case_study_url}" target="_blank" rel="noopener" class="case-study-link">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        ${escHtml(f.algolia_case_study_company)}: ${escHtml(f.algolia_case_study_result)}
+      </a>` : ''}
     </div>
   </section>`;
 }
@@ -2903,7 +3043,19 @@ function sectionBusinessCaseHook(D) {
     <div class="section-eyebrow">Business Case · The Hook</div>
     <div class="section-title">Said vs. Found</div>
     <p class="section-desc">Leadership's stated priorities — compared to what the audit found. Use this to open the conversation.</p>
-    ${gaps.map(g=>`
+    ${gaps.map(g=>{
+      // Extract screenshot path from found_evidence or dedicated field
+      const screenshotMatch = (g.found_evidence||'').match(/screenshots\/[\w\-\.]+\.png/);
+      const screenshotFile = g.screenshot_file || (screenshotMatch ? screenshotMatch[0] : null);
+      // Clean evidence text — remove raw filename reference
+      const cleanEvidence = (g.found_evidence||'').replace(/\s*Screenshot:\s*screenshots\/[\w\-\.]+\.png\.?/g,'').trim();
+      // Link to the finding detail section if finding_id provided
+      const findingLink = g.finding_id
+        ? `<a class="gap-found-link" href="#finding-${g.finding_id.toLowerCase()}" onclick="event.preventDefault();document.querySelector('[data-tab=\\'audit\\']').click();setTimeout(()=>document.getElementById('finding-${g.finding_id.toLowerCase()}')?.scrollIntoView({behavior:'smooth',block:'start'}),180);">
+             → View full finding with screenshot
+           </a>`
+        : (screenshotFile ? `<a class="gap-found-link" href="#" onclick="event.preventDefault();document.querySelector('[data-tab=\\'audit\\']').click();">→ See full evidence in Search Audit tab</a>` : '');
+      return `
     <div class="gap-pair" style="margin-bottom:20px;">
       <div class="gap-said">
         <div class="gap-said-lbl">What They Said</div>
@@ -2914,9 +3066,12 @@ function sectionBusinessCaseHook(D) {
       <div class="gap-found">
         <div class="gap-found-lbl">What The Audit Found</div>
         <div class="gap-found-text">${escHtml(g.found_title)}</div>
-        <div class="gap-found-ev">${escHtml(g.found_evidence)}</div>
+        ${cleanEvidence ? `<div class="gap-found-ev">${escHtml(cleanEvidence)}</div>` : ''}
+        ${screenshotFile ? `<img src="${escHtml(screenshotFile)}" class="gap-screenshot-thumb" alt="Audit evidence screenshot" loading="lazy">` : ''}
+        ${findingLink}
       </div>
-    </div>`).join('')}
+    </div>`;
+    }).join('')}
   </section>`;
 }
 
@@ -2932,10 +3087,7 @@ function sectionCompetitiveSynthesis(D) {
     <div class="section-eyebrow">Business Case · Competitive Intelligence</div>
     <div class="section-title">Competitive Landscape</div>
     <p class="section-desc">${escHtml(cs.scenario||'')} ${cs.scenario_note?'— '+escHtml(cs.scenario_note):''}</p>
-    ${ga.talk_track?`<div class="card" style="background:linear-gradient(135deg,#003DFF,#5468FF);color:white;border:none;margin-bottom:24px;padding:24px;">
-      <div style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;opacity:0.7;margin-bottom:10px;">🏆 The Golden Angle</div>
-      <div style="font-size:18px;font-weight:600;line-height:1.5;">${escHtml(ga.talk_track)}</div>
-    </div>`:''}
+    ${ga.talk_track || (ga.competitors_using_algolia||[]).length ? `<div style="margin-bottom:24px;">${renderGoldenAngleCard(ga)}</div>` : ''}
     ${tiers.length?`<div style="margin-bottom:28px;">
       <div style="font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--mid);margin-bottom:14px;">Competitor Tiers</div>
       <div style="display:flex;flex-direction:column;gap:12px;">
