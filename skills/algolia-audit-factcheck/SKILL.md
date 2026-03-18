@@ -788,3 +788,98 @@ Next audit is more accurate → factcheck scores improve over time
 - **Quick tier is ONLY for rapid pre-share sanity checks** — Read-only, zero external calls. Catches consistency and math errors but does NOT validate the information itself. This is 10% of the job at best.
 - **The correction manifest is the most actionable output** — It tells you exactly what to fix, where, and what the correct value is.
 - **The skill feedback file accumulates value over multiple audits** — Run fact-checks on 2-3 audits and patterns emerge that reveal systemic SKILL.md weaknesses.
+
+---
+
+## FACTCHECK_GATE.md — Machine-Readable Publish Gate (MANDATORY)
+
+**This file is written LAST, after all 7 dimensions are scored.** It is the structured verdict consumed by the `/algolia-search-audit` orchestrator to decide whether to proceed to local review, warn the user, or block publishing entirely.
+
+**Location**: `{company}-audit-workspace/FACTCHECK_GATE.md`
+
+**Write this file immediately after calculating the overall score. No exceptions.**
+
+### Format (copy exactly):
+
+```markdown
+# FACTCHECK GATE
+SCORE: {x.x}
+CONFIDENCE: {HIGH | MODERATE | LOW}
+ACTION: {PROCEED | WARN | BLOCKED}
+BLOCKING_COUNT: {n}
+WARNING_COUNT: {n}
+DATE: {YYYY-MM-DD}
+
+## BLOCKING ISSUES (must fix before publish — ACTION = BLOCKED if any exist)
+{List each [DISC] and [FAIL] item as: "- [TYPE] {field}: audited '{wrong}' vs verified '{correct}' — Source: {url}"}
+{If none: "- none"}
+
+## WARNINGS (should review — shown to user at review gate)
+{List each [UNVF] and [STALE] item as: "- [TYPE] {field}: {description} — {recommendation}"}
+{If none: "- none"}
+
+## TOP 3 FINDINGS FOR USER
+1. {Most important positive or negative finding in one sentence}
+2. {Second most important}
+3. {Third most important}
+```
+
+### Gate Rules (enforced by orchestrator):
+
+| Score | Confidence | ACTION | Orchestrator Behavior |
+|-------|-----------|--------|----------------------|
+| ≥ 8.0 | HIGH | PROCEED | Stage to hub automatically, present for review |
+| 6.0–7.9 | MODERATE | WARN | Stage to hub, show all warnings at review gate, require explicit user acknowledgment before publish |
+| < 6.0 | LOW | BLOCKED | Do NOT stage. Show blocking issues. Require fixes before re-running factcheck. Do not proceed until score ≥ 6.0 |
+
+### ACTION = BLOCKED rule:
+If **any** `[DISC]` or `[FAIL]` items are found regardless of score, set `ACTION: BLOCKED` and `BLOCKING_COUNT: {n}`. The orchestrator will not stage or publish until these are corrected and the factcheck re-run.
+
+### Example FACTCHECK_GATE.md (passing):
+```markdown
+# FACTCHECK GATE
+SCORE: 9.2
+CONFIDENCE: HIGH
+ACTION: PROCEED
+BLOCKING_COUNT: 0
+WARNING_COUNT: 2
+DATE: 2026-03-18
+
+## BLOCKING ISSUES
+- none
+
+## WARNINGS
+- [UNVF] Under Armour case study: metric "35% conversion" not confirmed on live page — recommend WebFetch to verify
+- [STALE] Traffic estimate: SimilarWeb shows 3.2M/mo vs audited 3.5M — within 10% tolerance, acceptable
+
+## TOP 3 FINDINGS FOR USER
+1. All 10 scoring area values verified against browser findings — no discrepancies
+2. ROI math verified: $97M × 5% = $4.85M confirmed correct
+3. Nike and Asics BuiltWith verification confirmed — golden angle data is solid
+```
+
+### Example FACTCHECK_GATE.md (blocked):
+```markdown
+# FACTCHECK GATE
+SCORE: 5.8
+CONFIDENCE: LOW
+ACTION: BLOCKED
+BLOCKING_COUNT: 2
+WARNING_COUNT: 4
+DATE: 2026-03-18
+
+## BLOCKING ISSUES
+- [DISC] revenue: audited '~$2.8B' vs verified '~$1.6B (FY2024)' — Source: https://ir.llbean.com/...
+- [FAIL] case_study_metric: "Under Armour 35% conversion" NOT found on https://algolia.com/customers/under-armour/ — fabricated or wrong URL
+
+## WARNINGS
+- [UNVF] CEO quote: not found in 11-investor-intelligence.md, cannot verify source
+- [STALE] Monthly visits: 26.7M audited vs 24.1M SimilarWeb current
+- [UNVF] Competitor bounce rate: Nordstrom 42% — no source URL
+- [MISS] score.breakdown_severity missing for 3 areas
+
+## TOP 3 FINDINGS FOR USER
+1. Revenue figure is 75% too high — must correct before sharing with prospect
+2. Under Armour case study metric is unverifiable at the cited URL — remove or find correct source
+3. CEO quote needs scratchpad source trace — currently floating without evidence
+```

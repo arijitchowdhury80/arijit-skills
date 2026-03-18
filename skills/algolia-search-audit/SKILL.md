@@ -5,7 +5,7 @@ description: Run a comprehensive Algolia Search Audit on a prospect website with
 
 # Algolia Search Audit — Orchestrator
 
-Full-stack search experience audit pipeline. This skill orchestrates four dedicated sub-skills:
+Full-stack search experience audit pipeline with mandatory factcheck gate and human review before publishing.
 
 | Sub-skill | Phase | Time | SKILL.md |
 |-----------|-------|------|----------|
@@ -13,10 +13,155 @@ Full-stack search experience audit pipeline. This skill orchestrates four dedica
 | `/algolia-live-signals` | Phase 1b: Live Intel — Hiring, Social, News (Apify) | ~3 min | `~/.claude/skills/algolia-live-signals/SKILL.md` |
 | `/algolia-audit-browser` | Phase 2: Browser Testing (20 steps) | ~25 min | `~/.claude/skills/algolia-audit-browser/SKILL.md` |
 | `/algolia-audit-report` | Phase 3-5: Scoring + Deliverables | ~20 min | `~/.claude/skills/algolia-audit-report/SKILL.md` |
+| `/algolia-audit-factcheck` | Phase 6: Fact Verification (**MANDATORY**) | ~25 min | `~/.claude/skills/algolia-audit-factcheck/SKILL.md` |
 
-**Execution order:** Phase 1 → Phase 1b (Apify live signals, runs after Step 2 of research) → Phase 2 → Phase 3-5
+**Full execution order (non-negotiable):**
+```
+Phase 1  → /algolia-audit-research       (14 research steps)
+Phase 1b → /algolia-live-signals         (Apify: hiring + social + news)
+Phase 2  → /algolia-audit-browser        (20 browser tests + screenshots)
+Phase 3-5→ /algolia-audit-report         (score + render SPA + deliverables)
+Phase 6  → /algolia-audit-factcheck      ← MANDATORY BEFORE ANY PUBLISH
+           ↓
+         Read FACTCHECK_GATE.md
+           ↓
+         ACTION = BLOCKED  → Stop. Show issues. Fix required.
+         ACTION = WARN     → Stage + show warnings. Explicit approval needed.
+         ACTION = PROCEED  → Stage to hub. Present for local review.
+           ↓
+         USER REVIEWS locally at http://127.0.0.1:8766/{slug}/
+           ↓
+         User says "publish" → git push → Vercel auto-deploys
+```
 
-**Each sub-skill is fully self-contained** — it can be run independently without the orchestrator. `/algolia-live-signals` can also be re-run standalone to refresh hiring/social/news data without re-running the full audit.
+**Why factcheck is mandatory:** Claude fabricates data. Stats are wrong. Links break. ROI math errors occur. Case study metrics get paraphrased. The factcheck is the only thing standing between an AE presenting wrong data to a prospect and an accurate audit. Every single audit must pass factcheck before it can be staged or published. No exceptions.
+
+**Each sub-skill is fully self-contained** — it can be run independently. `/algolia-live-signals` can be re-run standalone to refresh data. `/algolia-audit-factcheck` can be re-run after fixes without re-running the full audit.
+
+---
+
+## THE PUBLISH PIPELINE (Full Detail)
+
+### Step 1–5: Run Full Audit Pipeline
+```
+/algolia-audit-research {slug}
+/algolia-live-signals {slug}
+/algolia-audit-browser {slug}
+/algolia-audit-report {slug}
+```
+
+### Step 6: Run Factcheck (MANDATORY — never skip)
+```
+/algolia-audit-factcheck {slug}-audit-workspace/
+```
+
+The factcheck writes `FACTCHECK_GATE.md` to the workspace root. Read it immediately after.
+
+### Step 7: Evaluate the Gate
+
+Read `{slug}-audit-workspace/FACTCHECK_GATE.md` and parse:
+
+**If `ACTION: BLOCKED`:**
+```
+⛔ PUBLISH BLOCKED — {BLOCKING_COUNT} critical issue(s) must be fixed.
+
+Blocking issues:
+{list from BLOCKING ISSUES section}
+
+These must be corrected before this audit can be staged or published.
+Reply with what you'd like to fix, or run:
+  /algolia-audit-factcheck {slug}-audit-workspace/
+again after corrections.
+```
+DO NOT stage. DO NOT push. Wait for user direction.
+
+**If `ACTION: WARN`:**
+```
+⚠️  FACTCHECK WARNINGS — Score: {SCORE}/10 ({CONFIDENCE})
+{WARNING_COUNT} items need your review before publishing:
+
+{list warnings}
+
+The audit has been staged for local review. You must explicitly acknowledge
+these warnings before I will push to GitHub.
+
+Review at: http://127.0.0.1:8766/{slug}/
+Type 'publish' to deploy (acknowledging the warnings above), or describe what to fix.
+```
+Proceed to staging (Step 8), but require explicit "publish" before Step 10.
+
+**If `ACTION: PROCEED`:**
+```
+✓ FACTCHECK PASSED — Score: {SCORE}/10 (HIGH CONFIDENCE)
+Staging for local review...
+```
+Proceed automatically to staging (Step 8).
+
+### Step 8: Start Local Server + Stage to Hub
+
+```bash
+# Start/restart server from hub root
+lsof -ti tcp:8766 | xargs kill -9 2>/dev/null; sleep 0.3
+cd ~/algolia-arian-v2 && python3 -m http.server 8766 &>/dev/null &
+sleep 1
+
+# Stage to hub (LOCAL commit, not pushed yet)
+cd {slug}-audit-workspace
+bash ~/.claude/skills/algolia-search-audit/scripts/publish-audit.sh {slug} ~/algolia-arian-v2 --stage-only
+```
+
+### Step 9: Present Review to User
+
+Show this exact block:
+
+```
+═══════════════════════════════════════════════════════
+  {COMPANY} AUDIT — READY FOR LOCAL REVIEW
+═══════════════════════════════════════════════════════
+
+  Factcheck: {SCORE}/10 — {CONFIDENCE}
+  {If WARN: show warning list}
+
+  Score:     {AUDIT_SCORE}/10 — {VERDICT}
+  ROI est:   {CONSERVATIVE} (conservative) · {MODERATE} (moderate)
+  Top gaps:  G1: {GAP1} · G2: {GAP2} · G3: {GAP3}
+
+  Review at: http://127.0.0.1:8766/{slug}/
+  Hub index: http://127.0.0.1:8766/
+
+  When you're satisfied, reply:
+    "publish"      → push to GitHub, Vercel auto-deploys in ~60 sec
+    "fix {issue}"  → describe what to change, I'll fix and re-stage
+    "factcheck"    → re-run factcheck if you made manual edits
+═══════════════════════════════════════════════════════
+```
+
+Wait. Do not push until the user explicitly says "publish".
+
+### Step 10: On "publish" Approval
+
+```bash
+cd ~/algolia-arian-v2
+bash ~/.claude/skills/algolia-search-audit/scripts/publish-audit.sh {slug} ~/algolia-arian-v2 --push-only
+```
+
+Then confirm:
+```
+✓ {COMPANY} published to GitHub.
+  Vercel is auto-deploying (ready in ~60 seconds).
+
+  Live URL: https://algolia-arian-v2.vercel.app/{slug}/
+  Hub:      https://algolia-arian-v2.vercel.app/
+```
+
+### Step 11: On "fix {issue}" (iterative fixes)
+
+1. Make the requested fix (edit JSON, re-render SPA, update scratchpad as needed)
+2. Re-run factcheck if the fix touches a factual claim: `/algolia-audit-factcheck {slug}-audit-workspace/`
+3. Re-stage: `bash publish-audit.sh {slug} ~/algolia-arian-v2 --stage-only`
+4. Return to Step 9 (show updated review prompt)
+
+---
 
 ---
 
