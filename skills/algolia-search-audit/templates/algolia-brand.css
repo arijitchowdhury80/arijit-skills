@@ -113,6 +113,32 @@ a {
   color: var(--brand-blue);
   text-decoration: none;
 }
+/* ══════════════════════════════════════════════════════════════════════════════
+   ⚡ TRANSPARENCY DIRECTIVE — NON-NEGOTIABLE SYSTEM RULE
+   ══════════════════════════════════════════════════════════════════════════════
+   Every data point that is a fact, estimate, claim, or statistic MUST have
+   an inline source link. No unlinked data. No claim without a URL.
+
+   This applies to ALL deliverables: SPA, AE report, battle card, leave-behind.
+
+   REQUIRED for every:
+   - Revenue figure → link to press release or trade publication
+   - Traffic metric → link to SimilarWeb
+   - Technology claim → link to BuiltWith
+   - ROI/financial estimate → link to Baymard/benchmark source
+   - Executive quote → link to source article/SEC filing
+   - Case study metric → link to algolia.com/customers/{company}
+   - Hiring signal → link to LinkedIn job posting URL
+   - Competitive claim (uses Algolia) → link to BuiltWith domain lookup
+   - Build vs Buy assessment → link to job description source
+   - News signal → link to article URL
+   - Industry statistic → link to Baymard/Forrester/primary source
+
+   When a source is unavailable: mark as [ESTIMATE - LOW CONFIDENCE] visually.
+   When a source is broken: fix the link or remove the claim.
+   NEVER present unverified data as fact.
+══════════════════════════════════════════════════════════════════════════════ */
+
 /* ── Global link style — DESIGN DIRECTIVE ────────────────────────────────────
    All links across the entire system:
    - Default: colored (blue) text, no underline, no icons, no arrows

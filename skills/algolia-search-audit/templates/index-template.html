@@ -1804,7 +1804,7 @@ function sectionExecSummary(D) {
       const cmp = D.competitive_synthesis || {};
       const hir = D.hiring || {};
       const rs  = fin.roi_scenarios || {};
-      const goldenNames = (cmp.competitor_tiers||[]).filter(t=>t.tier.includes('GOLDEN')).flatMap(t=>t.competitors||[]);
+      const goldenNames = (cmp.competitor_tiers||[]).filter(t=>String(t.tier||'').includes('GOLDEN')).flatMap(t=>t.competitors||[]);
       const vacantRole  = (hir.buying_committee||[]).find(r=>r.status?.includes('OPEN'));
 
       return `
@@ -1944,7 +1944,7 @@ function sectionExecSummary(D) {
         ])}
         ${navCard('case','#003DFF','Business Case','The Argument',[
           `Said vs Found · Competitive Matrix · Revenue at Risk`,
-          `${(cmp.competitor_tiers||[]).filter(t=>t.tier.includes('GOLDEN')).flatMap(t=>t.competitors||[]).join(' + ')||'Nike + Asics'} use Algolia`,
+          `${(cmp.competitor_tiers||[]).filter(t=>String(t.tier||'').includes('GOLDEN')).flatMap(t=>t.competitors||[]).join(' + ')||'Nike + Asics'} use Algolia`,
           `4 strategic angles in Brooks' own language`,
         ])}
         ${navCard('play','#7C3AED','Sales Play','Run the Deal',[
@@ -2038,7 +2038,12 @@ function sectionCompanySnapshot(D) {
           ${cs.ticker ? 'Public · ' + escHtml(cs.ticker) : 'Private · D2C'}
         </div>
         <div style="font-size:14px;color:var(--mid);line-height:1.6;">
-          Direct-to-consumer specialty commerce.${hir.build_vs_buy ? `<br><br><em>${escHtml(hir.build_vs_buy.split('—')[0].trim())}</em>` : ''}
+          Direct-to-consumer specialty commerce.
+          ${hir.build_vs_buy ? `<br><br>
+            <span style="font-weight:600;color:var(--gray);">${escHtml(hir.build_vs_buy.split('—')[0].trim())}</span>
+            ${hir.build_vs_buy_source ? `<br><a href="${hir.build_vs_buy_source}" target="_blank" style="font-size:13px;color:var(--blue);">
+              ${escHtml(hir.build_vs_buy_source_label||'Source')}
+            </a>` : ''}` : ''}
         </div>
       </div>
 
@@ -2054,13 +2059,19 @@ function sectionCompanySnapshot(D) {
                           font-size:16px;font-weight:600;color:white;flex-shrink:0;">
                 ${(e.name||'?').split(' ').map((w)=>w[0]).slice(0,2).join('')}
               </div>
-              <div>
+              <div style="flex:1;min-width:0;">
                 <div style="font-size:16px;font-weight:600;color:var(--gray);">${escHtml(e.name||'—')}</div>
                 <div style="font-size:14px;color:var(--mid);">${escHtml(e.title||'—')}</div>
+                ${e.tenure ? `<div style="font-size:13px;color:var(--mid);opacity:0.7;margin-top:2px;">${escHtml(e.tenure)}</div>` : ''}
               </div>
-              ${e.linkedin_url ? `<a href="${e.linkedin_url}" target="_blank" style="margin-left:auto;display:inline-flex;align-items:center;gap:5px;
-                background:#0A66C2;color:white;padding:5px 12px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;">
-                in LinkedIn</a>` : ''}
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;">
+                ${e.linkedin_url ? `<a href="${e.linkedin_url}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;
+                  background:#0A66C2;color:white;padding:4px 10px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;">
+                  in LinkedIn</a>` : ''}
+                ${e.source_url ? `<a href="${e.source_url}" target="_blank" style="font-size:12px;color:var(--mid);text-decoration:none;"
+                  onmouseenter="this.style.textDecoration='underline'" onmouseleave="this.style.textDecoration='none'">
+                  ${escHtml(e.source_label||'Source')}</a>` : ''}
+              </div>
             </div>
             ${e.quote ? `
             <blockquote style="font-size:15px;color:var(--gray);font-style:italic;line-height:1.6;
@@ -2070,8 +2081,10 @@ function sectionCompanySnapshot(D) {
             ${e.quote_source ? `
             <a href="${e.quote_source}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;
               font-size:13px;font-weight:600;color:var(--blue);text-decoration:none;">
-              → ${escHtml(e.quote_source_label||'View source')} · ${escHtml(e.quote_date||'')}
+              ${escHtml(e.quote_source_label||'View source')} · ${escHtml(e.quote_date||'')}
             </a>` : ''}
+            ${e.relevance ? `<div style="font-size:13px;color:var(--mid);padding:8px 12px;background:var(--light);border-radius:6px;margin-top:8px;line-height:1.5;">
+              ${escHtml(e.relevance)}</div>` : ''}
           </div>`).join('')}
         </div>
       </div>` : ''}
@@ -2108,7 +2121,7 @@ function sectionTraffic(D) {
           const pctVal = parseFloat(c.share) || 0;
           const barW   = Math.round((pctVal / maxShare) * 100);
           return `<div class="score-bar-row">
-            <span class="score-bar-row__label">${escHtml(c.channel)}</span>
+            <span class="score-bar-row__label">${escHtml(c.source || c.channel)}</span>
             <div class="score-bar-row__track"><div class="score-bar-row__fill fill-ok" style="width:${barW}%"></div></div>
             <span class="score-bar-row__val" style="color:var(--gray)">${c.share}</span>
           </div>`;
@@ -2912,7 +2925,7 @@ function sectionCompetitiveSynthesis(D) {
   const ga = D.golden_angle || {};
   const tiers = cs.competitor_tiers || [];
   const matrix = cs.positioning_matrix || [];
-  const tierCol = (tier) => tier.includes('AHEAD')?'#DC2626':tier.includes('GOLDEN')?'#059669':tier.includes('DISRUPTOR')?'#D97706':'#6B7280';
+  const tierCol = (tier) => String(tier||'').includes('AHEAD')?'#DC2626':String(tier||'').includes('GOLDEN')?'#059669':String(tier||'').includes('DISRUPTOR')?'#D97706':'#6B7280';
   const cap = (v) => v===true?'<span class="cap-yes">✓</span>':v===false?'<span class="cap-no">✗</span>':`<span class="cap-part">${escHtml(String(v||'~'))}</span>`;
 
   return `<section id="section-competitive" class="audit-section">
