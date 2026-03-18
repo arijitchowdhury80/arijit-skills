@@ -1,55 +1,64 @@
 ---
 name: algolia-landing
-description: Generate Algolia-branded landing page copy with section-by-section structure, design specs, and CTAs.
-user-invocable: true
-allowed-tools: Read, Grep
-argument-hint: "[topic/product] [audience: developers|marketers|c-suite] [goal: demo|trial|download]"
+description: Create Algolia-branded landing page content and HTML/CSS with conversion optimization.
 ---
 
-# Algolia landing page generator
+# Algolia Branded Landing Page
 
-Create structured, on-brand landing page copy with design direction.
+Create complete landing page content with HTML/CSS output following Algolia brand guidelines and conversion optimization best practices. Includes hero section, value proposition, feature blocks, social proof, and conversion-focused CTAs.
 
-## Reference files
+## Input
 
-- [Voice & tone](../algolia-shared-reference/brand-core/voice-and-tone.md)
-- [Terminology](../algolia-shared-reference/brand-core/terminology.md)
-- [Editorial standards](../algolia-shared-reference/brand-core/editorial-standards.md)
-- [Messaging framework](../algolia-shared-reference/brand-core/messaging-framework.md)
-- [Landing page template](../algolia-shared-reference/content-templates/landing-page.md)
-- [Colors](../algolia-shared-reference/visual-identity/colors.md)
-- [Typography](../algolia-shared-reference/visual-identity/typography.md)
+- Page purpose (product feature, campaign, event registration, free trial, content download)
+- Target audience (developers, product managers, executives, mixed)
+- Primary CTA (what action should the visitor take)
+- Key value proposition (one sentence)
+- Features or benefits to highlight (3-6 items)
+- Social proof available (customer logos, testimonials, stats)
+- Form fields needed (if lead capture)
 
-## Page sections
+## Process
 
-1. **Hero** — H1 headline (6-12 words), subheadline (1-2 sentences), primary CTA button, visual direction
-2. **Social proof bar** — Customer logos, key stat, analyst recognition
-3. **Value props** — 3-4 cards: icon + H3 + 2-3 sentences (outcomes, not features)
-4. **Feature deep-dive** — 2-3 sections with H2, screenshot direction, description, bullet capabilities
-5. **Customer testimonial** — Named quote with title, company, specific result
-6. **Pricing/comparison** (optional) — Tier cards or comparison table
-7. **Final CTA** — Repeat primary CTA with urgency or alternative action
+1. **Hero Section** -- Full-width hero with a headline (8-12 words, benefit-driven), subheadline (15-25 words, supporting detail), primary CTA button, and optional secondary link. Background: Nebula Blue #003DFF gradient or white with blue accent. Headline in white (on dark) or Space Gray #21243D (on light).
+2. **Social Proof Bar** -- Horizontal strip of five to eight customer logos in grayscale. Include a supporting stat: "Trusted by 17,000+ companies" or "1.7 trillion searches powered annually." Position directly below hero.
+3. **Value Proposition Section** -- Three to four feature blocks in a grid layout. Each block: icon placeholder, bold heading (4-6 words), description (2-3 sentences), optional link to learn more. Use alternating background colors (white and light gray #F5F5F7) for visual rhythm.
+4. **Product Demo/Visual Section** -- Placeholder for interactive demo, video embed, or product screenshot. Include descriptive caption. This section should show the product in action.
+5. **Benefits Section** -- Two-column layout with image on one side and three to four benefit bullet points on the other. Each bullet: bold lead-in phrase followed by one explanatory sentence. Alternate image side between sections.
+6. **Testimonial Section** -- One to two customer quotes with attribution (name, title, company, optional headshot). Pull quotes in Algolia Purple #5468FF italics. Company logo beside each quote.
+7. **Metrics Section** -- Three to four data callouts in a horizontal strip. Large numbers in Nebula Blue #003DFF, labels in Space Gray. Use approved stats or customer-specific results.
+8. **CTA Section** -- Repeated primary CTA with a slightly different framing than the hero. If lead capture: minimal form (name, email, company maximum). Form button matches hero CTA color.
+9. **Footer** -- Standard Algolia footer: navigation links, social icons, legal links, copyright notice. Space Gray background with white text.
+10. **HTML/CSS Output** -- Generate clean, semantic HTML5 with inline CSS or a style block. Mobile-responsive using flexbox/grid. Accessible: proper heading hierarchy, alt text placeholders, sufficient color contrast, focus states on interactive elements.
+11. **Run `/algolia-brand-check`** on the complete page content and code before finalizing.
 
-## Rules
-- Sentence case for all headings
-- Action-oriented CTA text: "Start free trial," "Get a demo," "Try it now"
-- Use approved stats: "1.75 trillion searches," "18,000+ businesses," "99.999% availability"
-- No superlatives without substantiation
-- No anthropomorphism — the product doesn't "think" or "understand"
-- Every section needs clear benefit-to-visitor framing
-- Design specs: Sora font, Xenon Blue (#003DFF) for CTAs, #23263B for headings
+## Output Sections
 
-## Output format
+### Page Content (structured markdown)
+- Hero: headline, subheadline, CTA text
+- Social proof: logos list, supporting stat
+- Feature blocks (3-4): heading, description, icon description
+- Testimonials: quote, attribution
+- Metrics: number + label pairs
+- Final CTA: heading, CTA text, form fields (if applicable)
 
-For each section, provide:
-```
-## [Section Name]
+### HTML/CSS Code
+- Complete HTML5 document
+- Responsive CSS (mobile-first)
+- Color variables using Algolia brand palette
+- Font stack with Source Sans Pro and fallbacks
 
-**Copy:**
-[The actual text content]
+### Conversion Notes
+- Recommended A/B test elements
+- Heatmap focus areas
+- Page load optimization tips
 
-**Design notes:**
-- [Visual direction, layout, color guidance]
-```
+## Brand Requirements
 
-Create landing page: $ARGUMENTS
+- **Voice**: Benefit-driven and action-oriented -- landing pages sell outcomes, not features. Confident without hype.
+- **Colors**: Nebula Blue #003DFF (hero background, CTAs, metric numbers), Space Gray #21243D (body text, headings on white), Algolia Purple #5468FF (accents, testimonial quotes), White #FFFFFF (content backgrounds), Light Gray #F5F5F7 (alternating section backgrounds)
+- **Font**: Source Sans Pro -- headlines 36-48px bold, subheads 20-24px regular, body 16-18px regular. Fallback: Arial, Helvetica, sans-serif.
+- **CTA Buttons**: Nebula Blue #003DFF background, white text, 18px bold, 52px height, 8px border-radius, hover state 10% darker
+- **Logo**: Algolia logo in top-left navigation bar, minimum height 32px
+- **Responsive**: Mobile-first design, single column below 768px, touch-friendly tap targets (44px minimum)
+- **Stats**: Only approved Algolia metrics or customer-attributed results with permission
+- **Competitors**: Never reference competitors; position against "traditional" or "legacy" approaches

@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{COMPANY_NAME}} Search Experience Audit — Algolia</title>
+  <link rel="stylesheet" href="components.css">
+  <style>
+    /* ===== PRINT PAGE STRUCTURE (v2) ===== */
+    @page { size: letter; margin: 0; }
+    html, body { margin: 0; padding: 0; }
+    body { font-size: 16px; }
+
+    /* Each chapter = exactly one printed page */
+    .chapter {
+      width: 8.5in;
+      height: 11in;
+      padding: 0.5in 0.6in 0.7in 0.6in;
+      box-sizing: border-box;
+      page-break-after: always;
+      page-break-inside: avoid;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Typography */
+    h1 { font-size: 1.8rem !important; line-height: 1.2 !important; margin: 0 0 8px 0; }
+    h2 { font-size: 1.5rem !important; line-height: 1.25 !important; margin: 0 0 8px 0; }
+    h3 { font-size: 1.2rem !important; line-height: 1.3 !important; }
+    p, li, td { font-size: 0.95rem !important; line-height: 1.5 !important; }
+
+    /* Content area */
+    .chapter__content { margin-top: 48px; }
+    img { max-width: 100%; }
+    .finding__screenshot img { min-height: 200px; object-fit: cover; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge--critical { background: var(--signal-critical); color: white; }
+    .badge--moderate { background: var(--signal-warning); color: white; }
+    .badge--positive { background: var(--signal-positive); color: white; }
+    .exec-card__header { padding: 14px 18px; background: linear-gradient(135deg, var(--nebula-blue), var(--algolia-purple)); color: white; }
+    .exec-card__body { padding: 14px 18px; }
+    .exec-card__angle { font-size: 0.85rem; margin-top: 6px; }
+    .exec-card__info { font-size: 0.85rem; color: var(--dark-gray); margin-bottom: 6px; padding: 0; text-align: left; }
+    .timeline { display: flex; flex-direction: column; gap: 0; position: relative; padding: 16px 0 16px 24px; }
+    .timeline::before { content: ''; position: absolute; top: 16px; bottom: 16px; left: 12px; width: 3px; background: linear-gradient(180deg, var(--nebula-blue), var(--algolia-purple)); border-radius: 2px; }
+    .timeline__item { display: flex; align-items: flex-start; gap: 14px; padding: 8px 0; position: relative; }
+    .timeline__dot { width: 14px; height: 14px; border-radius: 50%; background: var(--nebula-blue); border: 3px solid var(--white); box-shadow: var(--shadow-sm); flex-shrink: 0; z-index: 1; margin-left: -18px; }
+    .timeline__content { font-size: 0.95rem; line-height: 1.45; }
+    .bar-row { display: grid; grid-template-columns: 120px 1fr 50px; gap: 8px; align-items: center; padding: 3px 0; }
+    .bar-row__label { font-weight: 600; font-size: 0.88rem; text-align: right; }
+    .bar-row__track { height: 26px; background: var(--light-gray); border-radius: 5px; overflow: hidden; }
+    .bar-row__fill { height: 100%; border-radius: 5px; background: var(--nebula-blue); min-width: 4px; }
+    .bar-row__value { font-weight: 800; font-size: 1.05rem; }
+
+    /* ===== PAGE HEADERS & FOOTERS (ABSOLUTE POSITIONING) ===== */
+    .page-header {
+      position: absolute;
+      top: 0.4in;
+      left: 0.6in;
+      right: 0.6in;
+      height: 32px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .page-header__logo { height: 24px; }
+    .page-header__logo--algolia { height: 24px; }
+    .page-header__logo--company { height: 24px; max-width: 120px; object-fit: contain; }
+
+    .page-footer {
+      position: absolute;
+      bottom: 0.35in;
+      left: 0.6in;
+      right: 0.6in;
+      height: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 8px;
+      background: white;
+    }
+    .page-footer__left { display: flex; align-items: center; gap: 10px; }
+    .page-footer__mark { height: 20px; width: 20px; }
+    .page-footer__conf { font-weight: 700; font-size: 11pt; color: #21243D; }
+    .page-footer__page { font-weight: 900; color: #003DFF; font-size: 12pt; }
+
+    /* ===== SECTION BREAK (ACT DIVIDER) PAGES ===== */
+    .section-break { page-break-before: always; min-height: 90vh; display: flex; align-items: center; justify-content: center; text-align: center; background: linear-gradient(135deg, #21243D 0%, #003DFF 60%, #5468FF 100%); color: white; position: relative; }
+    .section-break__act { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.7; margin-bottom: 12px; }
+    .section-break__title { font-size: 2.4rem !important; font-weight: 900; white-space: normal !important; line-height: 1.2 !important; max-width: 500px; }
+    .section-break__subtitle { font-size: 1rem; opacity: 0.8; margin-top: 12px; font-weight: 400; }
+    .section-break__divider { width: 60px; height: 3px; background: rgba(255,255,255,0.5); margin: 20px auto; border-radius: 2px; }
+    @media print { .section-break { min-height: auto; padding: 120px 0; } }
+
+    /* ===== COMPETITIVE ADVANTAGE GREEN HIGHLIGHT ===== */
+    .ct-highlight { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 2px solid #059669; border-radius: 8px; padding: 12px 16px; margin-top: 12px; }
+    .ct-highlight strong { color: #059669; }
+
+    /* ===== COVER PAGE ===== */
+    .cover-page {
+      position: relative;
+      width: 8.5in; height: 11in;
+      background: #21243D;
+      color: white;
+      overflow: hidden;
+      page-break-after: always;
+    }
+    .cover-page__bg {
+      position: absolute; inset: 0; z-index: 0;
+    }
+    .cover-page__bg img {
+      width: 100%; height: 100%; object-fit: cover; opacity: 0.22;
+    }
+    .cover-page__content {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      height: 100%; padding: 0 0.75in 0.8in;
+    }
+    .cover-page__content h1 {
+      font-size: 3.2rem; font-weight: 900; line-height: 1.1; color: white; margin-bottom: 10px;
+    }
+    .cover-page__content .subtitle {
+      font-size: 1rem; color: rgba(255,255,255,0.75); margin-bottom: 0;
+    }
+    .cover-page__metrics {
+      display: flex; gap: 16px; margin-top: 24px; flex-wrap: wrap;
+    }
+    .cover-page__metric {
+      font-size: 0.85rem; color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 14px; border-radius: 4px;
+    }
+    .cover-page__footer {
+      font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-top: 20px;
+    }
+    .cover-page__logos {
+      position: absolute; top: 32px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 20px; z-index: 10;
+    }
+    .cover-page__logo--algolia { height: 28px; filter: brightness(0) invert(1); }
+    .cover-page__logo--company { height: 36px; max-width: 160px; object-fit: contain; filter: brightness(0) invert(1); }
+    .cover-page__logo-divider { color: rgba(255,255,255,0.6); font-size: 1.5rem; font-weight: 300; }
+    .cover-page__confidential {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      color: rgba(255,255,255,0.7); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    /* ===== V2 ENHANCEMENTS ===== */
+    .toc { columns: 2; column-gap: 48px; }
+    .toc__act { break-inside: avoid; margin-bottom: 24px; }
+    .toc__act-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nebula-blue); font-weight: 700; margin-bottom: 8px; border-bottom: 2px solid var(--nebula-blue); padding-bottom: 4px; }
+    .toc__entry { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px dotted #ddd; }
+    .toc__entry a { text-decoration: none; color: var(--space-gray); font-size: 0.95rem; font-weight: 500; }
+    .toc__entry a:hover { color: var(--nebula-blue); }
+    .toc__page { font-size: 0.82rem; color: #999; min-width: 24px; text-align: right; }
+
+    /* ===== FINDING PAGE: VERTICAL HERO LAYOUT (v2) ===== */
+    .finding__body { margin-top: 4px; display: flex; flex-direction: column; gap: 5px; }
+    .tef-grid { display: contents; }
+    /* SCREENSHOT = HERO - 5 inches tall (~55% of usable page) */
+    .tef-screenshot { order: 1; width: 100%; height: 5in; border-radius: 8px; overflow: hidden; border: 2px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.1); flex-shrink: 0; background: #fafafa; }
+    .tef-screenshot img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: center; }
+    .tef-details { order: 3; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; flex-shrink: 0; }
+    .tef-row { padding: 6px 8px; border-radius: 5px; font-size: 0.85rem; line-height: 1.4; }
+    .tef-row--tested { background: #f0f4ff; border-left: 3px solid var(--nebula-blue); }
+    .tef-row--expected { background: #ecfdf5; border-left: 3px solid var(--signal-positive); }
+    .tef-row--found { background: #fef2f2; border-left: 3px solid var(--signal-critical); }
+    .tef-row strong { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; font-weight: 800; }
+    .tef-row--tested strong { color: var(--nebula-blue); }
+    .tef-row--expected strong { color: var(--signal-positive); }
+    .tef-row--found strong { color: var(--signal-critical); }
+    .tef-bottom { display: contents; }
+    /* STAT BAR = FULL WIDTH */
+    .tef-stat { order: 2; width: 100%; display: flex; align-items: center; gap: 12px; padding: 6px 16px; background: linear-gradient(135deg, #f0f4ff, #ede9fe); border-radius: 6px; border: 2px solid #e0e7ff; flex-shrink: 0; box-sizing: border-box; }
+    .tef-stat__number { font-size: 1.8rem; font-weight: 900; color: var(--nebula-blue); line-height: 1; flex-shrink: 0; }
+    .tef-stat__label { font-size: 0.88rem; color: #21243D; font-weight: 500; text-align: left; }
+    .tef-solution { order: 4; width: 100%; padding: 10px 14px; background: #f0fdf4; border-radius: 6px; border: 2px solid #059669; flex-shrink: 0; box-sizing: border-box; }
+    .tef-solution h4 { color: #059669; font-size: 0.9rem; margin: 0 0 4px 0; font-weight: 700; }
+    .tef-solution p { font-size: 0.88rem; line-height: 1.45; color: #21243D; margin: 0; }
+    .tef-stat__label { font-size: 0.88rem; color: #5A5E9A; margin-top: 4px; }
+    .tef-solution { padding: 14px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .tef-solution h4 { color: var(--nebula-blue); font-size: 0.95rem; margin-bottom: 6px; }
+    .tef-solution p { font-size: 0.9rem; line-height: 1.5; }
+
+    .trigger-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .trigger-card { padding: 24px; border-radius: 10px; border: 1px solid #e5e7eb; position: relative; overflow: hidden; }
+    .trigger-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .trigger-card:nth-child(1)::before { background: var(--nebula-blue); }
+    .trigger-card:nth-child(2)::before { background: var(--algolia-purple); }
+    .trigger-card:nth-child(3)::before { background: var(--signal-positive); }
+    .trigger-card:nth-child(4)::before { background: var(--signal-warning); }
+    .trigger-card__icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .trigger-card__title { font-weight: 800; font-size: 1rem; margin-bottom: 6px; }
+    .trigger-card__body { font-size: 0.82rem; color: #5A5E9A; line-height: 1.5; }
+    .trigger-card__metric { font-size: 1.5rem; font-weight: 900; color: var(--nebula-blue); margin-top: 8px; }
+
+    .icp-card { padding: 24px; border-radius: 10px; border: 1px solid #e5e7eb; margin-bottom: 20px; }
+    .icp-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; align-items: start; }
+    .icp-col { padding: 14px; border-radius: 8px; font-size: 0.92rem; line-height: 1.55; }
+    .icp-col--said { background: #ede9fe; border-left: 4px solid var(--algolia-purple); }
+    .icp-col--found { background: #fef2f2; border-left: 4px solid var(--signal-critical); }
+    .icp-col--does { background: #ecfdf5; border-left: 4px solid var(--signal-positive); }
+    .icp-col__header { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 6px; }
+    .icp-col--said .icp-col__header { color: var(--algolia-purple); }
+    .icp-col--found .icp-col__header { color: var(--signal-critical); }
+    .icp-col--does .icp-col__header { color: var(--signal-positive); }
+    .icp-source { font-size: 0.82rem; color: #999; margin-top: 6px; font-style: italic; }
+
+    .solution-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    .solution-table th { background: var(--nebula-blue); color: white; padding: 10px 14px; text-align: left; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .solution-table td { padding: 10px 14px; border-bottom: 1px solid #e5e7eb; }
+    .solution-table tr:nth-child(even) td { background: #f8fafc; }
+    .sla-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; }
+    .sla-card { text-align: center; padding: 16px; background: linear-gradient(135deg, #f0f4ff, #ede9fe); border-radius: 8px; }
+    .sla-card__value { font-size: 1.4rem; font-weight: 900; color: var(--nebula-blue); }
+    .sla-card__label { font-size: 0.85rem; color: #5A5E9A; margin-top: 4px; }
+
+    .snapshot-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px; }
+    .snapshot-metric { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+    .snapshot-metric__label { font-size: 0.85rem; color: #5A5E9A; }
+    .snapshot-metric__value { font-size: 0.95rem; font-weight: 800; color: var(--space-gray); }
+    .brand-card { padding: 14px 18px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 12px; }
+    .brand-card__name { font-weight: 800; font-size: 0.95rem; }
+    .brand-card__desc { font-size: 0.78rem; color: #5A5E9A; margin-top: 2px; }
+
+    .cap-grid { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .cap-grid th { background: #f0f4ff; padding: 8px 10px; text-align: center; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid var(--nebula-blue); }
+    .cap-grid th:first-child { text-align: left; }
+    .cap-grid td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #eee; }
+    .cap-grid td:first-child { text-align: left; font-weight: 600; }
+    .cap-yes { color: var(--signal-positive); font-weight: 700; }
+    .cap-no { color: var(--signal-critical); font-weight: 700; }
+    .cap-partial { color: var(--signal-warning); font-weight: 700; }
+
+    /* ===== V3: VISUAL STORYTELLING ENHANCEMENTS ===== */
+
+    /* Radial Gauge */
+    .gauge-wrap { display: flex; align-items: center; gap: 32px; }
+    .gauge-svg text { font-family: 'Source Sans Pro', sans-serif; }
+
+    /* Heatmap Scoring Table */
+    .heatmap-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    .heatmap-table th { padding: 10px 12px; text-align: left; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; background: #f8fafc; border-bottom: 2px solid var(--nebula-blue); }
+    .heatmap-table td { padding: 8px 12px; border-bottom: 1px solid #eee; }
+    .hm-high { background: #fef2f2; color: #991b1b; font-weight: 700; }
+    .hm-med { background: #fffbeb; color: #92400e; font-weight: 700; }
+    .hm-low { background: #ecfdf5; color: #065f46; font-weight: 700; }
+    .hm-score { font-weight: 900; font-size: 1rem; }
+    .hm-score-bad { color: #dc2626; }
+    .hm-score-ok { color: #d97706; }
+    .hm-score-good { color: #059669; }
+
+    /* SVG Funnel */
+    .svg-funnel { text-align: center; margin: 24px 0; }
+    .svg-funnel svg text { font-family: 'Source Sans Pro', sans-serif; }
+
+    /* Screenshot Annotation Overlays */
+    .annotated-screenshot { position: relative; display: inline-block; width: 100%; }
+    .annotated-screenshot img { width: 100%; display: block; border-radius: 8px; }
+    .anno-circle { position: absolute; border: 3px solid #dc2626; border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 3px rgba(220,38,38,0.2); }
+    .anno-callout { position: absolute; background: #dc2626; color: white; font-size: 0.82rem; font-weight: 700; padding: 5px 11px; border-radius: 4px; white-space: nowrap; z-index: 2; }
+    .anno-callout::after { content: ''; position: absolute; width: 0; height: 0; border-style: solid; }
+    .anno-callout--left::after { right: -6px; top: 50%; transform: translateY(-50%); border-width: 5px 0 5px 6px; border-color: transparent transparent transparent #dc2626; }
+    .anno-callout--bottom::after { bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 5px 0 5px; border-color: #dc2626 transparent transparent transparent; }
+    .anno-callout--top::after { top: -6px; left: 50%; transform: translateX(-50%); border-width: 0 5px 6px 5px; border-color: transparent transparent #dc2626 transparent; }
+    .anno-arrow { position: absolute; pointer-events: none; }
+
+    /* Radar Chart */
+    .radar-wrap { display: flex; align-items: center; gap: 32px; justify-content: center; }
+    .radar-legend { list-style: none; padding: 0; margin: 0; }
+    .radar-legend li { padding: 4px 0; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; }
+    .radar-legend__dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    /* Differentiated Flow Diagrams */
+    .flow-diagram--data { background: linear-gradient(135deg, #f0f4ff 0%, #ede9fe 100%); padding: 24px; border-radius: 12px; }
+    .flow-diagram--comparison { background: white; border: 2px solid #e5e7eb; padding: 24px; border-radius: 12px; }
+    .flow-diagram--comparison .flow-box { border-width: 2px; }
+    .flow-diagram--pipeline { background: linear-gradient(90deg, #f0f4ff 0%, #ecfdf5 100%); padding: 24px; border-radius: 12px; position: relative; }
+    .flow-diagram--pipeline::before { content: ''; position: absolute; top: 50%; left: 40px; right: 40px; height: 3px; background: linear-gradient(90deg, var(--nebula-blue), var(--algolia-purple), var(--signal-positive)); border-radius: 2px; z-index: 0; }
+    .flow-diagram--pipeline .flow-box { position: relative; z-index: 1; }
+    .flow-diagram--pipeline .flow-arrow { display: none; }
+
+    /* SVG Icon consistency */
+    .svg-icon { width: 32px; height: 32px; display: inline-block; vertical-align: middle; }
+    .svg-icon--lg { width: 48px; height: 48px; }
+
+    /* SEC Risk Factors */
+    .risk-card { padding: 20px; border-radius: 10px; border: 1px solid #e5e7eb; margin-bottom: 16px; position: relative; overflow: hidden; }
+    .risk-card::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; }
+    .risk-card--high::before { background: var(--signal-critical); }
+    .risk-card--med::before { background: var(--signal-warning); }
+    .risk-card__title { font-weight: 800; font-size: 0.95rem; margin-bottom: 6px; }
+    .risk-card__excerpt { font-size: 0.82rem; color: #5A5E9A; line-height: 1.5; font-style: italic; }
+    .risk-card__implication { font-size: 0.82rem; margin-top: 8px; padding: 8px 12px; background: #f0f4ff; border-radius: 6px; }
+  </style>
+</head>
+<body>
+
+<!-- SVG Gradient Definitions (required for score gauges and charts) -->
+<svg width="0" height="0" style="position: absolute;">
+  <defs>
+    <!-- Score gauge gradients -->
+    <linearGradient id="gauge-gradient-critical" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7f1d1d"/>
+      <stop offset="100%" style="stop-color:#DC2626"/>
+    </linearGradient>
+    <linearGradient id="gauge-gradient-warning" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#92400E"/>
+      <stop offset="100%" style="stop-color:#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="gauge-gradient-good" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#065F46"/>
+      <stop offset="100%" style="stop-color:#10B981"/>
+    </linearGradient>
+    <!-- Funnel gradients -->
+    <linearGradient id="funnel-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(0,61,255,0.3)"/>
+      <stop offset="100%" style="stop-color:#003DFF"/>
+    </linearGradient>
+    <!-- Arrow marker for annotations -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#DC2626"/>
+    </marker>
+  </defs>
+</svg>
+
+<!-- =========================================================================
+     COVER PAGE
+     Skill populates: company photo URL, company name, status line, metrics
+     Company logo: {{COMPANY_LOGO_URL}} | Algolia logo: assets/algolia-logo-white.svg
+     ========================================================================= -->
+<div class="cover-page">
+  <div class="cover-page__bg">
+    <img src="{{COVER_PHOTO_URL}}" alt="{{COMPANY_NAME}} storefront" onerror="this.style.display='none'">
+  </div>
+  <!-- Dual logo header on cover -->
+  <div class="cover-page__logos">
+    <img src="{{ALGOLIA_LOGO_WHITE}}" alt="Algolia" class="cover-page__logo cover-page__logo--algolia">
+    <span class="cover-page__logo-divider">×</span>
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="cover-page__logo cover-page__logo--company">
+  </div>
+  <div class="cover-page__content">
+    <h1>{{COMPANY_NAME}} Search<br>Experience Audit</h1>
+    <p class="subtitle">Status: {{STATUS_HEADLINE}}</p>
+    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.3); margin: 16px 0 24px; width: 50%;">
+    <div class="cover-page__metrics">
+      <span class="cover-page__metric">{{METRIC_1}}</span>
+      <span class="cover-page__metric">{{METRIC_2}}</span>
+    </div>
+    <p class="cover-page__footer">Prepared by <strong>Algolia</strong> | {{REPORT_DATE}}</p>
+  </div>
+  <!-- Footer with confidentiality -->
+  <div class="cover-page__confidential">© Algolia Confidential</div>
+</div>
+
+
+<!-- =========================================================================
+     TABLE OF CONTENTS — Inserted by renderer from data.toc array
+     Every anchor href must match the id of its target chapter div
+     ========================================================================= -->
+<div class="chapter page-break" id="section-toc">
+  <div class="page-header">
+    <div class="page-header__left">
+      <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+      <div class="page-header__divider"></div>
+      <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+    </div>
+    <div class="page-header__right">
+      <span style="font-size:0.75rem;color:var(--dark-gray);">Search Experience Audit</span>
+    </div>
+  </div>
+  <div class="chapter__content">
+    <h1 style="color:var(--nebula-blue);margin-bottom:8px;">Contents</h1>
+    <p style="color:var(--dark-gray);font-size:0.85rem;margin-bottom:32px;">
+      {{COMPANY_NAME}} · Prepared by Algolia · {{AUDIT_DATE}}
+    </p>
+    <div class="toc">
+      {{TOC_CONTENT}}
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential — Internal Use Only</span>
+    <span class="page-footer__page-num">TOC</span>
+  </div>
+</div>
+
+
+<!-- =========================================================================
+     ACT I SECTION BREAK — Full-bleed gradient divider page
+     ========================================================================= -->
+<div class="section-break">
+  <div>
+    <div class="section-break__act">Act I</div>
+    <div class="section-break__divider"></div>
+    <div class="section-break__title">The Verdict</div>
+    <div class="section-break__subtitle">What we found — and why it matters</div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     ACT I: THE VERDICT (Pages 1-8)
+     "What and So What" — Executive reads this in 2 minutes
+     ========================================================================= -->
+
+<!-- CHAPTER 1: The Bottom Line -->
+<div class="chapter page-break" id="ch-bottom-line">
+  <!-- Page Header: Algolia logo (left) + Company logo (right) -->
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+
+  <div class="chapter__content">
+    <h2 class="text-center mb-32">The Bottom Line</h2>
+
+    <div class="grid-2" style="gap: 48px; align-items: start;">
+      <!-- Left: Score Gauge with visual weight -->
+      <div class="text-center">
+        <!-- Score Gauge Component
+             The arc fills based on score (0-10 → 0-100%).
+             stroke-dasharray: (score/10 * 283) (283 - that value)
+             283 = circumference of r=45 circle (2 * π * 45)
+
+             Skill populates: {{GAUGE_DASHARRAY}}, {{GAUGE_COLOR_CLASS}}, {{SCORE_VALUE_CLASS}}
+        -->
+        <div class="score-gauge">
+          <svg class="score-gauge__svg" viewBox="0 0 100 100">
+            <!-- Background arc -->
+            <circle class="score-gauge__bg" cx="50" cy="50" r="45" />
+            <!-- Colored arc (skill fills stroke-dasharray based on score) -->
+            <circle class="score-gauge__arc {{GAUGE_COLOR_CLASS}}" cx="50" cy="50" r="45"
+                    stroke-dasharray="{{GAUGE_DASHARRAY}}"
+                    stroke-dashoffset="0" />
+          </svg>
+          <div class="score-gauge__center">
+            <div class="score-gauge__value {{SCORE_VALUE_CLASS}}">{{OVERALL_SCORE}}</div>
+            <div class="score-gauge__label">Search Score</div>
+            <div class="score-gauge__verdict">{{SCORE_VERDICT}}</div>
+          </div>
+        </div>
+        <p class="mt-24" style="max-width: 280px; margin-left: auto; margin-right: auto; color: var(--dark-gray);">
+          {{SCORE_DESCRIPTION}}
+        </p>
+      </div>
+
+      <!-- Right: KPI Cards -->
+      <div class="kpi-dashboard" style="border-radius: var(--card-radius);">
+        <div style="display: flex; flex-direction: column; gap: 0;">
+
+          <div class="kpi-card" style="border-right: none; border-bottom: 1px solid rgba(255,255,255,0.15); padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div class="kpi-card__icon" style="width: 40px; height: 40px; margin: 0;">
+                <svg viewBox="0 0 24 24" stroke="white" stroke-width="2" fill="none">
+                  <path d="M12 2L2 22h20L12 2z"/>
+                  <path d="M12 9v4M12 17h.01"/>
+                </svg>
+              </div>
+              <div style="text-align: left;">
+                <div class="kpi-card__value" style="font-size: 1.5rem; margin-bottom: 2px;">{{CRITICAL_GAP_LABEL}}</div>
+                <div class="kpi-card__label" style="margin-bottom: 0; font-size: 0.85rem; opacity: 0.85;">{{CRITICAL_GAP_TITLE}}</div>
+              </div>
+            </div>
+            <div class="kpi-card__desc" style="margin-top: 12px; padding-left: 56px;">{{CRITICAL_GAP_DESC}}</div>
+          </div>
+
+          <div class="kpi-card" style="border-right: none; border-bottom: 1px solid rgba(255,255,255,0.15); padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div class="kpi-card__icon" style="width: 40px; height: 40px; margin: 0;">
+                <svg viewBox="0 0 24 24" stroke="white" stroke-width="2" fill="none">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v12M9 9c0-1.1.9-2 2-2h2c1.1 0 2 .9 2 2s-.9 2-2 2h-2c-1.1 0-2 .9-2 2s.9 2 2 2h2c1.1 0 2-.9 2-2"/>
+                </svg>
+              </div>
+              <div style="text-align: left;">
+                <div class="kpi-card__value" style="font-size: 1.5rem; margin-bottom: 2px;">{{REVENUE_RISK}}</div>
+                <div class="kpi-card__label" style="margin-bottom: 0; font-size: 0.85rem; opacity: 0.85;">Revenue at Risk</div>
+              </div>
+            </div>
+            <div class="kpi-card__desc" style="margin-top: 12px; padding-left: 56px;">{{REVENUE_RISK_DESC}}</div>
+          </div>
+
+          <div class="kpi-card" style="border-right: none; padding: 24px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div class="kpi-card__icon" style="width: 40px; height: 40px; margin: 0;">
+                <svg viewBox="0 0 24 24" stroke="white" stroke-width="2" fill="none">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="6"/>
+                  <circle cx="12" cy="12" r="2" fill="white"/>
+                </svg>
+              </div>
+              <div style="text-align: left;">
+                <div class="kpi-card__value" style="font-size: 1.5rem; margin-bottom: 2px;">{{THE_ASK_LABEL}}</div>
+                <div class="kpi-card__label" style="margin-bottom: 0; font-size: 0.85rem; opacity: 0.85;">The Ask</div>
+              </div>
+            </div>
+            <div class="kpi-card__desc" style="margin-top: 12px; padding-left: 56px;">{{THE_ASK_DESC}}</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page Footer -->
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTER 2: The Opportunity -->
+<div class="chapter page-break" id="ch-opportunity">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <span class="chapter-label">High-end Strategic Diagnostic</span>
+    <h1>The Opportunity: {{OPPORTUNITY_HEADLINE}}</h1>
+
+    <!-- Revenue Funnel — 3-TIER LOCKED GEOMETRY. DO NOT CHANGE POLYGON POINTS. -->
+    <!-- Bottom tier points="160,212 340,212 305,295 195,295" = 110px wide. Text-clip fix v2.7 -->
+    <div class="funnel-svg mt-32">
+      <svg viewBox="0 0 500 315" style="width: 100%; max-width: 500px; display: block; margin: 0 auto;">
+        <defs>
+          <linearGradient id="funnel-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:rgba(0,61,255,0.55)"/>
+            <stop offset="100%" style="stop-color:#003DFF"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Tier 1: Total Digital Revenue (widest) -->
+        <polygon points="20,10 480,10 415,100 85,100"
+          style="fill:url(#funnel-grad);opacity:0.82;"/>
+        <text x="250" y="44" text-anchor="middle"
+          style="font-size:12px;font-weight:700;fill:white;font-family:'Source Sans 3','Source Sans Pro',sans-serif;">
+          Total Digital Revenue</text>
+        <text x="250" y="72" text-anchor="middle"
+          style="font-size:19px;font-weight:900;fill:white;font-family:'Source Sans 3','Source Sans Pro',sans-serif;">
+          {{TOTAL_DIGITAL_REVENUE}}</text>
+
+        <!-- Tier 2: Search-Addressable -->
+        <polygon points="85,112 415,112 335,200 165,200"
+          style="fill:url(#funnel-grad);opacity:0.91;"/>
+        <text x="250" y="147" text-anchor="middle"
+          style="font-size:11px;font-weight:700;fill:white;font-family:'Source Sans 3','Source Sans Pro',sans-serif;">
+          Search-Addressable Est. (15%)</text>
+        <text x="250" y="180" text-anchor="middle"
+          style="font-size:17px;font-weight:900;fill:white;font-family:'Source Sans 3','Source Sans Pro',sans-serif;">
+          {{SEARCH_ADDRESSABLE}}</text>
+
+        <!-- Tier 3: Algolia Search ROI — LOCKED 110px bottom. NEVER CHANGE THESE POINTS. -->
+        <polygon points="165,212 335,212 305,295 195,295"
+          style="fill:#003DFF;"/>
+        <text x="250" y="247" text-anchor="middle"
+          style="font-size:10px;font-weight:700;fill:white;font-family:'Source Sans 3','Source Sans Pro',sans-serif;">
+          Algolia Search ROI Est.</text>
+        <text x="250" y="278" text-anchor="middle"
+          style="font-size:15px;font-weight:900;fill:white;font-family:'Source Sans 3','Source Sans Pro',sans-serif;">
+          {{CONSERVATIVE_LIFT_LABEL}}</text>
+
+        <!-- Source footnote -->
+        <text x="250" y="310" text-anchor="middle"
+          style="font-size:10px;fill:#9CA3AF;font-family:'Source Sans 3','Source Sans Pro',sans-serif;">
+          Source: {{REVENUE_SOURCE_LABEL}}</text>
+      </svg>
+    </div>
+
+    <div class="text-center mt-32">
+      <p style="font-size: 1.1rem; color: var(--dark-gray); max-width: 600px; margin: 0 auto;">
+        {{BENCHMARK_PROOF}}
+      </p>
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTER 3: The Ask -->
+<div class="chapter page-break" id="ch-the-ask">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>{{PILOT_HEADLINE}}</h1>
+
+    <div class="grid-2 mt-32">
+      <div>
+        <div class="timeline">
+          <!-- Skill populates 3-4 milestone steps -->
+          {{TIMELINE_STEPS}}
+        </div>
+        <p class="takeaway">{{PILOT_TAKEAWAY}}</p>
+      </div>
+      <div class="financial-card">
+        <h4>Financial Snapshot</h4>
+        {{FINANCIAL_CARD_ROWS}}
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- =========================================================================
+     ACT II SECTION BREAK
+     ========================================================================= -->
+<div class="section-break">
+  <div>
+    <div class="section-break__act">Act II</div>
+    <div class="section-break__divider"></div>
+    <div class="section-break__title">The Evidence</div>
+    <div class="section-break__subtitle">What we tested — screenshot by screenshot</div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     ACT II: THE PROOF — Search Audit Findings (Pages 9-26)
+     Each finding = full spread with screenshot evidence
+     ========================================================================= -->
+
+<!-- CHAPTER 4: The Scorecard -->
+<div class="chapter page-break" id="ch-scorecard">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>{{SCORECARD_HEADLINE}}</h1>
+
+    <div class="dual-panel mt-32">
+      <div class="panel panel--positive">
+        <h3>{{PANEL_POSITIVE_TITLE}}</h3>
+        {{PANEL_POSITIVE_ITEMS}}
+      </div>
+      <div class="panel panel--critical">
+        <h3>{{PANEL_CRITICAL_TITLE}}</h3>
+        {{PANEL_CRITICAL_ITEMS}}
+      </div>
+    </div>
+
+    <p class="takeaway mt-32">{{SCORECARD_TAKEAWAY}}</p>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTERS 5-11: Individual Findings
+     The skill generates one .finding block per major gap discovered.
+     Number of findings varies per audit (typically 5-8).
+     Each finding uses the finding spread component. -->
+
+{{FINDINGS_SECTIONS}}
+
+
+<!-- CHAPTER 12a: In Their Own Words — Radar Chart (own page) -->
+<div class="chapter page-break" id="ch-their-words-radar">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>In their own words: Strategy vs. execution</h1>
+
+    <!-- Radar chart showing expected vs actual performance -->
+    <div class="text-center mt-32 mb-32">
+      <div class="radar-chart">
+        <svg viewBox="0 0 300 300">
+          <!-- Radar grid (5 concentric polygons) -->
+          <polygon class="radar-chart__grid" points="150,30 252,95 220,220 80,220 48,95"/>
+          <polygon class="radar-chart__grid" points="150,54 228,103 204,198 96,198 72,103"/>
+          <polygon class="radar-chart__grid" points="150,78 204,111 188,176 112,176 96,111"/>
+          <polygon class="radar-chart__grid" points="150,102 180,119 172,154 128,154 120,119"/>
+          <polygon class="radar-chart__grid" points="150,126 156,127 156,132 144,132 144,127"/>
+
+          <!-- Axis lines -->
+          <line class="radar-chart__axis" x1="150" y1="150" x2="150" y2="30"/>
+          <line class="radar-chart__axis" x1="150" y1="150" x2="252" y2="95"/>
+          <line class="radar-chart__axis" x1="150" y1="150" x2="220" y2="220"/>
+          <line class="radar-chart__axis" x1="150" y1="150" x2="80" y2="220"/>
+          <line class="radar-chart__axis" x1="150" y1="150" x2="48" y2="95"/>
+
+          <!-- Expected polygon (green - what they told investors) -->
+          <polygon class="radar-chart__polygon--expected" points="{{RADAR_EXPECTED_POINTS}}"/>
+
+          <!-- Actual polygon (red - what audit found) -->
+          <polygon class="radar-chart__polygon--actual" points="{{RADAR_ACTUAL_POINTS}}"/>
+
+          <!-- Labels -->
+          <text class="radar-chart__label" x="150" y="20">NLP Search</text>
+          <text class="radar-chart__label" x="265" y="95">Personalization</text>
+          <text class="radar-chart__label" x="235" y="235">Recommendations</text>
+          <text class="radar-chart__label" x="65" y="235">Discovery</text>
+          <text class="radar-chart__label" x="35" y="95">Speed</text>
+        </svg>
+      </div>
+      <div class="radar-chart__legend">
+        <div class="radar-chart__legend-item">
+          <div class="radar-chart__legend-color radar-chart__legend-color--expected"></div>
+          <span>What They Told Investors</span>
+        </div>
+        <div class="radar-chart__legend-item">
+          <div class="radar-chart__legend-color radar-chart__legend-color--actual"></div>
+          <span>What The Audit Found</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+<!-- CHAPTER 12b: In Their Own Words — Strategy-Execution Pairs (next page) -->
+<div class="chapter page-break" id="ch-their-words-pairs">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>What they said vs. what we found</h1>
+
+    <!-- Strategy-Execution pairs with gap visualization -->
+    {{STRATEGY_EXECUTION_PAIRS}}
+
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- =========================================================================
+     ACT III SECTION BREAK
+     ========================================================================= -->
+<div class="section-break">
+  <div>
+    <div class="section-break__act">Act III</div>
+    <div class="section-break__divider"></div>
+    <div class="section-break__title">The Intelligence</div>
+    <div class="section-break__subtitle">Why now — the signals that create urgency</div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     ACT III: WHY NOW — The Signals (Pages 27-36)
+     Context that creates urgency
+     ========================================================================= -->
+
+<!-- CHAPTER 13: Tech Stack in Transition -->
+<div class="chapter page-break" id="ch-tech-stack">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>{{TECH_STACK_HEADLINE}}</h1>
+
+    <div class="stack-diagram mt-32">
+      <div class="stack-column">
+        <div class="stack-column__header stack-column__header--removed">Removed</div>
+        {{STACK_REMOVED_BLOCKS}}
+      </div>
+      <div class="stack-column">
+        <div class="stack-column__header stack-column__header--vacuum">The Vacuum</div>
+        <div class="stack-block stack-block--vacuum">
+          {{VACUUM_LABEL}}
+          <span class="stack-block__sublabel">{{VACUUM_SUBLABEL}}</span>
+        </div>
+      </div>
+      <div class="stack-column">
+        <div class="stack-column__header stack-column__header--added">Added</div>
+        {{STACK_ADDED_BLOCKS}}
+      </div>
+    </div>
+
+    <p class="takeaway mt-32">{{TECH_STACK_TAKEAWAY}}</p>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTER 14: The AI Gap -->
+<div class="chapter page-break" id="ch-ai-gap">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>{{AI_GAP_HEADLINE}}</h1>
+
+    <div class="balance-scale mt-32">
+      <div class="scale-pan scale-pan--heavy">
+        <h3>{{AI_DEPLOYED_TITLE}}</h3>
+        {{AI_DEPLOYED_ITEMS}}
+      </div>
+      <div class="scale-fulcrum">
+        <!-- SVG triangle fulcrum -->
+        <svg width="48" height="40" viewBox="0 0 48 40">
+          <polygon points="24,0 0,40 48,40" fill="var(--medium-gray)"/>
+        </svg>
+      </div>
+      <div class="scale-pan scale-pan--light">
+        <h3>{{AI_ABSENT_TITLE}}</h3>
+        {{AI_ABSENT_ITEMS}}
+      </div>
+    </div>
+
+    <p class="takeaway mt-32">{{AI_GAP_TAKEAWAY}}</p>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTER 15: Competitor Pressure -->
+<div class="chapter page-break" id="ch-competitors">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>{{COMPETITOR_HEADLINE}}</h1>
+
+    <div class="grid-2 mt-32" style="gap: 48px;">
+      <!-- LEFT: Horizontal Bar Chart (proper visualization) -->
+      <div>
+        <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dark-gray); margin-bottom: 20px;">
+          Traffic Comparison: Monthly Visits
+        </h4>
+        <div class="bar-chart-h">
+          {{COMPETITOR_BAR_ROWS}}
+          <!-- Example row structure:
+          <div class="bar-chart-h__row">
+            <div class="bar-chart-h__label bar-chart-h__label--highlight">{{COMPANY_NAME}}</div>
+            <div class="bar-chart-h__track">
+              <div class="bar-chart-h__fill bar-chart-h__fill--primary" style="width: 100%;"></div>
+            </div>
+            <div class="bar-chart-h__value bar-chart-h__value--highlight">187M</div>
+          </div>
+          <div class="bar-chart-h__row">
+            <div class="bar-chart-h__label">Competitor 1</div>
+            <div class="bar-chart-h__track">
+              <div class="bar-chart-h__fill bar-chart-h__fill--secondary" style="width: 65%;"></div>
+            </div>
+            <div class="bar-chart-h__value">122M</div>
+          </div>
+          -->
+        </div>
+      </div>
+
+      <!-- RIGHT: Donut chart for Algolia adoption -->
+      <div>
+        <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dark-gray); margin-bottom: 20px; text-align: center;">
+          {{COMPETITIVE_DIMENSION}}
+        </h4>
+        <div class="donut-multi">
+          <svg class="donut-multi__svg" viewBox="0 0 100 100">
+            <!-- Background circle -->
+            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--medium-gray)" stroke-width="16"/>
+            <!-- Filled arc (skill fills stroke-dasharray based on %) -->
+            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--nebula-blue)" stroke-width="18"
+                    stroke-dasharray="{{DONUT_DASHARRAY}}"
+                    stroke-linecap="round"/>
+          </svg>
+          <div class="donut-multi__center">
+            <div class="donut-multi__center-value">{{DONUT_PCT}}</div>
+            <div class="donut-multi__center-label">{{DONUT_LABEL}}</div>
+          </div>
+        </div>
+        <p class="text-center mt-16" style="font-size: 0.9rem; color: var(--dark-gray);">
+          {{DONUT_DESCRIPTION}}
+        </p>
+      </div>
+    </div>
+
+    <!-- Competitor table with search provider details -->
+    <div class="mt-32">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Competitor</th>
+            <th>Search Provider</th>
+            <th>Monthly Traffic</th>
+            <th>Bounce Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{COMPETITOR_TABLE_ROWS}}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="takeaway mt-32">{{COMPETITOR_TAKEAWAY}}</p>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTER 16: Hiring Signals -->
+<div class="chapter page-break" id="ch-hiring">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>{{HIRING_HEADLINE}}</h1>
+
+    <div class="grid-2 mt-32">
+      <div>
+        <h4 class="text-center mb-24">Open Technology Roles</h4>
+        <div class="bar-chart">
+          {{HIRING_BAR_ROWS}}
+        </div>
+      </div>
+      <div>
+        {{HIRING_CALLOUT}}
+        <!-- Typically a callout box with JD excerpt -->
+      </div>
+    </div>
+
+    <p class="takeaway mt-32">{{HIRING_TAKEAWAY}}</p>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTER 17: What Leadership Is Saying -->
+<div class="chapter page-break" id="ch-leadership">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>What leadership is saying</h1>
+
+    {{LEADERSHIP_QUOTES}}
+    <!-- Each quote as a callout--quote with source citation -->
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- =========================================================================
+     ACT IV SECTION BREAK
+     ========================================================================= -->
+<div class="section-break">
+  <div>
+    <div class="section-break__act">Act IV</div>
+    <div class="section-break__divider"></div>
+    <div class="section-break__title">The Path Forward</div>
+    <div class="section-break__subtitle">Architecture, alignment, and next steps</div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     ACT IV: THE PATH FORWARD (Pages 37-44)
+     ========================================================================= -->
+
+<!-- CHAPTER 18: Architecture Fit -->
+<div class="chapter page-break" id="ch-architecture">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <span class="chapter-label">High-end Strategic Diagnostic</span>
+    <h1>{{ARCHITECTURE_HEADLINE}}</h1>
+
+    <!-- Enhanced Pipeline Flow with visual hierarchy -->
+    <div class="flow-enhanced flow-enhanced--pipeline mt-32">
+      <div class="flow-enhanced__box flow-enhanced__box--source">
+        <div class="flow-enhanced__box-icon">
+          <svg viewBox="0 0 48 48" stroke="var(--space-gray)" stroke-width="2.5" fill="none">
+            <rect x="6" y="6" width="36" height="36" rx="4"/>
+            <line x1="6" y1="18" x2="42" y2="18"/>
+            <line x1="18" y1="18" x2="18" y2="42"/>
+          </svg>
+        </div>
+        <div class="flow-enhanced__box-title">Data Fabric</div>
+        <div class="flow-enhanced__box-subtitle">{{DATA_SOURCE_LABEL}}</div>
+      </div>
+
+      <div class="flow-enhanced__connector"></div>
+
+      <div class="flow-enhanced__box flow-enhanced__box--algolia flow-enhanced__box--highlight">
+        <div class="flow-enhanced__box-icon">
+          <svg viewBox="0 0 48 48" stroke="white" stroke-width="2.5" fill="none">
+            <circle cx="20" cy="20" r="12"/>
+            <line x1="28" y1="28" x2="40" y2="40" stroke-linecap="round"/>
+            <circle cx="20" cy="20" r="4" fill="white"/>
+          </svg>
+        </div>
+        <div class="flow-enhanced__box-title">Algolia</div>
+        <div class="flow-enhanced__box-subtitle">Search & Discovery</div>
+      </div>
+
+      <div class="flow-enhanced__connector"></div>
+
+      <div class="flow-enhanced__box flow-enhanced__box--destination">
+        <div class="flow-enhanced__box-icon">
+          <svg viewBox="0 0 48 48" stroke="white" stroke-width="2.5" fill="none">
+            <path d="M24 4L4 14v20l20 10 20-10V14L24 4z"/>
+            <path d="M24 24v20M4 14l20 10 20-10"/>
+          </svg>
+        </div>
+        <div class="flow-enhanced__box-title">Buyer Experience</div>
+        <div class="flow-enhanced__box-subtitle">{{BUYER_EXPERIENCE_LABEL}}</div>
+      </div>
+    </div>
+
+    <!-- Benefits grid with proper icons -->
+    <div class="grid-3 mt-48">
+      {{ARCHITECTURE_BENEFITS}}
+      <!-- Example benefit card:
+      <div style="text-align: center; padding: 24px;">
+        <div class="icon-btn icon-btn--primary" style="margin: 0 auto 16px;">
+          <span class="icon icon--lg icon--white">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8"/></svg>
+          </span>
+        </div>
+        <h4 style="margin-bottom: 8px;">Speed</h4>
+        <p style="font-size: 0.9rem; color: var(--dark-gray); margin: 0;">
+          Sub-20ms response times across 100M+ records
+        </p>
+      </div>
+      -->
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTER 19: Buying Committee -->
+<div class="chapter page-break" id="ch-buying-committee">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <span class="chapter-label">High-end Strategic Diagnostic</span>
+    <h1>Aligned with leadership priorities.</h1>
+
+    <div class="exec-cards mt-32">
+      {{EXEC_CARDS}}
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTER 20: Pilot Roadmap (detailed) -->
+<div class="chapter page-break" id="ch-pilot">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h1>{{PILOT_DETAIL_HEADLINE}}</h1>
+
+    <div class="timeline mt-32">
+      {{PILOT_TIMELINE_STEPS}}
+    </div>
+
+    <div class="grid-2 mt-48">
+      <div>
+        {{PILOT_SCOPE_DETAILS}}
+      </div>
+      <div class="financial-card">
+        <h4>Financial Snapshot</h4>
+        {{PILOT_FINANCIAL_ROWS}}
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- CHAPTER 21: Next Steps -->
+<div class="chapter page-break" id="ch-next-steps">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <div class="closing-section">
+      <h2>Next Steps</h2>
+      <div class="next-steps-list mt-32" style="text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+        {{NEXT_STEPS_ITEMS}}
+      </div>
+      <blockquote class="mt-48">
+        "{{CLOSING_QUOTE}}"
+      </blockquote>
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+<!-- =========================================================================
+     APPENDIX (Pages 45-50)
+     Reference data only — no findings or screenshots
+     ========================================================================= -->
+
+<div class="chapter page-break" id="appendix-scoring">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h2>Appendix A: Full Scoring Detail</h2>
+
+    <!-- Severity Heatmap: Color-coded so you read severity at a glance -->
+    <table class="severity-heatmap mt-32">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Challenge Area</th>
+          <th style="width: 12%;">Score</th>
+          <th style="width: 14%;">Severity</th>
+          <th style="width: 44%;">Key Finding</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{SCORING_HEATMAP_ROWS}}
+        <!-- Example row structure:
+        <tr>
+          <td>Typo Tolerance</td>
+          <td class="score-cell score-cell--3">3/10</td>
+          <td class="severity--high">HIGH</td>
+          <td>"headlamp" vs "headlight": 23 vs 538 results</td>
+        </tr>
+        <tr>
+          <td>Query Suggestions</td>
+          <td class="score-cell score-cell--7">7/10</td>
+          <td class="severity--low">LOW</td>
+          <td>Popular searches shown on empty state</td>
+        </tr>
+        -->
+      </tbody>
+    </table>
+
+    <div class="grid-2 mt-32">
+      <!-- Left: Severity distribution -->
+      <div>
+        <h4>Severity Distribution</h4>
+        <div style="display: flex; gap: 16px; margin-top: 16px;">
+          <div style="flex: 1; text-align: center; padding: 20px; background: linear-gradient(135deg, #DC2626, #991B1B); color: white; border-radius: 8px;">
+            <div style="font-size: 2rem; font-weight: 900;">{{HIGH_COUNT}}</div>
+            <div style="font-size: 0.85rem; text-transform: uppercase;">High</div>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 20px; background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border-radius: 8px;">
+            <div style="font-size: 2rem; font-weight: 900;">{{MED_COUNT}}</div>
+            <div style="font-size: 0.85rem; text-transform: uppercase;">Medium</div>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 20px; background: linear-gradient(135deg, #10B981, #059669); color: white; border-radius: 8px;">
+            <div style="font-size: 2rem; font-weight: 900;">{{LOW_COUNT}}</div>
+            <div style="font-size: 0.85rem; text-transform: uppercase;">Low</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Score calculation -->
+      <div>
+        <h4>Weighted Score Calculation</h4>
+        <div style="background: var(--light-gray); padding: 20px; border-radius: 8px; margin-top: 16px; font-family: var(--font-mono); font-size: 0.85rem;">
+          <div>HIGH areas (2x weight): {{HIGH_WEIGHTED_SUM}}</div>
+          <div>MED areas (1x weight): {{MED_WEIGHTED_SUM}}</div>
+          <div>LOW areas (0.5x weight): {{LOW_WEIGHTED_SUM}}</div>
+          <hr style="border: none; border-top: 1px solid var(--medium-gray); margin: 12px 0;">
+          <div style="font-weight: 700;">
+            Total: {{TOTAL_WEIGHTED}} / {{TOTAL_WEIGHTS}} = <span style="color: var(--nebula-blue);">{{OVERALL_SCORE}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+<div class="chapter page-break" id="appendix-techstack">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h2>Appendix B: Full tech stack deep dive</h2>
+    {{APPENDIX_TECH_TABLE}}
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+<div class="chapter page-break" id="appendix-traffic">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h2>Appendix C: Traffic and Demographics</h2>
+
+    <div class="grid-2 mt-32" style="gap: 48px;">
+      <!-- Traffic Sources Donut Chart -->
+      <div>
+        <h4 class="text-center mb-24">Traffic Sources</h4>
+        <div class="donut-multi">
+          <svg class="donut-multi__svg" viewBox="0 0 100 100">
+            <!-- Multi-segment donut — skill calculates stroke-dasharray and stroke-dashoffset for each segment
+                 Formula: segment length = (percentage / 100) * circumference
+                 circumference = 2 * π * r = 2 * 3.14159 * 40 = 251.33
+                 Each segment's stroke-dashoffset = previous segments' cumulative length
+            -->
+            {{TRAFFIC_DONUT_SEGMENTS}}
+            <!-- Example segments:
+            <circle class="donut-multi__segment donut-multi__segment--organic" cx="50" cy="50" r="40"
+                    stroke-dasharray="100.5 150.8" stroke-dashoffset="0"/>
+            <circle class="donut-multi__segment donut-multi__segment--direct" cx="50" cy="50" r="40"
+                    stroke-dasharray="75.4 175.9" stroke-dashoffset="-100.5"/>
+            <circle class="donut-multi__segment donut-multi__segment--paid" cx="50" cy="50" r="40"
+                    stroke-dasharray="50.3 201" stroke-dashoffset="-175.9"/>
+            -->
+          </svg>
+          <div class="donut-multi__center">
+            <div class="donut-multi__center-value">{{TOTAL_MONTHLY_VISITS}}</div>
+            <div class="donut-multi__center-label">Monthly Visits</div>
+          </div>
+        </div>
+        <div class="donut-legend mt-24">
+          {{TRAFFIC_LEGEND_ITEMS}}
+          <!-- Example:
+          <div class="donut-legend__item">
+            <div class="donut-legend__color donut-legend__color--organic"></div>
+            <span>Organic</span>
+            <span class="donut-legend__value">40%</span>
+          </div>
+          -->
+        </div>
+      </div>
+
+      <!-- Demographics Pie Chart -->
+      <div>
+        <h4 class="text-center mb-24">Age Demographics</h4>
+        <div class="demographics-chart">
+          <div class="demographics-chart__pie">
+            <svg viewBox="0 0 100 100">
+              {{DEMOGRAPHICS_PIE_SEGMENTS}}
+              <!-- Pie segments use path with arc commands
+                   Each segment: M 50,50 L startX,startY A 45,45 0 largeArc,1 endX,endY Z
+              -->
+            </svg>
+          </div>
+          <div class="demographics-chart__legend">
+            {{DEMOGRAPHICS_LEGEND_ITEMS}}
+            <!-- Example:
+            <div class="demographics-legend__item">
+              <div class="demographics-legend__color" style="background: #A5B4FC;"></div>
+              <span class="demographics-legend__label">25-34</span>
+              <span class="demographics-legend__value">28%</span>
+            </div>
+            -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key metrics table -->
+    <div class="mt-32">
+      <h4 class="mb-16">Engagement Metrics</h4>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+            <th>Industry Avg</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ENGAGEMENT_TABLE_ROWS}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+<div class="chapter page-break" id="appendix-financials">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h2>Appendix D: Financial profile</h2>
+    {{APPENDIX_FINANCIAL_DATA}}
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+<div class="chapter page-break" id="appendix-queries">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h2>Appendix E: Test queries used</h2>
+    {{APPENDIX_QUERIES_TABLE}}
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+<div class="chapter page-break" id="appendix-sources">
+  <header class="page-header">
+    <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia" class="page-header__logo--algolia">
+    <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" class="page-header__logo--company">
+  </header>
+  <div class="chapter__content">
+    <h2>Appendix F: Sources and methodology</h2>
+
+    <h3 class="mt-24">Methodology</h3>
+    <p>{{METHODOLOGY_DESCRIPTION}}</p>
+
+    <h3 class="mt-32">Sources</h3>
+    <div class="bibliography">
+      {{BIBLIOGRAPHY_ENTRIES}}
+    </div>
+  </div>
+  <footer class="page-footer">
+    <span class="page-footer__confidential">© Algolia Confidential</span>
+    <span class="page-footer__page-num">{{PAGE_NUM}}</span>
+  </footer>
+</div>
+
+
+</body>
+</html>

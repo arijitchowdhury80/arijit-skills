@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{COMPANY_NAME}} Search Experience Audit — Algolia</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600;700;900&display=swap');
+
+    /* ── PAGE: US Letter, 3 pages, no margins ── */
+    @page { size: letter; margin: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: white; }
+
+    body {
+      font-family: 'Source Sans 3', 'Source Sans Pro', Helvetica, sans-serif;
+      color: #21243D;
+    }
+
+    :root {
+      --blue: #003DFF;
+      --purple: #5468FF;
+      --gray: #21243D;
+      --mid: #6B7280;
+      --light: #F5F5F7;
+      --border: #E5E7EB;
+      --red: #DC2626;
+      --amber: #D97706;
+      --green: #059669;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+
+    /* ── PAGE WRAPPER ── */
+    .page {
+      width: 8.5in;
+      height: 11in;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+    }
+
+    /* ── PAGE HEADER (pages 2-3) ── */
+    .page-header {
+      position: absolute;
+      top: 0.3in; left: 0.6in; right: 0.6in;
+      height: 0.4in;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header img { height: 18px; }
+
+    /* ── PAGE FOOTER (pages 2-3) ── */
+    .page-footer {
+      position: absolute;
+      bottom: 0.25in; left: 0.6in; right: 0.6in;
+      height: 0.3in;
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--border);
+      font-size: 11px; color: var(--mid);
+    }
+
+    /* ── CONTENT SAFE ZONE (pages 2-3) ── */
+    .page-content {
+      position: absolute;
+      top: 0.75in; bottom: 0.6in;
+      left: 0.6in; right: 0.6in;
+      overflow: hidden;
+    }
+
+    /* ══════════════════════════════
+       PAGE 1: COVER
+    ══════════════════════════════ */
+
+    .cover { background: var(--gray); color: white; }
+
+    .cover__photo {
+      position: absolute; inset: 0; z-index: 0;
+    }
+    .cover__photo img {
+      width: 100%; height: 100%; object-fit: cover; opacity: 0.2;
+    }
+
+    /* Gradient overlay darkens bottom for text legibility */
+    .cover__overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(
+        to bottom,
+        rgba(33,36,61,0.3) 0%,
+        rgba(33,36,61,0.7) 60%,
+        rgba(33,36,61,0.92) 100%
+      );
+    }
+
+    .cover__content {
+      position: relative; z-index: 2;
+      height: 100%; display: flex; flex-direction: column;
+      justify-content: flex-end;
+      padding: 0.65in 0.75in 0.6in;
+    }
+
+    /* Dual logos at top of cover */
+    .cover__logos {
+      position: absolute; top: 0.4in; left: 0.75in;
+      z-index: 3; display: flex; align-items: center; gap: 16px;
+    }
+    .cover__logos img { height: 22px; }
+    .cover__logos-div { width: 1px; height: 22px; background: rgba(255,255,255,0.35); }
+
+    .cover__label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.14em; color: rgba(255,255,255,0.6); margin-bottom: 12px;
+    }
+
+    .cover__title {
+      font-size: 3.4rem; font-weight: 900; line-height: 1.1;
+      color: white; margin-bottom: 8px; letter-spacing: -0.02em;
+    }
+
+    .cover__sub {
+      font-size: 1.3rem; font-weight: 300;
+      color: rgba(255,255,255,0.8); margin-bottom: 32px;
+    }
+
+    .cover__score-row {
+      display: flex; align-items: center; gap: 24px; margin-bottom: 40px;
+    }
+
+    .cover__score-badge {
+      display: flex; align-items: baseline; gap: 6px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 10px 20px;
+    }
+    .cover__score-num { font-size: 2.8rem; font-weight: 900; color: white; }
+    .cover__score-denom { font-size: 1.2rem; color: rgba(255,255,255,0.5); }
+    .cover__score-label { font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.1em; color: rgba(255,255,255,0.6); margin-top: 2px; }
+
+    .cover__verdict {
+      font-size: 1.1rem; font-weight: 700; padding: 8px 18px;
+      border-radius: 5px; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .verdict--critical  { background: rgba(220,38,38,0.3); color: #FCA5A5; border: 1px solid rgba(220,38,38,0.4); }
+    .verdict--moderate  { background: rgba(217,119,6,0.3); color: #FCD34D; border: 1px solid rgba(217,119,6,0.4); }
+
+    .cover__metrics {
+      display: flex; gap: 0;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px; overflow: hidden;
+    }
+    .cover__metric {
+      padding: 10px 20px;
+      border-right: 1px solid rgba(255,255,255,0.12);
+      font-size: 10px;
+    }
+    .cover__metric:last-child { border-right: none; }
+    .cover__metric-val { font-size: 1.1rem; font-weight: 900; color: white; }
+    .cover__metric-lab { color: rgba(255,255,255,0.55); font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.06em; margin-top: 1px; }
+
+    .cover__confidential {
+      position: absolute; bottom: 0.3in; left: 0.75in; z-index: 3;
+      font-size: 9px; color: rgba(255,255,255,0.35);
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .cover__date {
+      position: absolute; bottom: 0.3in; right: 0.75in; z-index: 3;
+      font-size: 9px; color: rgba(255,255,255,0.35);
+    }
+
+    /* ══════════════════════════════
+       PAGE 2: WHAT WE FOUND
+    ══════════════════════════════ */
+
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--blue); margin-bottom: 4px;
+    }
+    .section-title {
+      font-size: 1.9rem; font-weight: 900; color: var(--gray);
+      line-height: 1.15; margin-bottom: 6px;
+    }
+    .section-intro { font-size: 0.95rem; color: var(--mid); margin-bottom: 22px; line-height: 1.5; }
+
+    /* Score gauge row */
+    .score-overview {
+      display: flex; gap: 20px; align-items: stretch;
+      margin-bottom: 22px;
+    }
+    .score-overview__gauge {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--light); border-radius: 8px; padding: 16px 24px;
+      min-width: 120px; flex-shrink: 0;
+    }
+    .score-overview__num { font-size: 3rem; font-weight: 900; color: var(--blue); line-height: 1; }
+    .score-overview__denom { font-size: 1rem; color: var(--mid); }
+    .score-overview__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mid); margin-top: 4px; }
+
+    .score-overview__bars { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .score-bar-row {
+      display: grid; grid-template-columns: 160px 1fr 36px;
+      gap: 8px; align-items: center;
+    }
+    .score-bar-row__label { font-size: 11px; color: var(--gray); }
+    .score-bar-row__track {
+      height: 10px; background: var(--light); border-radius: 5px; overflow: hidden;
+    }
+    .score-bar-row__fill { height: 100%; border-radius: 5px; }
+    .score-bar-row__fill--critical { background: var(--red); }
+    .score-bar-row__fill--moderate { background: var(--amber); }
+    .score-bar-row__fill--ok       { background: var(--green); }
+    .score-bar-row__val { font-size: 11px; font-weight: 900; text-align: right; }
+    .score-bar-row__val--critical { color: var(--red); }
+    .score-bar-row__val--moderate { color: var(--amber); }
+    .score-bar-row__val--ok       { color: var(--green); }
+
+    /* Prospect-facing finding cards (no screenshots, no internal intel) */
+    .finding-card {
+      display: grid; grid-template-columns: 48px 1fr;
+      gap: 0; border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden; margin-bottom: 14px;
+    }
+    .finding-card__num-col {
+      background: var(--blue); color: white;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 12px 8px;
+    }
+    .finding-card__n { font-size: 1.4rem; font-weight: 900; }
+    .finding-card__severity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; }
+    .dot--critical { background: #FCA5A5; }
+    .dot--moderate { background: #FCD34D; }
+
+    .finding-card__body { padding: 12px 16px; }
+    .finding-card__category {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--mid); margin-bottom: 3px;
+    }
+    .finding-card__title { font-size: 1rem; font-weight: 700; color: var(--gray); margin-bottom: 5px; line-height: 1.3; }
+    .finding-card__desc { font-size: 0.9rem; color: var(--mid); line-height: 1.5; margin-bottom: 6px; }
+    .finding-card__impact {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #FEF2F2; border-radius: 4px; padding: 4px 10px;
+      font-size: 0.85rem;
+    }
+    .finding-card__impact-stat { font-weight: 900; color: var(--red); }
+    .finding-card__impact-label { color: var(--gray); }
+    .finding-card__solution {
+      margin-top: 6px; padding: 6px 10px;
+      background: #F0FDF4; border-left: 3px solid var(--green);
+      border-radius: 0 4px 4px 0; font-size: 0.85rem; color: var(--gray); line-height: 1.4;
+    }
+    .finding-card__solution strong { color: var(--green); }
+
+    /* ══════════════════════════════
+       PAGE 3: THE OPPORTUNITY + NEXT STEPS
+    ══════════════════════════════ */
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+
+    /* Funnel section */
+    .funnel-section h2 { font-size: 1.4rem; font-weight: 900; color: var(--gray); margin-bottom: 4px; }
+    .funnel-section p { font-size: 0.9rem; color: var(--mid); line-height: 1.5; margin-bottom: 16px; }
+
+    /* Next steps */
+    .next-steps { }
+    .next-steps h2 { font-size: 1.4rem; font-weight: 900; color: var(--gray); margin-bottom: 16px; }
+
+    .step {
+      display: flex; gap: 14px; margin-bottom: 16px;
+    }
+    .step__num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--blue); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; font-weight: 900; flex-shrink: 0;
+    }
+    .step__body { }
+    .step__title { font-size: 0.95rem; font-weight: 700; color: var(--gray); margin-bottom: 2px; }
+    .step__desc { font-size: 0.85rem; color: var(--mid); line-height: 1.4; }
+
+    /* CTA block */
+    .cta-block {
+      background: linear-gradient(135deg, var(--gray), var(--blue));
+      border-radius: 10px; padding: 24px;
+      color: white; text-align: center; margin-top: 20px;
+    }
+    .cta-block h3 { font-size: 1.1rem; font-weight: 900; color: white; margin-bottom: 8px; }
+    .cta-block p { font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-bottom: 16px; }
+    .cta-block__contact { font-size: 0.9rem; font-weight: 700; color: white; }
+    .cta-block__email { color: rgba(255,255,255,0.75); font-size: 0.85rem; }
+
+    /* Disclaimer */
+    .disclaimer {
+      font-size: 10px; color: var(--mid); line-height: 1.4;
+      padding: 8px 0; border-top: 1px solid var(--border);
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════
+       PAGE 1: COVER
+  ══════════════════════════════ -->
+  <div class="page cover">
+
+    <!-- Background company photo -->
+    <div class="cover__photo">
+      <img src="{{COVER_PHOTO_URL}}" alt="{{COMPANY_NAME}}" onerror="this.style.display='none'">
+    </div>
+    <div class="cover__overlay"></div>
+
+    <!-- Dual logos -->
+    <div class="cover__logos">
+      <img src="{{ALGOLIA_LOGO_WHITE}}" alt="Algolia">
+      <div class="cover__logos-div"></div>
+      <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" style="filter:brightness(0) invert(1); max-height:22px; max-width:120px; object-fit:contain;">
+    </div>
+
+    <!-- Main content -->
+    <div class="cover__content">
+      <div class="cover__label">Search Experience Audit</div>
+      <div class="cover__title">{{COMPANY_NAME}}</div>
+      <div class="cover__sub">A diagnostic of your search and discovery experience</div>
+
+      <div class="cover__score-row">
+        <div class="cover__score-badge">
+          <div>
+            <div class="cover__score-num">{{OVERALL_SCORE}}<span class="cover__score-denom">/10</span></div>
+            <div class="cover__score-label">Search Score</div>
+          </div>
+        </div>
+        <div class="cover__verdict verdict--{{SCORE_VERDICT_CLASS}}">{{SCORE_VERDICT}}</div>
+      </div>
+
+      <div class="cover__metrics">
+        <div class="cover__metric">
+          <div class="cover__metric-val">{{CRITICAL_COUNT}}</div>
+          <div class="cover__metric-lab">Critical Gaps</div>
+        </div>
+        <div class="cover__metric">
+          <div class="cover__metric-val">{{MODERATE_COUNT}}</div>
+          <div class="cover__metric-lab">Moderate Gaps</div>
+        </div>
+        <div class="cover__metric">
+          <div class="cover__metric-val">{{FINDINGS_COUNT}}</div>
+          <div class="cover__metric-lab">Total Findings</div>
+        </div>
+        <div class="cover__metric">
+          <div class="cover__metric-val">{{SEARCH_ROI}}</div>
+          <div class="cover__metric-lab">Est. Search ROI</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cover__confidential">Prepared by Algolia · For {{COMPANY_NAME}}</div>
+    <div class="cover__date">{{AUDIT_DATE}}</div>
+  </div>
+
+
+  <!-- ══════════════════════════════
+       PAGE 2: WHAT WE FOUND
+  ══════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia">
+      <span style="font-size:10px;color:var(--mid);">{{COMPANY_NAME}} Search Experience Audit</span>
+    </div>
+
+    <div class="page-content">
+      <div class="section-label">Act I — The Verdict</div>
+      <div class="section-title">What We Found</div>
+      <p class="section-intro">
+        We ran {{TEST_QUERY_COUNT}} search tests across {{COMPANY_NAME}}'s site on {{AUDIT_DATE}}.
+        Here is what your customers experience today.
+      </p>
+
+      <!-- Score overview with bar chart -->
+      <div class="score-overview">
+        <div class="score-overview__gauge">
+          <div class="score-overview__num">{{OVERALL_SCORE}}</div>
+          <div class="score-overview__denom">/10</div>
+          <div class="score-overview__label">Search Score</div>
+        </div>
+        <div class="score-overview__bars">
+          {{SCORE_BARS}}
+          <!--
+            Renderer inserts one .score-bar-row per dimension.
+            Bar fill width = score/10 * 100%.
+            Template:
+            <div class="score-bar-row">
+              <span class="score-bar-row__label">NLP / Semantic Search</span>
+              <div class="score-bar-row__track">
+                <div class="score-bar-row__fill score-bar-row__fill--critical" style="width:20%;"></div>
+              </div>
+              <span class="score-bar-row__val score-bar-row__val--critical">2/10</span>
+            </div>
+          -->
+        </div>
+      </div>
+
+      <!-- Prospect-facing finding cards -->
+      {{PROSPECT_FINDING_CARDS}}
+      <!--
+        Renderer inserts one .finding-card per finding.
+        NOTE: Prospect-facing — NO screenshots, NO internal intelligence.
+        Only: category, title, what we observed, impact stat, Algolia solution.
+        Template:
+        <div class="finding-card">
+          <div class="finding-card__num-col">
+            <span class="finding-card__n">1</span>
+            <span class="finding-card__severity-dot dot--critical"></span>
+          </div>
+          <div class="finding-card__body">
+            <div class="finding-card__category">Semantic Search</div>
+            <div class="finding-card__title">Natural Language Queries Return Irrelevant Results</div>
+            <div class="finding-card__desc">
+              We searched for "gift for mom under $300" — your search returned 0 relevant products.
+              Shoppers with intent to buy are leaving empty-handed.
+            </div>
+            <div class="finding-card__impact">
+              <span class="finding-card__impact-stat">0 relevant results</span>
+              <span class="finding-card__impact-label">for natural language purchase intent query</span>
+            </div>
+            <div class="finding-card__solution">
+              <strong>Algolia solution:</strong> NLP-powered semantic search understands shopper intent.
+              Lacoste saw +37% conversion after implementing Algolia's semantic search.
+              <a href="{{CASE_STUDY_URL}}">Case study →</a>
+            </div>
+          </div>
+        </div>
+      -->
+    </div>
+
+    <div class="page-footer">
+      <span>Prepared by Algolia · Confidential</span>
+      <span>2</span>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════
+       PAGE 3: THE OPPORTUNITY + NEXT STEPS
+  ══════════════════════════════ -->
+  <div class="page">
+    <div class="page-header">
+      <img src="{{ALGOLIA_LOGO_BLUE}}" alt="Algolia">
+      <span style="font-size:10px;color:var(--mid);">{{COMPANY_NAME}} Search Experience Audit</span>
+    </div>
+
+    <div class="page-content">
+      <div class="section-label">Act II — The Opportunity</div>
+      <div class="section-title">What Fixing Search Unlocks</div>
+      <p class="section-intro" style="margin-bottom:20px;">
+        Search-driven revenue recovery is one of the fastest-payback investments in digital commerce.
+      </p>
+
+      <div class="two-col">
+
+        <!-- Left: Revenue funnel -->
+        <div class="funnel-section">
+          <h2>Your Revenue at Stake</h2>
+          <p>Based on industry benchmarks: 15% of digital revenue flows through search.
+             A 5% conversion lift from improved search is conservative.
+             <a href="{{REVENUE_SOURCE}}">[{{REVENUE_SOURCE_LABEL}}]</a></p>
+
+          <!-- 3-tier locked funnel — same geometry as binder -->
+          <svg viewBox="0 0 500 315" style="width:100%;max-width:380px;display:block;margin:0 auto;">
+            <defs>
+              <linearGradient id="plb-funnel-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:rgba(0,61,255,0.5)"/>
+                <stop offset="100%" style="stop-color:#003DFF"/>
+              </linearGradient>
+            </defs>
+            <polygon points="20,10 480,10 415,100 85,100" style="fill:url(#plb-funnel-grad);opacity:0.82;"/>
+            <text x="250" y="44" text-anchor="middle" style="font-size:11px;font-weight:700;fill:white;font-family:'Source Sans 3',sans-serif;">Total Digital Revenue</text>
+            <text x="250" y="72" text-anchor="middle" style="font-size:18px;font-weight:900;fill:white;font-family:'Source Sans 3',sans-serif;">{{TOTAL_DIGITAL_REVENUE}}</text>
+            <polygon points="85,112 415,112 335,200 165,200" style="fill:url(#plb-funnel-grad);opacity:0.91;"/>
+            <text x="250" y="147" text-anchor="middle" style="font-size:10px;font-weight:700;fill:white;font-family:'Source Sans 3',sans-serif;">Search-Addressable (15%)</text>
+            <text x="250" y="180" text-anchor="middle" style="font-size:16px;font-weight:900;fill:white;font-family:'Source Sans 3',sans-serif;">{{SEARCH_ADDRESSABLE}}</text>
+            <!-- LOCKED BOTTOM TIER — DO NOT CHANGE POINTS -->
+            <polygon points="165,212 335,212 305,295 195,295" style="fill:#003DFF;"/>
+            <text x="250" y="247" text-anchor="middle" style="font-size:11px;font-weight:700;fill:white;font-family:'Source Sans 3',sans-serif;">Algolia Search ROI Est.</text>
+            <text x="250" y="278" text-anchor="middle" style="font-size:14px;font-weight:900;fill:white;font-family:'Source Sans 3',sans-serif;">{{CONSERVATIVE_LIFT_LABEL}}</text>
+            <text x="250" y="310" text-anchor="middle" style="font-size:10px;fill:#9CA3AF;font-family:'Source Sans 3',sans-serif;">Source: {{REVENUE_SOURCE_LABEL}}</text>
+          </svg>
+        </div>
+
+        <!-- Right: Next steps + CTA -->
+        <div class="next-steps">
+          <h2>Recommended Next Steps</h2>
+
+          {{NEXT_STEPS}}
+          <!--
+            Renderer inserts 3 .step blocks.
+            Template:
+            <div class="step">
+              <div class="step__num">1</div>
+              <div class="step__body">
+                <div class="step__title">30-min Technical Discovery Call</div>
+                <div class="step__desc">Walk through the 3 critical findings with your engineering lead. We'll show exactly how Algolia addresses each gap.</div>
+              </div>
+            </div>
+          -->
+
+          <div class="cta-block">
+            <h3>Let's build a proof of concept</h3>
+            <p>We can have a working Algolia prototype on your search in under 2 weeks —
+               no commitment required.</p>
+            <div class="cta-block__contact">{{AE_NAME}}</div>
+            <div class="cta-block__email">{{AE_EMAIL}}</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="disclaimer">
+        This audit was conducted by Algolia on {{AUDIT_DATE}} using browser-based testing and publicly available data sources.
+        Traffic data sourced from SimilarWeb (as of {{SW_VINTAGE}}). Financial data sourced from {{REVENUE_SOURCE_LABEL}}.
+        Revenue projections are estimates based on industry benchmarks (Baymard Institute, Forrester Research) and are not guarantees.
+        This document is prepared for {{COMPANY_NAME}} and is not for distribution.
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <span>Prepared by Algolia · Confidential</span>
+      <span>3</span>
+    </div>
+  </div>
+
+</body>
+</html>

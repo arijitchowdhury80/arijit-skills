@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{COMPANY_NAME}} — Strategic Battle Card — Algolia</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;900&display=swap');
+
+    /* ── PAGE: Landscape letter, no margins ── */
+    @page { size: 11in 8.5in landscape; margin: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 11in; height: 8.5in; overflow: hidden; background: white; }
+
+    body {
+      font-family: 'Source Sans 3', 'Source Sans Pro', Helvetica, sans-serif;
+      font-size: 11px;
+      color: #21243D;
+      display: flex;
+      flex-direction: column;
+    }
+
+    :root {
+      --blue: #003DFF;
+      --purple: #5468FF;
+      --gray: #21243D;
+      --mid: #6B7280;
+      --light: #F5F5F7;
+      --border: #E5E7EB;
+      --red: #DC2626;
+      --amber: #D97706;
+      --green: #059669;
+      --teal: #0891B2;
+      --violet: #7C3AED;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+
+    /* ── HEADER BAR ── */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 20px;
+      background: var(--gray);
+      color: white;
+      flex-shrink: 0;
+    }
+    .header__left { display: flex; align-items: center; gap: 14px; }
+    .header__logos { display: flex; align-items: center; gap: 10px; }
+    .header__logos img { height: 16px; }
+    .header__logos-div { width: 1px; height: 16px; background: rgba(255,255,255,0.3); }
+    .header__company { font-size: 16px; font-weight: 900; }
+    .header__vendor-tag {
+      background: rgba(220,38,38,0.25); border: 1px solid rgba(220,38,38,0.5);
+      color: #FCA5A5; font-size: 11px; font-weight: 700;
+      padding: 3px 10px; border-radius: 4px; text-transform: uppercase;
+    }
+    .header__right { display: flex; align-items: center; gap: 16px; }
+    .header__score {
+      text-align: center;
+      background: rgba(255,255,255,0.1);
+      border-radius: 6px; padding: 4px 14px;
+    }
+    .header__score-num { font-size: 22px; font-weight: 900; }
+    .header__score-label { font-size: 10px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.08em; }
+    .header__urgency {
+      font-size: 10px; font-weight: 700; padding: 4px 12px;
+      border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .urgency--high { background: #DC2626; color: white; }
+    .urgency--medium { background: #D97706; color: white; }
+
+    /* ── BODY: 3-column grid ── */
+    .body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 2.8fr 2.4fr 2.8fr;
+      min-height: 0;
+    }
+
+    .col {
+      padding: 12px 14px;
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .col:last-child { border-right: none; }
+
+    .col__title {
+      font-size: 10px; font-weight: 900;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--blue); padding-bottom: 5px;
+      border-bottom: 2px solid var(--blue);
+      flex-shrink: 0;
+    }
+    .col__subtitle { font-size: 11px; color: var(--mid); margin-top: -4px; }
+
+    /* ══════════════════════════════════════
+       COLUMN 1: INTELLIGENCE SIGNALS
+       9 signal types, each with type badge,
+       text, source, and relevance note.
+    ══════════════════════════════════════ */
+
+    .signal {
+      border-radius: 5px;
+      padding: 7px 9px;
+      border: 1px solid var(--border);
+      position: relative;
+      padding-left: 12px;
+      flex-shrink: 0;
+    }
+    .signal::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; bottom: 0; width: 3px;
+      border-radius: 5px 0 0 5px;
+    }
+
+    /* Signal type colors */
+    .signal--exec::before        { background: var(--blue); }
+    .signal--media::before       { background: var(--purple); }
+    .signal--funding::before     { background: var(--green); }
+    .signal--industry-risk::before  { background: var(--red); }
+    .signal--industry-opp::before   { background: var(--amber); }
+    .signal--competitor::before  { background: #EF4444; }
+    .signal--customer::before    { background: var(--teal); }
+    .signal--partner::before     { background: #0D9488; }
+    .signal--hiring::before      { background: var(--violet); }
+
+    .signal__badge {
+      display: inline-block;
+      font-size: 10px; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.08em; padding: 1px 6px; border-radius: 3px;
+      margin-bottom: 3px;
+    }
+    .signal--exec .signal__badge        { background: #EEF2FF; color: var(--blue); }
+    .signal--media .signal__badge       { background: #EDE9FE; color: var(--purple); }
+    .signal--funding .signal__badge     { background: #F0FDF4; color: var(--green); }
+    .signal--industry-risk .signal__badge  { background: #FEF2F2; color: var(--red); }
+    .signal--industry-opp .signal__badge   { background: #FFFBEB; color: var(--amber); }
+    .signal--competitor .signal__badge  { background: #FEF2F2; color: #EF4444; }
+    .signal--customer .signal__badge    { background: #ECFEFF; color: var(--teal); }
+    .signal--partner .signal__badge     { background: #F0FDFA; color: #0D9488; }
+    .signal--hiring .signal__badge      { background: #F5F3FF; color: var(--violet); }
+
+    .signal__text {
+      font-size: 10px; line-height: 1.4; color: var(--gray);
+      font-style: italic; margin-bottom: 2px;
+    }
+    .signal__meta { font-size: 10px; color: var(--mid); margin-bottom: 2px; }
+    .signal__relevance {
+      font-size: 9px; color: var(--gray); font-style: normal;
+      padding-top: 3px; border-top: 1px dashed var(--border);
+      margin-top: 2px;
+    }
+    .signal__relevance::before { content: '→ '; color: var(--blue); font-weight: 700; }
+
+    /* ══════════════════════════════════════
+       COLUMN 2: STRATEGY vs REALITY
+       Gap diagram pairs
+    ══════════════════════════════════════ */
+
+    .gap-pair {
+      border-radius: 5px; overflow: hidden;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .gap-pair__said {
+      padding: 6px 10px;
+      background: #F0FDF4; border-bottom: 1px solid var(--border);
+    }
+    .gap-pair__said-label {
+      font-size: 10px; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--green); margin-bottom: 2px;
+    }
+    .gap-pair__said-text {
+      font-size: 10px; font-style: italic; color: var(--gray); line-height: 1.35;
+    }
+    .gap-pair__said-attr { font-size: 10px; color: var(--mid); margin-top: 2px; }
+    .gap-pair__said-source { font-size: 10px; color: var(--mid); }
+
+    .gap-pair__bridge {
+      display: flex; align-items: center; justify-content: center;
+      padding: 3px; background: var(--light);
+      font-size: 9px; font-weight: 700; color: var(--red);
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .gap-pair__bridge::before { content: '✗ '; }
+
+    .gap-pair__found {
+      padding: 6px 10px;
+      background: #FEF2F2;
+    }
+    .gap-pair__found-label {
+      font-size: 10px; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--red); margin-bottom: 2px;
+    }
+    .gap-pair__found-text {
+      font-size: 10px; color: var(--gray); line-height: 1.35; font-weight: 600;
+    }
+    .gap-pair__found-evidence {
+      font-size: 9px; color: var(--mid); margin-top: 2px;
+    }
+
+    /* Score heatmap */
+    .score-row {
+      display: grid; grid-template-columns: 1fr 36px 80px;
+      gap: 6px; align-items: center; padding: 3px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+    }
+    .score-row:last-child { border-bottom: none; }
+    .score-row__area { color: var(--gray); }
+    .score-row__num { font-weight: 900; text-align: center; }
+    .score-row__num--critical { color: var(--red); }
+    .score-row__num--moderate { color: var(--amber); }
+    .score-row__num--ok       { color: var(--green); }
+    .score-row__bar-wrap { height: 8px; background: var(--light); border-radius: 4px; overflow: hidden; }
+    .score-row__bar { height: 100%; border-radius: 4px; }
+    .score-row__bar--critical { background: var(--red); }
+    .score-row__bar--moderate { background: var(--amber); }
+    .score-row__bar--ok       { background: var(--green); }
+
+    /* ══════════════════════════════════════
+       COLUMN 3: ALGOLIA ADVANTAGE
+    ══════════════════════════════════════ */
+
+    /* Feature comparison table */
+    .feature-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+    .feature-table th {
+      font-size: 10px; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.07em; padding: 5px 8px; text-align: left;
+    }
+    .feature-table th:first-child { color: var(--mid); }
+    .feature-table th:nth-child(2) { color: var(--red); text-align: center; }
+    .feature-table th:nth-child(3) { color: var(--blue); text-align: center; background: #F0F4FF; border-radius: 4px 4px 0 0; }
+    .feature-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); }
+    .feature-table td:nth-child(2) { text-align: center; }
+    .feature-table td:nth-child(3) { text-align: center; background: #F8FAFF; }
+    .feature-table tr:last-child td { border-bottom: none; }
+    .cap-yes  { color: var(--green); font-weight: 900; font-size: 12px; }
+    .cap-no   { color: var(--red);   font-weight: 900; font-size: 12px; }
+    .cap-part { color: var(--amber); font-weight: 900; font-size: 12px; }
+
+    /* Case study proof point */
+    .proof-card {
+      background: linear-gradient(135deg, #003DFF, #5468FF);
+      color: white; border-radius: 6px; padding: 9px 12px;
+      flex-shrink: 0;
+    }
+    .proof-card__label { font-size: 10px; font-weight: 900; opacity: 0.75;
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+    .proof-card__company { font-size: 12px; font-weight: 900; margin-bottom: 2px; }
+    .proof-card__result { font-size: 10px; opacity: 0.9; line-height: 1.4; margin-bottom: 4px; }
+    .proof-card__stat { font-size: 20px; font-weight: 900; margin-bottom: 2px; }
+    .proof-card__stat-label { font-size: 9px; opacity: 0.8; }
+    .proof-card__source { font-size: 10px; opacity: 0.65; margin-top: 4px; }
+
+    /* Talk track */
+    .talk-track {
+      border: 1.5px solid var(--blue); border-radius: 6px; padding: 8px 10px;
+      flex-shrink: 0;
+    }
+    .talk-track__label { font-size: 10px; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--blue); margin-bottom: 4px; }
+    .talk-track__opener { font-size: 10px; color: var(--gray); line-height: 1.5;
+      font-style: italic; }
+    .talk-track__cta { font-size: 10px; font-weight: 700; color: var(--blue);
+      margin-top: 5px; }
+
+    /* ── FOOTER BAR ── */
+    .footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 20px;
+      background: var(--light); border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .footer__item { font-size: 11px; color: var(--mid); }
+    .footer__item strong { color: var(--gray); }
+    .footer__urgency {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 9px; font-weight: 700;
+    }
+    .footer__urgency-label { color: var(--mid); text-transform: uppercase; letter-spacing: 0.06em; }
+    .urgency-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .urgency-dot--high { background: var(--red); }
+    .urgency-dot--medium { background: var(--amber); }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="header__left">
+      <div class="header__logos">
+        <img src="{{ALGOLIA_LOGO_WHITE}}" alt="Algolia">
+        <div class="header__logos-div"></div>
+        <img src="{{COMPANY_LOGO_URL}}" alt="{{COMPANY_NAME}}" style="filter:brightness(0) invert(1);">
+      </div>
+      <div class="header__company">{{COMPANY_NAME}}</div>
+      <div class="header__vendor-tag">Currently: {{SEARCH_VENDOR}}</div>
+    </div>
+    <div class="header__right">
+      <div class="header__score">
+        <div class="header__score-num">{{OVERALL_SCORE}}<span style="font-size:11px;opacity:0.5;">/10</span></div>
+        <div class="header__score-label">Search Score</div>
+      </div>
+      <div class="header__urgency urgency--{{URGENCY_LEVEL}}">{{URGENCY_LABEL}}</div>
+    </div>
+  </div>
+
+  <!-- ── BODY ── -->
+  <div class="body">
+
+    <!-- ══ COL 1: INTELLIGENCE SIGNALS ══ -->
+    <div class="col">
+      <div class="col__title">Intelligence Signals</div>
+      <div class="col__subtitle">What we know about their world right now</div>
+
+      {{INTELLIGENCE_SIGNALS}}
+      <!--
+        Renderer inserts one .signal block per signal collected.
+        Signal type classes: signal--exec | signal--media | signal--funding |
+          signal--industry-risk | signal--industry-opp | signal--competitor |
+          signal--customer | signal--partner | signal--hiring
+
+        Template for each signal:
+        <div class="signal signal--[TYPE]">
+          <div class="signal__badge">[TYPE LABEL]</div>
+          <div class="signal__text">"[Quote or description of signal]"</div>
+          <div class="signal__meta">[Name/Source] · [Date] · <a href="[URL]">Source</a></div>
+          <div class="signal__relevance">[Why this creates urgency or opportunity for Algolia]</div>
+        </div>
+
+        SIGNAL TYPES AND WHEN TO USE:
+        exec          — CEO/CFO/CMO/CTO public statement (earnings, investor day, press interview)
+        media         — Article, interview, podcast quote from any named employee
+        funding       — Investment round, IPO, M&A, partnership announcement
+        industry-risk — Industry trend they must respond to or fall behind (e.g. AI adoption wave)
+        industry-opp  — Market tailwind they should capitalize on (e.g. mobile commerce surge)
+        competitor    — Specific move by a named competitor (launched feature, partnership, acquisition)
+        customer      — Customer review, social media complaint, or partner feedback about their search
+        partner       — Technology partner announcement relevant to their stack
+        hiring        — Job posting or LinkedIn signal revealing their investment priorities
+      -->
+    </div>
+
+    <!-- ══ COL 2: STRATEGY vs REALITY ══ -->
+    <div class="col">
+      <div class="col__title">Strategy vs. Reality</div>
+      <div class="col__subtitle">What they told the market — what the audit found</div>
+
+      {{GAP_PAIRS}}
+      <!--
+        Renderer inserts one .gap-pair block per exec promise that contradicts audit findings.
+        Template:
+        <div class="gap-pair">
+          <div class="gap-pair__said">
+            <div class="gap-pair__said-label">What They Said</div>
+            <div class="gap-pair__said-text">"[Executive quote about digital/search/CX]"</div>
+            <div class="gap-pair__said-attr">— [Name], [Title]</div>
+            <div class="gap-pair__said-source"><a href="[URL]">[Source label]</a> · [Date]</div>
+          </div>
+          <div class="gap-pair__bridge">Gap Identified</div>
+          <div class="gap-pair__found">
+            <div class="gap-pair__found-label">What The Audit Found</div>
+            <div class="gap-pair__found-text">[1-line finding description]</div>
+            <div class="gap-pair__found-evidence">
+              Query tested: "[query]" · <a href="screenshots/[file]">Screenshot</a>
+            </div>
+          </div>
+        </div>
+      -->
+
+      <!-- Score heatmap below gap pairs -->
+      <div class="col__title" style="margin-top:4px;">Score Heatmap</div>
+      {{SCORE_HEATMAP}}
+      <!--
+        Renderer inserts one .score-row per scoring area.
+        Template:
+        <div class="score-row">
+          <span class="score-row__area">NLP / Semantic Search</span>
+          <span class="score-row__num score-row__num--critical">2/10</span>
+          <div class="score-row__bar-wrap">
+            <div class="score-row__bar score-row__bar--critical" style="width:20%;"></div>
+          </div>
+        </div>
+        Bar width = (score/10 * 100)%. Color: critical=<4, moderate=4-6, ok=>6
+      -->
+    </div>
+
+    <!-- ══ COL 3: ALGOLIA ADVANTAGE ══ -->
+    <div class="col">
+      <div class="col__title">Algolia vs. {{SEARCH_VENDOR}}</div>
+
+      <!-- Feature comparison table -->
+      <table class="feature-table">
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>{{SEARCH_VENDOR}}</th>
+            <th>Algolia</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{FEATURE_COMPARISON_ROWS}}
+          <!--
+            Renderer inserts one row per capability gap found in audit.
+            Template:
+            <tr>
+              <td>NLP / Natural Language</td>
+              <td><span class="cap-no">✗</span></td>
+              <td><span class="cap-yes">✓</span></td>
+            </tr>
+            Use: cap-yes (✓), cap-no (✗), cap-part (◐)
+          -->
+        </tbody>
+      </table>
+
+      <!-- Proof point -->
+      <div class="proof-card">
+        <div class="proof-card__label">Customer Proof — {{CASE_STUDY_INDUSTRY}} / Similar Profile</div>
+        <div class="proof-card__company">{{CASE_STUDY_COMPANY}}</div>
+        <div class="proof-card__result">{{CASE_STUDY_CHALLENGE}}</div>
+        <div class="proof-card__stat">{{CASE_STUDY_RESULT_STAT}}</div>
+        <div class="proof-card__stat-label">{{CASE_STUDY_RESULT_LABEL}}</div>
+        <div class="proof-card__source"><a href="{{CASE_STUDY_URL}}" style="color:rgba(255,255,255,0.7);">{{CASE_STUDY_URL}}</a></div>
+      </div>
+
+      <!-- Talk track -->
+      <div class="talk-track">
+        <div class="talk-track__label">Opening Talk Track</div>
+        <div class="talk-track__opener">{{TALK_TRACK_OPENER}}</div>
+        <div class="talk-track__cta">→ {{TALK_TRACK_CTA}}</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <div class="footer__item">
+      <strong>{{COMPANY_NAME}}</strong> · {{INDUSTRY}} · {{HQ}} ·
+      <a href="{{VISITS_SOURCE}}">{{MONTHLY_VISITS}}/mo</a>
+      <span style="font-size:10px;color:#9CA3AF;">[SimilarWeb {{SW_VINTAGE}}]</span>
+    </div>
+    <div class="footer__item">
+      Revenue: <a href="{{REVENUE_SOURCE}}"><strong>{{REVENUE}}</strong></a>
+      <span style="font-size:10px;color:#9CA3AF;">[{{REVENUE_SOURCE_LABEL}}]</span>
+    </div>
+    <div class="footer__urgency">
+      <span class="footer__urgency-label">Deal Urgency</span>
+      <span class="urgency-dot urgency-dot--{{URGENCY_LEVEL}}"></span>
+      <strong style="color:{{URGENCY_COLOR}};">{{URGENCY_LABEL}}</strong>
+    </div>
+    <div class="footer__item" style="color:#9CA3AF;">Algolia Confidential · {{AUDIT_DATE}}</div>
+  </div>
+
+</body>
+</html>

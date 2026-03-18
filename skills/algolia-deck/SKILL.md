@@ -1,62 +1,56 @@
 ---
 name: algolia-deck
-description: Create an Algolia-branded presentation with slide-by-slide content, design specs, and speaker notes. Compatible with the Algolia Slide Template 2024.
-user-invocable: true
-allowed-tools: Read, Grep
-argument-hint: "[topic] [audience] [number of slides]"
+description: Create Algolia-branded presentation decks with speaker notes and Google Slides-ready layout.
 ---
 
-# Algolia presentation creator
+# Algolia Branded Slide Deck
 
-Create a branded presentation outline with slide-by-slide content.
+Create structured presentation content following the official Algolia slide template. Each slide includes title, body, speaker notes, layout type, and color specifications ready for assembly in Google Slides or Keynote.
 
-## Reference files
+## Input
 
-- [Voice & tone](../algolia-shared-reference/brand-core/voice-and-tone.md)
-- [Messaging framework](../algolia-shared-reference/brand-core/messaging-framework.md)
-- [Presentation template](../algolia-shared-reference/content-templates/presentation.md)
-- [Colors](../algolia-shared-reference/visual-identity/colors.md)
-- [Typography](../algolia-shared-reference/visual-identity/typography.md)
-- [Logo usage](../algolia-shared-reference/visual-identity/logo-usage.md)
+- Presentation topic and objective
+- Target audience (customer, prospect, internal, partner, executive, developer)
+- Desired slide count (recommended: 10-15 for external, 5-10 for internal)
+- Key messages or talking points to incorporate
+- Any specific data, metrics, or customer examples to include
 
-## Design specs
+## Process
 
-- **Font**: Sora (Light 300 for titles, Regular 400 for body, Semi-Bold 600 for emphasis)
-- **Colors**: Xenon Blue #003DFF, headings #23263B, body #5A5E9A, white backgrounds
-- **Logo**: Algolia Full Xenon variant, bottom-right corner
+1. **Outline Structure** -- Create a narrative arc: opening hook, problem framing, solution positioning, proof points, call to action. Map each section to slide count allocation.
+2. **Title Slide** -- Company logo placement top-left, presentation title centered, subtitle with date and presenter name, Nebula Blue #003DFF background with white text.
+3. **Agenda Slide** -- Three to five agenda items, numbered, sentence case. White background with Space Gray #21243D text.
+4. **Problem/Challenge Slides** -- Frame the audience pain point. Use data callouts, short bullet points (max four per slide), supporting visuals guidance. One idea per slide.
+5. **Solution Slides** -- Position Algolia capabilities against the framed problem. Use two-column layouts for before/after or feature/benefit pairs. Include product screenshots or architecture diagrams as callouts.
+6. **Proof Point Slides** -- Customer logos, quantified results (use approved stats), pull quotes from case studies. Data visualization guidance for charts and graphs.
+7. **Technical Detail Slides** -- If audience is technical: code snippets, architecture diagrams, API examples. Use monospace font for code blocks on white background.
+8. **CTA/Next Steps Slide** -- Clear single call to action, contact information, relevant links. Nebula Blue background with white text.
+9. **Speaker Notes** -- Write conversational speaker notes for each slide (60-90 seconds of talk time per slide). Notes should expand on bullet points, not repeat them.
+10. **Run `/algolia-brand-check`** on the complete deck content before finalizing.
 
-## Slide layouts
+## Output Sections
 
-| Layout | Use for |
-|--------|---------|
-| Title slide | Opening — deck title, subtitle, date |
-| Agenda | Table of contents |
-| Section divider | Break between sections |
-| Content + visual | Main content with image/chart placeholder |
-| Stats/metrics | Highlight 2-3 key numbers |
-| Quote/testimonial | Customer quote |
-| Comparison | Before/after or competitive positioning |
-| Team | People slides |
-| CTA/closing | Final slide with next steps |
+For each slide, provide:
 
-## Output format
+### Slide [N]: [Title]
+- **Layout**: Title Slide | Content | Two-Column | Image-Left | Image-Right | Data/Chart | Quote | Section Divider | CTA
+- **Background**: Color hex code
+- **Title**: Slide title text (sentence case)
+- **Body**: Bullet points or paragraph content
+- **Visual Notes**: Description of images, charts, or diagrams to include
+- **Speaker Notes**: Talk track for this slide (2-4 sentences)
 
-For each slide output:
+### Deck Summary
+- Total slide count
+- Estimated presentation duration
+- Key message reinforcement checklist
 
-```
-### Slide N: [Layout type]
-**Title:** ...
-**Content:** ...
-**Visual:** [Description of image/chart/graphic to add]
-**Speaker notes:** ...
-```
+## Brand Requirements
 
-## Rules
-- Max 6 words in slide titles
-- Max 3-5 bullet points per slide
-- One idea per slide
-- Tone: confident, visual-first, story-driven
-- Use approved stats from the messaging framework
-- Never criticize competitors by name
-
-Create a presentation about: $ARGUMENTS
+- **Voice**: Confident and credible -- presentations should feel authoritative without being pushy
+- **Colors**: Title/divider slides use Nebula Blue #003DFF background with white text. Content slides use white background with Space Gray #21243D text. Accent elements use Algolia Purple #5468FF. Data visualizations use the Algolia color palette.
+- **Font**: Source Sans Pro for all text. Titles 28-36pt bold. Body 18-24pt regular. Speaker notes 14pt.
+- **Logo**: Algolia logo top-left on title slide, bottom-right on content slides. Minimum clear space of 1x logo height on all sides.
+- **Bullets**: Use sentence case, no periods on single-line bullets, max four bullets per slide
+- **Stats**: Only use approved metrics (17,000+ customers, 1.7T searches/year, 30B records)
+- **Competitors**: Never name competitors in customer-facing decks; use "legacy solutions" or "traditional approaches"

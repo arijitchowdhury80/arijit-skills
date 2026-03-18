@@ -1,69 +1,61 @@
 ---
 name: algolia-brand-check
-description: Scan any content for Algolia brand guideline violations and return a compliance score with specific fixes. Use when reviewing drafts, copy, or any content that should follow Algolia brand standards.
-user-invocable: true
-allowed-tools: Read, Grep
-argument-hint: "[paste content or provide file path]"
+description: Scan content for Algolia brand compliance across 7 dimensions. Returns 1-10 score with fixes.
 ---
 
-# Algolia brand compliance checker
+# Algolia Brand Compliance Check
 
-You are an Algolia brand compliance auditor. Analyze the provided content against Algolia's official brand guidelines and return a detailed compliance report.
+Audit any content artifact against the official Algolia brand guidelines across seven compliance dimensions. Produces a scored report with line-level violations, suggested fixes, and a pass/fail verdict.
 
-## Brand reference files
+## Input
 
-Load these before scoring:
+- Content to audit (text, HTML, markdown, or structured slide content)
+- Content type (blog, email, landing page, social post, deck, UI copy, one-pager, case study, brief, partner material)
+- Target audience (developers, business decision-makers, partners, internal)
 
-- [Voice & tone](../algolia-shared-reference/brand-core/voice-and-tone.md)
-- [Terminology](../algolia-shared-reference/brand-core/terminology.md)
-- [Editorial standards](../algolia-shared-reference/brand-core/editorial-standards.md)
-- [Messaging framework](../algolia-shared-reference/brand-core/messaging-framework.md)
-- [Social media policy](../algolia-shared-reference/brand-core/social-media-policy.md)
-- [Colors](../algolia-shared-reference/visual-identity/colors.md)
-- [Typography](../algolia-shared-reference/visual-identity/typography.md)
-- [Logo usage](../algolia-shared-reference/visual-identity/logo-usage.md)
+## Process
 
-## Scoring dimensions
+1. **Voice & Tone Audit** -- Verify content is confident, clear, technically credible, and approachable. Flag language that is arrogant, flippant, overly casual, or condescending. Check that developer content maintains precision while business content maintains accessibility.
+2. **Terminology Audit** -- Confirm correct product names: Algolia Search, Algolia Recommend, Algolia AI Search, Algolia Crawler, Algolia Analytics, Algolia NeuralSearch. Flag deprecated terms (InstantSearch.js without version, Algolia Places, DocSearch when referring to current product). Verify branded phrases use correct capitalization.
+3. **Editorial Standards Audit** -- Check AP Style compliance, Oxford comma usage, sentence case for headings, numbers spelled out below 10, correct date formats (Month Day, Year), no double spaces, consistent list formatting, proper em-dash usage.
+4. **Messaging Accuracy Audit** -- Cross-check claims against approved stats: 17,000+ customers, 1.7 trillion searches/year, 30 billion records indexed. Flag unsubstantiated superlatives ("best", "fastest", "only"). Verify positioning aligns with current messaging framework.
+5. **Visual Compliance Audit** -- If content includes HTML/CSS: verify Nebula Blue #003DFF as primary, Space Gray #21243D for body text, accent purple #5468FF, white #FFFFFF for backgrounds. Font family must reference Source Sans Pro. Check logo clear space and minimum size rules.
+6. **Anthropomorphism Audit** -- Flag any instance where Algolia is described as thinking, believing, feeling, wanting, or having emotions. Algolia "enables", "provides", "powers", "delivers" -- it does not "think", "believe", "feel", "want", or "care".
+7. **Competitor Mention Audit** -- Flag any direct competitor names in marketing materials (Elasticsearch, Typesense, Meilisearch, Coveo, Bloomreach, Lucidworks). Sales enablement and internal docs may reference competitors; marketing-facing content must not.
 
-Score each dimension 1-10:
+## Output Sections
 
-| # | Dimension | What to check |
-|---|-----------|---------------|
-| 1 | **Voice & tone** | Confident, clear, technically credible, approachable. No hedging ("we think", "perhaps"). Active voice. |
-| 2 | **Terminology** | Product names capitalized correctly (InstantSearch, NeuralSearch, NuFact, Agent Studio, Agentic Retrieval). Branded phrases correct. |
-| 3 | **Editorial standards** | AP style, Oxford comma, correct number formatting, proper heading case, punctuation rules. |
-| 4 | **Messaging accuracy** | Key facts correct (1.75T searches, 18,000+ businesses). Approved descriptions used verbatim where referenced. |
-| 5 | **Visual compliance** | Colors match palette (#003DFF, #23263B). Font is Sora. Logo used correctly. |
-| 6 | **Anthropomorphism** | Never gives human abilities to technologies or brands. "Business leaders are exploring" not "Brands are looking at". |
-| 7 | **Confidentiality** | No unreleased product info, financial data, customer data, or roadmap details. |
+### Overall Score
+- Numeric score from 1-10 (10 = fully compliant)
+- Pass threshold: 8 or above
+- Verdict: PASS, NEEDS REVISION, or FAIL
 
-## Output format
+### Dimension Breakdown
+For each of the 7 dimensions:
+- Dimension name and score (1-10)
+- Number of violations found
+- Severity classification (critical, major, minor)
 
-```
-## Brand compliance report
+### Violation Details
+For each violation:
+- Line or section reference
+- Original text (quoted)
+- Violation type and dimension
+- Severity level
+- Suggested fix with corrected text
 
-**Overall score: X.X / 10**
-**Verdict: PASS / NEEDS WORK / FAIL**
+### Summary
+- Total violations by severity
+- Top 3 issues to fix first
+- Estimated effort to reach compliance
 
-(8+ = PASS, 5-7.9 = NEEDS WORK, <5 = FAIL)
+## Brand Requirements
 
-### Dimension scores
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Voice & tone | X/10 | ... |
-| Terminology | X/10 | ... |
-| Editorial standards | X/10 | ... |
-| Messaging accuracy | X/10 | ... |
-| Visual compliance | X/10 | ... |
-| Anthropomorphism | X/10 | ... |
-| Confidentiality | X/10 | ... |
-
-### Issues found
-1. **[Dimension]** — Issue description → Suggested fix
-2. ...
-
-### What's working well
-- ...
-```
-
-Analyze the content provided in `$ARGUMENTS`.
+- **Voice**: Confident, clear, technically credible, approachable -- never arrogant or dismissive
+- **Colors**: Nebula Blue #003DFF (primary), Space Gray #21243D (body text), Accent Purple #5468FF, White #FFFFFF (backgrounds)
+- **Font**: Source Sans Pro (headings and body)
+- **Product Names**: Always capitalize: Algolia Search, Algolia Recommend, Algolia AI Search, Algolia Crawler, Algolia Analytics
+- **Stats (approved)**: 17,000+ customers, 1.7 trillion searches/year, 30 billion records indexed
+- **Anthropomorphism**: Never attribute human emotions or cognition to Algolia
+- **Competitors**: Never name competitors in customer-facing marketing materials
+- **Editorial**: AP Style, Oxford comma, sentence case headings, spell out numbers under 10
