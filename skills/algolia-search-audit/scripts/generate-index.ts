@@ -206,7 +206,7 @@ ${audits.length === 0 ? `
       </div>
       <div class="card-footer">
         <span class="card-date">Audited ${a.audit_date}</span>
-        <span class="card-arrow">Open audit →</span>
+        <span class="card-arrow">Open audit</span>
       </div>
     </a>`;
   }).join("\n  ")}
