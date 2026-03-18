@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Costco Search Experience Audit — Template Preview</title>
+  <link rel="stylesheet" href="components.css">
+  <style>
+    .chapter { padding: 48px 60px; min-height: 90vh; display: flex; flex-direction: column; }
+    .chapter + .chapter { page-break-before: always; }
+    .chapter__content { flex: 1; }
+    @media print { .chapter { min-height: auto; padding: 32px 0; } }
+  </style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover-page" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);">
+  <div class="cover-page__content">
+    <h1>Costco Search<br>Experience Audit</h1>
+    <p class="subtitle">Status: Critical Recommendation Vacuum Detected</p>
+    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.3); margin: 16px 0 24px; width: 50%;">
+    <div class="cover-page__metrics">
+      <span class="cover-page__metric">100.9M Monthly Visits</span>
+      <span class="cover-page__metric">$19.6B Digital Revenue</span>
+    </div>
+    <p class="cover-page__footer">Prepared by <strong>Algolia</strong> | February 2026</p>
+  </div>
+</div>
+
+<!-- CH1: BOTTOM LINE -->
+<div class="chapter page-break">
+  <div class="chapter__content">
+    <div class="kpi-dashboard">
+      <h2>The Bottom Line</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card__icon">
+            <svg viewBox="0 0 48 48"><circle cx="20" cy="20" r="16" fill="none" stroke="white" stroke-width="3"/><line x1="31" y1="31" x2="44" y2="44" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
+          </div>
+          <div class="kpi-card__value">4.4/10</div>
+          <div class="kpi-card__label">Search Score</div>
+          <div class="kpi-card__desc">Costco serves 100M+ visitors but suffers from critical intelligence gaps.</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__icon">
+            <svg viewBox="0 0 48 48"><path d="M24 16a8 8 0 100 16 8 8 0 000-16z" fill="none" stroke="white" stroke-width="2.5"/><path d="M24 6v4M24 38v4M6 24h4M38 24h4M11.5 11.5l2.8 2.8M33.7 33.7l2.8 2.8M11.5 36.5l2.8-2.8M33.7 14.3l2.8-2.8" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+          </div>
+          <div class="kpi-card__value">Removed</div>
+          <div class="kpi-card__label">Engine Removed</div>
+          <div class="kpi-card__desc">RichRelevance removed. Zero product recommendations on any page.</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__icon">
+            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke="white" stroke-width="2.5"/><text x="24" y="30" text-anchor="middle" fill="white" font-size="22" font-weight="bold">$</text></svg>
+          </div>
+          <div class="kpi-card__value">$148M</div>
+          <div class="kpi-card__label">Revenue Risk</div>
+          <div class="kpi-card__desc">Annual revenue left on the table due to discovery failures.</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card__icon">
+            <svg viewBox="0 0 48 48"><rect x="10" y="6" width="28" height="36" rx="3" fill="none" stroke="white" stroke-width="2.5"/><rect x="18" y="2" width="12" height="8" rx="2" fill="white"/><line x1="16" y1="20" x2="32" y2="20" stroke="white" stroke-width="2"/><line x1="16" y1="26" x2="28" y2="26" stroke="white" stroke-width="2"/></svg>
+          </div>
+          <div class="kpi-card__value">30-Day</div>
+          <div class="kpi-card__label">The Ask</div>
+          <div class="kpi-card__desc">Pilot (&lt;$100K) to prove value on top 100 PDPs.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CH2: OPPORTUNITY -->
+<div class="chapter page-break">
+  <div class="chapter__content">
+    <span class="chapter-label">High-end Strategic Diagnostic</span>
+    <h1>The Opportunity: $148M in addressable revenue.</h1>
+
+    <div class="revenue-funnel mt-32">
+      <div class="revenue-funnel__shape">
+        <div class="revenue-funnel__tier revenue-funnel__tier--top">Total Digital Revenue: $19.6B</div>
+        <div class="revenue-funnel__tier revenue-funnel__tier--mid">Search-Addressable Revenue (15%): $2.96B</div>
+        <div class="revenue-funnel__tier revenue-funnel__tier--bottom">5% Conservative Lift</div>
+      </div>
+      <div class="revenue-funnel__result">5% Conservative Lift = $148M/Year</div>
+      <div class="revenue-funnel__proof">Benchmarks from Lacoste (+37%) and Decathlon (+50%) suggest this is conservative.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CH4: SCORECARD -->
+<div class="chapter page-break">
+  <div class="chapter__content">
+    <h1>A tale of two engines: Strong foundation, missing intelligence.</h1>
+
+    <div class="dual-panel mt-32">
+      <div class="panel panel--positive">
+        <h3>The Foundation</h3>
+        <div class="panel__item">
+          <span class="panel__icon panel__icon--check">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#059669"/><path d="M8 12l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <div class="panel__text"><strong>Latency:</strong> 8/10 <span>(Fast)</span></div>
+        </div>
+        <div class="panel__item">
+          <span class="panel__icon panel__icon--check">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#059669"/><path d="M8 12l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <div class="panel__text"><strong>Typo Tolerance:</strong> 6/10 <span>(Functional)</span></div>
+        </div>
+        <div class="panel__item">
+          <span class="panel__icon panel__icon--check">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#059669"/><path d="M8 12l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <div class="panel__text"><strong>Synonyms:</strong> 9/10 <span>(Excellent)</span></div>
+        </div>
+      </div>
+      <div class="panel panel--critical">
+        <h3>The Intelligence</h3>
+        <div class="panel__item">
+          <span class="panel__icon panel__icon--cross">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#DC2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          <div class="panel__text"><strong>NLP/Semantics:</strong> 2/10 <span>(Fails complex queries)</span></div>
+        </div>
+        <div class="panel__item">
+          <span class="panel__icon panel__icon--cross">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#DC2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          <div class="panel__text"><strong>Recommendations:</strong> 1/10 <span>(CRITICAL VACUUM)</span></div>
+        </div>
+        <div class="panel__item">
+          <span class="panel__icon panel__icon--cross">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#DC2626"/><path d="M8 8l8 8M16 8l-8 8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+          </span>
+          <div class="panel__text"><strong>Empty State:</strong> 2/10 <span>(Blank screen)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="takeaway mt-32">We don't need to rebuild the basics. We need to inject the missing intelligence layer.</p>
+  </div>
+</div>
+
+<!-- COMPETITOR LANDSCAPE -->
+<div class="chapter page-break">
+  <div class="chapter__content">
+    <h1>The warehouse sector has a recommendation vacuum. First mover wins.</h1>
+
+    <div class="competitor-layout mt-32">
+      <div>
+        <h4 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dark-gray); margin-bottom: 12px;">
+          Competitive Landscape: Recommendation Engines
+        </h4>
+        <table class="data-table">
+          <thead>
+            <tr><th>Competitor</th><th>Rec Engine</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Costco</strong></td>
+              <td>❌ REMOVED (RichRelevance)</td>
+              <td><span class="status-badge status-badge--critical">Vacuum</span></td>
+            </tr>
+            <tr>
+              <td>Sam's Club</td>
+              <td>❌ 5 Engines Removed</td>
+              <td><span class="status-badge status-badge--warning">Rebuilding</span></td>
+            </tr>
+            <tr>
+              <td>BJ's</td>
+              <td>— Basic</td>
+              <td><span class="status-badge status-badge--neutral">Legacy</span></td>
+            </tr>
+            <tr>
+              <td>Walmart</td>
+              <td>✅ Custom AI</td>
+              <td><span class="status-badge status-badge--positive">Leader</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="donut-chart">
+        <svg viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#E8E8ED" stroke-width="28"/>
+          <circle cx="90" cy="90" r="70" fill="none" stroke="#003DFF" stroke-width="28"
+                  stroke-dasharray="132 308"
+                  stroke-dashoffset="110"
+                  stroke-linecap="round"/>
+          <text x="90" y="82" text-anchor="middle" font-size="16" font-weight="900" fill="#003DFF" font-family="Source Sans 3, sans-serif">Shared</text>
+          <text x="90" y="104" text-anchor="middle" font-size="20" font-weight="900" fill="#003DFF" font-family="Source Sans 3, sans-serif">30.1%</text>
+        </svg>
+        <div class="donut-chart__label">Sam's Club shares 30.1% of Costco's organic keywords.<a href="#" class="cite">[4]</a></div>
+      </div>
+    </div>
+
+    <p class="takeaway mt-32">Sam's Club is actively deploying AI. Costco has retreated.</p>
+  </div>
+</div>
+
+<!-- HIRING SIGNALS -->
+<div class="chapter page-break">
+  <div class="chapter__content">
+    <h1>Hiring signals confirm a 'Buy' posture.</h1>
+
+    <div class="grid-2 mt-32">
+      <div>
+        <h4 class="text-center mb-24">Open Technology Roles</h4>
+        <div class="bar-chart">
+          <div class="bar-chart__row">
+            <div class="bar-chart__label">Cloud/DevOps</div>
+            <div class="bar-chart__track"><div class="bar-chart__fill" style="width: 100%;"></div></div>
+            <div class="bar-chart__value">25</div>
+          </div>
+          <div class="bar-chart__row">
+            <div class="bar-chart__label">Data/Analytics</div>
+            <div class="bar-chart__track"><div class="bar-chart__fill" style="width: 80%;"></div></div>
+            <div class="bar-chart__value">20</div>
+          </div>
+          <div class="bar-chart__row">
+            <div class="bar-chart__label">Search Engineering</div>
+            <div class="bar-chart__track"><div class="bar-chart__fill bar-chart__fill--critical" style="width: 4%;"></div></div>
+            <div class="bar-chart__value bar-chart__value--critical">0 ❌</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="callout callout--info">
+          <div class="callout__label">🔍 BI Engineer Role</div>
+          <p style="margin-top: 8px;"><strong>Responsible for measuring search performance...</strong></p>
+          <p>Responsible for measuring search performance, sitewide analytics, product discovery, and search analytics...</p>
+          <p style="color: var(--signal-critical); font-weight: 600; margin-top: 8px;">↳ They measure search. They do not build it.</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="takeaway mt-32">You are not building a search engine. <strong>You need a vendor.</strong></p>
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="chapter page-break">
+  <div class="chapter__content">
+    <h1>The tech stack is in upheaval — and the search layer is exposed.</h1>
+
+    <div class="stack-diagram mt-32">
+      <div class="stack-column">
+        <div class="stack-column__header stack-column__header--removed">Removed</div>
+        <div class="stack-block stack-block--removed">RichRelevance (Recs)<br><span class="stack-block__sublabel">Recommendations</span></div>
+        <div class="stack-block stack-block--removed">Braze (Marketing)<br><span class="stack-block__sublabel">Marketing Automation</span></div>
+        <div class="stack-block stack-block--removed">ContentStack (CMS)<br><span class="stack-block__sublabel">Content Management</span></div>
+        <div class="stack-block stack-block--removed">PowerReviews<br><span class="stack-block__sublabel">Reviews</span></div>
+      </div>
+      <div class="stack-column">
+        <div class="stack-column__header stack-column__header--vacuum">The Vacuum</div>
+        <div class="stack-block stack-block--vacuum">
+          Search &amp;<br>Discovery Layer
+          <span class="stack-block__sublabel">No identifiable vendor. Zero Recommendations.</span>
+        </div>
+      </div>
+      <div class="stack-column">
+        <div class="stack-column__header stack-column__header--added">Added</div>
+        <div class="stack-block stack-block--added">Dynatrace<br><span class="stack-block__sublabel">Observability</span></div>
+        <div class="stack-block stack-block--added">Cloudflare Insights<br><span class="stack-block__sublabel">Performance</span></div>
+        <div class="stack-block stack-block--added">Fittingbox (AR)<br><span class="stack-block__sublabel">Augmented Reality</span></div>
+      </div>
+    </div>
+
+    <p class="takeaway mt-32">The stack is modernizing, but discovery has been stripped bare.</p>
+  </div>
+</div>
+
+<!-- ARCHITECTURE FIT -->
+<div class="chapter page-break">
+  <div class="chapter__content">
+    <span class="chapter-label">High-end Strategic Diagnostic</span>
+    <h1>Seamless fit into the Custom Java + Akamai stack.</h1>
+
+    <div class="flow-diagram mt-48">
+      <div class="flow-box flow-box--blue">
+        <div class="flow-box__icon">👤</div>
+        <div class="flow-box__label">User</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box flow-box--blue">
+        <div class="flow-box__icon">☁️</div>
+        <div class="flow-box__label">Akamai CDN</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box flow-box--purple">
+        <div class="flow-box__icon">🔍 📈</div>
+        <div class="flow-box__label">Algolia API Layer</div>
+        <div class="flow-box__sublabel">(Search &amp; Recs)</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box flow-box--gray">
+        <div class="flow-box__icon">🗄️</div>
+        <div class="flow-box__label">Costco Custom</div>
+        <div class="flow-box__sublabel">Java Platform</div>
+      </div>
+    </div>
+
+    <div class="grid-3 mt-48">
+      <div>
+        <h4>▸ API-First</h4>
+        <p>No replatforming required.</p>
+      </div>
+      <div>
+        <h4>▸ Latency</h4>
+        <p>Sub-30ms results.</p>
+      </div>
+      <div>
+        <h4>▸ Security</h4>
+        <p>SOC 2 Type II compliant.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

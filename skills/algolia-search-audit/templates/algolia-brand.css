@@ -1,0 +1,148 @@
+/**
+ * Algolia Brand CSS — Single source of truth for typography and brand tokens
+ * Applied to ALL audit deliverables by render-audit.ts (injected before </head>)
+ *
+ * Source: https://algolia.frontify.com/document/1?#/basics/typography
+ *
+ * Font:    Sora (Google Fonts) — 3 weights only: 300 / 400 / 600
+ * Colors:  #23263B (text), #003DFF (blue), #5468FF (purple), #6B7280 (mid)
+ * Scale:   H1=56px/300, H2=36px/300, H3=28px/400, H4=22px/600, body=16px/400, label=14px/600
+ *
+ * CHANGE THIS FILE — all reports update on next render.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap');
+
+/* ─── Brand Tokens ───────────────────────────────────────────────────────── */
+:root {
+  /* Colors */
+  --brand-blue:        #003DFF;
+  --brand-purple:      #5468FF;
+  --brand-navy:        #23263B;   /* Primary text */
+  --brand-mid:         #6B7280;   /* Secondary text */
+  --brand-light:       #F5F5F7;
+  --brand-border:      #E5E7EB;
+  --brand-white:       #FFFFFF;
+  --brand-red:         #DC2626;
+  --brand-amber:       #D97706;
+  --brand-green:       #059669;
+  --brand-teal:        #0891B2;
+  --brand-violet:      #7C3AED;
+
+  /* Typography */
+  --font-family:       'Sora', sans-serif;
+  --font-body:         16px;
+  --font-label:        14px;
+  --font-h1:           56px;
+  --font-h2:           36px;
+  --font-h3:           28px;
+  --font-h4:           22px;
+  --font-h5:           18px;
+  --weight-light:      300;
+  --weight-regular:    400;
+  --weight-semibold:   600;
+
+  /* Spacing & Shape */
+  --radius:            8px;
+  --shadow:            0 2px 8px rgba(35,38,59,0.10);
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-body);
+  font-weight: var(--weight-regular);
+  color: var(--brand-navy);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Type Scale ─────────────────────────────────────────────────────────── */
+h1, .h1 {
+  font-size: var(--font-h1);
+  font-weight: var(--weight-light);
+  line-height: 1.10;
+  letter-spacing: -2px;
+  color: var(--brand-navy);
+}
+h2, .h2 {
+  font-size: var(--font-h2);
+  font-weight: var(--weight-light);
+  line-height: 1.40;
+  letter-spacing: -2px;
+  color: var(--brand-navy);
+}
+h3, .h3 {
+  font-size: var(--font-h3);
+  font-weight: var(--weight-regular);
+  line-height: 1.40;
+  letter-spacing: -1px;
+  color: var(--brand-navy);
+}
+h4, .h4 {
+  font-size: var(--font-h4);
+  font-weight: var(--weight-semibold);
+  line-height: 1.40;
+  color: var(--brand-navy);
+}
+h5, .h5 {
+  font-size: var(--font-h5);
+  font-weight: var(--weight-semibold);
+  line-height: 1.40;
+  color: var(--brand-navy);
+}
+
+p, li, td, th {
+  font-size: var(--font-body);
+  font-weight: var(--weight-regular);
+  color: var(--brand-navy);
+  line-height: 1.6;
+}
+
+/* Labels, eyebrows, badges, metadata */
+.label, .eyebrow, small, caption {
+  font-size: var(--font-label);
+  font-weight: var(--weight-semibold);
+  color: var(--brand-mid);
+}
+
+a {
+  color: var(--brand-blue);
+  text-decoration: none;
+}
+/* ── Global link style — DESIGN DIRECTIVE ────────────────────────────────────
+   All links across the entire system:
+   - Default: colored (blue) text, no underline, no icons, no arrows
+   - Hover: underline only — no color change, no icons
+   - Never use ↗ → or any arrow/icon on links
+   - This applies everywhere: signal cards, exec cards, nav, source badges, etc.
+─────────────────────────────────────────────────────────────────────────────── */
+a {
+  color: var(--brand-blue);
+  text-decoration: none;
+  transition: text-decoration 0.1s;
+}
+a:hover {
+  text-decoration: underline;
+  color: var(--brand-blue);
+}
+
+/* ─── Utility aliases for templates ─────────────────────────────────────── */
+/* Templates can use these var() aliases to stay in sync */
+:root {
+  --blue:   var(--brand-blue);
+  --purple: var(--brand-purple);
+  --gray:   var(--brand-navy);
+  --mid:    var(--brand-mid);
+  --light:  var(--brand-light);
+  --border: var(--brand-border);
+  --white:  var(--brand-white);
+  --red:    var(--brand-red);
+  --amber:  var(--brand-amber);
+  --green:  var(--brand-green);
+  --teal:   var(--brand-teal);
+  --violet: var(--brand-violet);
+}

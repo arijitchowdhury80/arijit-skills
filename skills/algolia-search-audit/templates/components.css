@@ -1,0 +1,2812 @@
+/* =============================================================================
+   ALGOLIA SEARCH AUDIT BOOK — Component Library
+   Visual components matching NotebookLM presentation quality.
+   All components use Algolia brand standards from /algolia-brand-check.
+   ============================================================================= */
+
+/* =============================================================================
+   1. FOUNDATION — Variables, Typography, Print Rules
+   ============================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400;1,600&display=swap');
+
+:root {
+  /* Algolia Brand Colors */
+  --nebula-blue: #003DFF;
+  --space-gray: #21243D;
+  --algolia-purple: #5468FF;
+  --white: #FFFFFF;
+  --light-gray: #F5F5F7;
+  --medium-gray: #E8E8ED;
+  --dark-gray: #6B7280;
+
+  /* Semantic Colors (used within visual metaphors, never as standalone indicators) */
+  --signal-critical: #DC2626;
+  --signal-critical-bg: #FEF2F2;
+  --signal-critical-border: #FECACA;
+  --signal-positive: #059669;
+  --signal-positive-bg: #F0FDF4;
+  --signal-positive-border: #BBF7D0;
+  --signal-warning: #D97706;
+  --signal-warning-bg: #FFFBEB;
+  --signal-warning-border: #FDE68A;
+  --signal-neutral: #6B7280;
+  --signal-neutral-bg: #F3F4F6;
+  --signal-neutral-border: #D1D5DB;
+
+  /* Typography */
+  --font-primary: 'Source Sans 3', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* Spacing */
+  --page-margin: 60px;
+  --section-gap: 48px;
+  --card-gap: 24px;
+  --card-padding: 32px;
+  --card-radius: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(33, 36, 61, 0.08);
+  --shadow-md: 0 4px 12px rgba(33, 36, 61, 0.10);
+  --shadow-lg: 0 8px 30px rgba(33, 36, 61, 0.12);
+  --shadow-xl: 0 20px 60px rgba(33, 36, 61, 0.15);
+}
+
+/* Base Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-primary);
+  color: var(--space-gray);
+  background: var(--white);
+  line-height: 1.6;
+}
+
+/* =============================================================================
+   2. PRINT OPTIMIZATION
+   ============================================================================= */
+
+@page {
+  size: letter;
+  margin: 0.6in 0.75in;
+}
+
+@page :first {
+  margin: 0;
+}
+
+@media print {
+  body { font-size: 11pt; }
+  .page-break { page-break-before: always; }
+  .no-break { page-break-inside: avoid; }
+  .cover-page { margin: 0; padding: 0; }
+  a { color: var(--nebula-blue); text-decoration: none; }
+  .source-ref { font-size: 8pt; color: var(--dark-gray); }
+}
+
+/* =============================================================================
+   3. TYPOGRAPHY SYSTEM
+   ============================================================================= */
+
+h1 {
+  font-size: 2.75rem;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--space-gray);
+  margin-bottom: 16px;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--space-gray);
+  margin-bottom: 12px;
+}
+
+h3 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--space-gray);
+  margin-bottom: 8px;
+}
+
+h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--space-gray);
+  margin-bottom: 6px;
+}
+
+p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--space-gray);
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--dark-gray);
+  line-height: 1.5;
+}
+
+.chapter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--algolia-purple);
+  margin-bottom: 8px;
+}
+
+/* Takeaway line — bold statement at bottom of a page */
+.takeaway {
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--space-gray);
+  padding-top: 32px;
+  margin-top: auto;
+  border-top: 1px solid var(--medium-gray);
+}
+
+/* =============================================================================
+   4. INLINE CITATIONS
+   ============================================================================= */
+
+.cite {
+  font-size: 0.7em;
+  vertical-align: super;
+  color: var(--algolia-purple);
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 1px;
+}
+
+.cite:hover { text-decoration: underline; }
+
+.source-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.source-tag--similarweb { background: #E8F4FD; color: #0369A1; }
+.source-tag--builtwith { background: #F0FDF4; color: #166534; }
+.source-tag--yahoo { background: #FEF3C7; color: #92400E; }
+.source-tag--sec { background: #EDE9FE; color: #5B21B6; }
+.source-tag--baymard { background: #FCE7F3; color: #9D174D; }
+.source-tag--observed { background: #F3F4F6; color: #374151; }
+
+/* =============================================================================
+   5. PAGE HEADER & FOOTER (Logos + Confidentiality)
+   ============================================================================= */
+
+/* Fixed header on every page (except cover) */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--medium-gray);
+  margin-bottom: 32px;
+}
+
+.page-header__logo {
+  height: 24px;
+  width: auto;
+}
+
+.page-header__logo--algolia {
+  height: 20px;
+}
+
+.page-header__logo--company {
+  height: 28px;
+  max-width: 140px;
+  object-fit: contain;
+}
+
+.page-header__divider {
+  width: 1px;
+  height: 20px;
+  background: var(--medium-gray);
+  margin: 0 16px;
+}
+
+.page-header__left {
+  display: flex;
+  align-items: center;
+}
+
+.page-header__right {
+  display: flex;
+  align-items: center;
+}
+
+/* Fixed footer on every page */
+.page-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--medium-gray);
+  margin-top: auto;
+  font-size: 0.75rem;
+  color: var(--dark-gray);
+}
+
+.page-footer__confidential {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.page-footer__page-number {
+  font-weight: 600;
+}
+
+/* Print-specific header/footer positioning */
+@media print {
+  .page-header {
+    position: running(header);
+  }
+
+  .page-footer {
+    position: running(footer);
+  }
+
+  @page {
+    @top-center {
+      content: element(header);
+    }
+    @bottom-center {
+      content: element(footer);
+    }
+  }
+
+  /* Alternative: CSS counters for page numbers */
+  .page-footer__page-number::after {
+    counter-increment: page;
+    content: counter(page);
+  }
+}
+
+/* =============================================================================
+   5b. COVER PAGE
+   ============================================================================= */
+
+.cover-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 60px;
+  color: var(--white);
+}
+
+.cover-page__bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+}
+
+.cover-page__bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-page__bg::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+}
+
+.cover-page__content {
+  position: relative;
+  z-index: 1;
+}
+
+.cover-page h1 {
+  font-size: 3.5rem;
+  color: var(--white);
+  margin-bottom: 16px;
+}
+
+.cover-page .subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+}
+
+.cover-page__metrics {
+  display: inline-flex;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 12px 24px;
+  margin-bottom: 48px;
+}
+
+.cover-page__metric {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+  padding: 0 16px;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.cover-page__metric:last-child { border-right: none; }
+
+.cover-page__footer {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cover-page__footer strong {
+  color: var(--white);
+}
+
+/* =============================================================================
+   6. KPI DASHBOARD (The Bottom Line)
+   ============================================================================= */
+
+.kpi-dashboard {
+  background: var(--nebula-blue);
+  border-radius: var(--card-radius);
+  padding: 48px;
+  color: var(--white);
+}
+
+.kpi-dashboard h2 {
+  color: var(--white);
+  margin-bottom: 40px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+
+.kpi-card {
+  text-align: center;
+  padding: 24px 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.kpi-card:last-child { border-right: none; }
+
+.kpi-card__icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  opacity: 0.9;
+}
+
+.kpi-card__icon svg { width: 100%; height: 100%; fill: var(--white); }
+
+.kpi-card__value {
+  font-size: 2.5rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.kpi-card__label {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.kpi-card__desc {
+  font-size: 0.875rem;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* =============================================================================
+   7. REVENUE FUNNEL (The Opportunity)
+   ============================================================================= */
+
+.revenue-funnel {
+  background: linear-gradient(180deg, #001A6E 0%, var(--nebula-blue) 100%);
+  border-radius: var(--card-radius);
+  padding: 60px 48px;
+  color: var(--white);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.revenue-funnel h2 { color: var(--white); }
+
+.revenue-funnel__shape {
+  width: 360px;
+  margin: 40px auto;
+  position: relative;
+}
+
+.revenue-funnel__tier {
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+  font-weight: 600;
+  position: relative;
+}
+
+.revenue-funnel__tier--top {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px 8px 0 0;
+  width: 100%;
+}
+
+.revenue-funnel__tier--mid {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 75%;
+}
+
+.revenue-funnel__tier--bottom {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0 0 8px 8px;
+  width: 50%;
+  font-size: 1.25rem;
+}
+
+.revenue-funnel__result {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-top: 32px;
+}
+
+.revenue-funnel__proof {
+  font-size: 0.95rem;
+  opacity: 0.8;
+  margin-top: 12px;
+}
+
+/* =============================================================================
+   8. DUAL PANEL COMPARISON (Scorecard: Foundation vs Intelligence)
+   ============================================================================= */
+
+.dual-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--card-gap);
+}
+
+.panel {
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  border: 2px solid;
+}
+
+.panel--positive {
+  background: var(--signal-positive-bg);
+  border-color: var(--signal-positive-border);
+}
+
+.panel--positive h3 { color: var(--signal-positive); }
+
+.panel--critical {
+  background: var(--signal-critical-bg);
+  border-color: var(--signal-critical-border);
+}
+
+.panel--critical h3 { color: var(--signal-critical); }
+
+.panel__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.panel__item:last-child { border-bottom: none; }
+
+.panel__icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.panel__icon--check { color: var(--signal-positive); }
+.panel__icon--cross { color: var(--signal-critical); }
+
+.panel__text strong {
+  font-weight: 700;
+}
+
+.panel__text span {
+  color: var(--dark-gray);
+}
+
+/* =============================================================================
+   9. FINDING SPREAD (Screenshot + Analysis)
+   ============================================================================= */
+
+.finding {
+  page-break-inside: avoid;
+  margin-bottom: var(--section-gap);
+}
+
+.finding__header {
+  margin-bottom: 24px;
+}
+
+.finding__header h2 {
+  font-size: 1.75rem;
+}
+
+.finding__body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* 70/30 Layout: Large screenshot + compact analysis sidebar */
+.finding__body--70-30 {
+  grid-template-columns: 7fr 3fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.finding__screenshot {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--medium-gray);
+}
+
+.finding__screenshot img {
+  width: 100%;
+  display: block;
+}
+
+/* Annotation overlay — red circle, arrow, or stamp */
+.finding__annotation {
+  position: absolute;
+  font-weight: 900;
+  color: var(--signal-critical);
+  font-size: 1.5rem;
+  transform: rotate(-12deg);
+  border: 4px solid var(--signal-critical);
+  padding: 8px 16px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.92);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.finding__analysis {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.finding__impact {
+  background: var(--signal-critical-bg);
+  border-left: 4px solid var(--signal-critical);
+  padding: 16px 20px;
+  border-radius: 0 8px 8px 0;
+}
+
+.finding__impact-stat {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--signal-critical);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.finding__impact-label {
+  font-size: 0.875rem;
+  color: var(--dark-gray);
+}
+
+.finding__solution {
+  background: var(--light-gray);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.finding__solution h4 {
+  color: var(--algolia-purple);
+  margin-bottom: 8px;
+}
+
+/* --- 70/30 Layout: Large Screenshot Variant --- */
+.annotated-screenshot--large {
+  flex: 1;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.annotated-screenshot--large img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--medium-gray);
+}
+
+/* --- 70/30 Layout: Compact Analysis Panel --- */
+.finding__analysis--compact {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--light-gray);
+  border-radius: 12px;
+  border-left: 4px solid var(--nebula-blue);
+}
+
+.finding__problem-box {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.finding__problem-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--signal-critical);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.finding__problem-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--space-gray);
+}
+
+.finding__impact--compact {
+  background: var(--signal-critical-bg);
+  border-left: 3px solid var(--signal-critical);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+}
+
+.finding__impact--compact .finding__impact-stat {
+  font-size: 1.25rem;
+}
+
+.finding__impact--compact .finding__impact-label {
+  font-size: 0.75rem;
+}
+
+.finding__solution--compact {
+  background: var(--white);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid var(--signal-positive-border);
+}
+
+.finding__solution-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--signal-positive);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.finding__solution-text {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--space-gray);
+  margin-bottom: 12px;
+}
+
+.finding__case-study {
+  font-size: 0.75rem;
+  color: var(--dark-gray);
+  padding-top: 10px;
+  border-top: 1px solid var(--medium-gray);
+}
+
+.finding__case-study a {
+  color: var(--nebula-blue);
+  font-weight: 600;
+}
+
+/* =============================================================================
+   10. PHONE MOCKUP (Before/After — Empty State)
+   ============================================================================= */
+
+.phone-comparison {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 32px;
+  align-items: center;
+  justify-items: center;
+}
+
+.phone-frame {
+  width: 260px;
+  border: 3px solid var(--space-gray);
+  border-radius: 36px;
+  padding: 12px;
+  background: var(--white);
+  box-shadow: var(--shadow-xl);
+  position: relative;
+}
+
+.phone-frame::before {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 6px;
+  background: var(--space-gray);
+  border-radius: 3px;
+  margin: 0 auto 8px;
+}
+
+.phone-frame__screen {
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--white);
+  min-height: 460px;
+}
+
+.phone-frame__screen img {
+  width: 100%;
+  display: block;
+}
+
+.phone-frame__label {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 16px;
+  color: var(--space-gray);
+}
+
+.phone-frame__label--proposed {
+  color: var(--algolia-purple);
+}
+
+.phone-comparison__center-stat {
+  text-align: center;
+  max-width: 180px;
+}
+
+.phone-comparison__center-stat .stat-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--nebula-blue);
+}
+
+/* =============================================================================
+   11. ARCHITECTURE DIAGRAM (Tech Stack / Integration Flow)
+   ============================================================================= */
+
+/* 11a. Removed/Vacuum/Added — Three column */
+.stack-diagram {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.stack-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stack-column__header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding: 8px;
+  border-radius: 6px 6px 0 0;
+}
+
+.stack-column__header--removed { background: var(--signal-critical); color: var(--white); }
+.stack-column__header--vacuum { background: var(--signal-neutral-bg); color: var(--space-gray); border: 2px dashed var(--signal-neutral-border); }
+.stack-column__header--added { background: var(--signal-positive); color: var(--white); }
+
+.stack-block {
+  padding: 14px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.stack-block--removed { background: var(--signal-critical); color: var(--white); }
+.stack-block--added { background: var(--signal-positive); color: var(--white); }
+
+.stack-block--vacuum {
+  background: var(--signal-neutral-bg);
+  border: 2px dashed var(--signal-neutral-border);
+  color: var(--dark-gray);
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-style: italic;
+}
+
+.stack-block__sublabel {
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* 11b. Integration Flow — Horizontal boxes with arrows */
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 32px 0;
+}
+
+.flow-box {
+  padding: 28px 24px;
+  border-radius: var(--card-radius);
+  text-align: center;
+  min-width: 160px;
+  box-shadow: var(--shadow-md);
+}
+
+.flow-box__icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  opacity: 0.85;
+}
+
+.flow-box__label {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.flow-box__sublabel {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.flow-box--blue {
+  background: linear-gradient(135deg, var(--nebula-blue), #0052FF);
+  color: var(--white);
+}
+
+.flow-box--purple {
+  background: linear-gradient(135deg, var(--algolia-purple), #7C3AED);
+  color: var(--white);
+}
+
+.flow-box--gray {
+  background: var(--light-gray);
+  color: var(--space-gray);
+  border: 1px solid var(--medium-gray);
+}
+
+.flow-arrow {
+  font-size: 1.5rem;
+  color: var(--dark-gray);
+  padding: 0 12px;
+}
+
+/* =============================================================================
+   12. COMPETITOR TABLE
+   ============================================================================= */
+
+.competitor-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+}
+
+.data-table thead th {
+  background: var(--space-gray);
+  color: var(--white);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.data-table thead th:first-child { border-radius: 8px 0 0 0; }
+.data-table thead th:last-child { border-radius: 0 8px 0 0; }
+
+.data-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--medium-gray);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:nth-child(even) td {
+  background: var(--light-gray);
+}
+
+/* Status badges — used within tables, not standalone */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-badge--critical { background: var(--signal-critical); color: var(--white); }
+.status-badge--warning { background: var(--signal-warning); color: var(--white); }
+.status-badge--neutral { background: var(--signal-neutral-bg); color: var(--signal-neutral); }
+.status-badge--positive { background: var(--signal-positive); color: var(--white); }
+
+/* =============================================================================
+   13. DONUT CHART (SVG-based, data-driven)
+   ============================================================================= */
+
+.donut-chart {
+  text-align: center;
+}
+
+.donut-chart svg {
+  width: 180px;
+  height: 180px;
+}
+
+.donut-chart__label {
+  font-size: 0.875rem;
+  color: var(--dark-gray);
+  margin-top: 12px;
+  line-height: 1.4;
+}
+
+/* =============================================================================
+   14. BAR CHART (Horizontal, CSS-driven)
+   ============================================================================= */
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bar-chart__row {
+  display: grid;
+  grid-template-columns: 160px 1fr 50px;
+  gap: 12px;
+  align-items: center;
+}
+
+.bar-chart__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.bar-chart__track {
+  height: 36px;
+  background: var(--light-gray);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-chart__fill {
+  height: 100%;
+  border-radius: 6px;
+  background: var(--nebula-blue);
+  transition: width 0.3s;
+  min-width: 4px;
+}
+
+.bar-chart__fill--critical {
+  background: var(--signal-critical);
+}
+
+.bar-chart__value {
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: var(--space-gray);
+}
+
+.bar-chart__value--critical {
+  color: var(--signal-critical);
+}
+
+/* =============================================================================
+   15. BALANCE SCALE (SVG-driven)
+   ============================================================================= */
+
+.balance-scale {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0;
+  align-items: end;
+  padding: 24px 0;
+}
+
+.scale-pan {
+  padding: 24px;
+  border-radius: var(--card-radius);
+  min-height: 180px;
+}
+
+.scale-pan--heavy {
+  background: var(--nebula-blue);
+  color: var(--white);
+  transform: translateY(20px);
+}
+
+.scale-pan--heavy h3 { color: var(--white); }
+
+.scale-pan--light {
+  background: var(--signal-critical);
+  color: var(--white);
+  transform: translateY(-10px);
+}
+
+.scale-pan--light h3 { color: var(--white); }
+
+.scale-pan__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 0.9rem;
+}
+
+.scale-pan__item-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.scale-fulcrum {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 8px;
+}
+
+/* =============================================================================
+   16. EXECUTIVE CARDS (Buying Committee)
+   ============================================================================= */
+
+.exec-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--card-gap);
+}
+
+.exec-card {
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--medium-gray);
+}
+
+.exec-card__photo-area {
+  height: 80px;
+  background: linear-gradient(135deg, var(--nebula-blue), var(--algolia-purple));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0;
+  position: relative;
+}
+
+.exec-card__photo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 4px solid var(--white);
+  background: var(--medium-gray);
+  object-fit: cover;
+  position: absolute;
+  bottom: -40px;
+  box-shadow: var(--shadow-md);
+}
+
+.exec-card__info {
+  padding: 52px 20px 20px;
+  text-align: center;
+}
+
+.exec-card__name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.exec-card__title {
+  font-size: 0.8rem;
+  color: var(--dark-gray);
+  margin-bottom: 12px;
+}
+
+.exec-card__focus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background: var(--light-gray);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.exec-card__focus strong {
+  color: var(--nebula-blue);
+}
+
+/* =============================================================================
+   17. TIMELINE (Pilot Roadmap)
+   ============================================================================= */
+
+.timeline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  padding: 40px 0;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 56px;
+  left: 5%;
+  right: 5%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--nebula-blue), var(--algolia-purple));
+  border-radius: 2px;
+}
+
+.timeline__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 22%;
+  position: relative;
+}
+
+.timeline__dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--nebula-blue);
+  border: 4px solid var(--white);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+  z-index: 1;
+}
+
+.timeline__dot--final {
+  width: 28px;
+  height: 28px;
+  background: var(--signal-critical);
+  box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.15);
+}
+
+.timeline__day {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--nebula-blue);
+  margin-bottom: 4px;
+}
+
+.timeline__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.timeline__desc {
+  font-size: 0.8rem;
+  color: var(--dark-gray);
+  margin-top: 2px;
+}
+
+/* =============================================================================
+   18. STRATEGY VS EXECUTION (In Their Own Words)
+   ============================================================================= */
+
+.strategy-execution {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+}
+
+.strategy-side {
+  padding: var(--card-padding);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.strategy-side blockquote {
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--space-gray);
+  margin-bottom: 12px;
+  padding-left: 16px;
+  border-left: 3px solid var(--algolia-purple);
+}
+
+.strategy-side cite {
+  font-size: 0.875rem;
+  color: var(--dark-gray);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.strategy-side__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dark-gray);
+  margin-top: 8px;
+}
+
+.execution-side {
+  padding: 20px;
+  background: var(--light-gray);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.execution-side__screenshot {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  max-width: 280px;
+}
+
+.execution-side__screenshot img {
+  width: 100%;
+  display: block;
+}
+
+/* Red X overlay on execution screenshots */
+.execution-side__x-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  font-size: 5rem;
+  color: var(--signal-critical);
+  opacity: 0.85;
+  font-weight: 900;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.execution-side__verdict {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--signal-critical);
+}
+
+.execution-side__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dark-gray);
+}
+
+/* =============================================================================
+   19. CALLOUT BOXES
+   ============================================================================= */
+
+.callout {
+  padding: 20px 24px;
+  border-radius: 8px;
+  border: 2px solid;
+}
+
+.callout--insight {
+  border-color: var(--signal-critical);
+  background: var(--white);
+}
+
+.callout--insight .callout__label {
+  color: var(--signal-critical);
+  font-weight: 700;
+}
+
+.callout--info {
+  border-color: var(--nebula-blue);
+  background: #EFF6FF;
+}
+
+.callout--quote {
+  border-color: var(--algolia-purple);
+  background: #F5F3FF;
+  font-style: italic;
+}
+
+.callout__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+/* =============================================================================
+   20. FINANCIAL SNAPSHOT SIDEBAR
+   ============================================================================= */
+
+.financial-card {
+  border: 2px solid var(--nebula-blue);
+  border-radius: var(--card-radius);
+  padding: 24px;
+  background: var(--white);
+}
+
+.financial-card h4 {
+  color: var(--nebula-blue);
+  margin-bottom: 16px;
+}
+
+.financial-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--light-gray);
+}
+
+.financial-card__row:last-child { border-bottom: none; }
+
+.financial-card__label {
+  font-size: 0.85rem;
+  color: var(--dark-gray);
+}
+
+.financial-card__value {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--nebula-blue);
+}
+
+.financial-card__value--positive { color: var(--signal-positive); }
+
+/* =============================================================================
+   21. SEARCH RESULT CARDS (NLP Failure Evidence)
+   ============================================================================= */
+
+.search-results-demo {
+  text-align: center;
+}
+
+.search-bar-mockup {
+  display: inline-flex;
+  align-items: center;
+  background: var(--white);
+  border: 2px solid var(--medium-gray);
+  border-radius: 8px;
+  padding: 12px 20px;
+  gap: 12px;
+  margin-bottom: 32px;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-bar-mockup__logo {
+  height: 28px;
+}
+
+.search-bar-mockup__query {
+  font-size: 1rem;
+  color: var(--space-gray);
+  min-width: 280px;
+  text-align: left;
+}
+
+.search-bar-mockup__btn {
+  background: var(--nebula-blue);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.result-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.result-card {
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.result-card--wrong {
+  border: 3px solid var(--signal-critical);
+  box-shadow: 0 0 0 1px var(--signal-critical);
+}
+
+.result-card--acceptable {
+  border: 2px solid var(--medium-gray);
+}
+
+.result-card__image {
+  height: 160px;
+  background: var(--light-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.result-card__image img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.result-card__price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 8px;
+}
+
+.result-card__label {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.result-card--wrong .result-card__label {
+  background: var(--signal-critical);
+  color: var(--white);
+}
+
+/* =============================================================================
+   22. NEXT STEPS (Numbered Action List)
+   ============================================================================= */
+
+.next-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.next-step {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.next-step__number {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--nebula-blue);
+  line-height: 1;
+  min-width: 60px;
+}
+
+.next-step__content h3 {
+  margin-bottom: 4px;
+}
+
+.next-step__content p {
+  color: var(--dark-gray);
+  margin-bottom: 0;
+}
+
+/* =============================================================================
+   23. CTA / CLOSING SECTION
+   ============================================================================= */
+
+.closing-section {
+  background: var(--nebula-blue);
+  border-radius: var(--card-radius);
+  padding: 60px 48px;
+  text-align: center;
+  color: var(--white);
+}
+
+.closing-section h2 { color: var(--white); }
+
+.closing-section blockquote {
+  font-size: 1.5rem;
+  font-style: italic;
+  font-weight: 600;
+  max-width: 600px;
+  margin: 24px auto 0;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+   24. BIBLIOGRAPHY / APPENDIX
+   ============================================================================= */
+
+.bibliography {
+  columns: 2;
+  column-gap: 40px;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.bib-entry {
+  break-inside: avoid;
+  margin-bottom: 8px;
+  padding-left: 24px;
+  text-indent: -24px;
+}
+
+.bib-entry__id {
+  font-weight: 700;
+  color: var(--algolia-purple);
+}
+
+.bib-entry a {
+  color: var(--nebula-blue);
+  word-break: break-all;
+}
+
+/* =============================================================================
+   25. SCORE GAUGE (Radial Arc with Color Gradient)
+   Visual weight for the 4.2/10 score — makes your gut say "this is bad"
+   ============================================================================= */
+
+.score-gauge {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+.score-gauge__svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+/* Background arc (gray) */
+.score-gauge__bg {
+  fill: none;
+  stroke: var(--medium-gray);
+  stroke-width: 16;
+}
+
+/* Colored arc — uses stroke-dasharray to show percentage */
+.score-gauge__arc {
+  fill: none;
+  stroke-width: 18;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1s ease-out;
+}
+
+/* Color stops based on score — populated via inline style */
+.score-gauge__arc--critical { stroke: url(#gauge-gradient-critical); }
+.score-gauge__arc--warning { stroke: url(#gauge-gradient-warning); }
+.score-gauge__arc--good { stroke: url(#gauge-gradient-good); }
+
+/* Center score display */
+.score-gauge__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.score-gauge__value {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.score-gauge__value--critical { color: var(--signal-critical); }
+.score-gauge__value--warning { color: var(--signal-warning); }
+.score-gauge__value--good { color: var(--signal-positive); }
+
+.score-gauge__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--dark-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+.score-gauge__verdict {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+/* Gradient definitions (included in HTML) */
+/*
+<svg width="0" height="0">
+  <defs>
+    <linearGradient id="gauge-gradient-critical" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7f1d1d"/>
+      <stop offset="100%" style="stop-color:#DC2626"/>
+    </linearGradient>
+    <linearGradient id="gauge-gradient-warning" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#92400E"/>
+      <stop offset="100%" style="stop-color:#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="gauge-gradient-good" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#065F46"/>
+      <stop offset="100%" style="stop-color:#10B981"/>
+    </linearGradient>
+  </defs>
+</svg>
+*/
+
+/* =============================================================================
+   26. SEVERITY HEATMAP TABLE (Color-coded scoring matrix)
+   Read severity at a glance without reading a word
+   ============================================================================= */
+
+.severity-heatmap {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+}
+
+.severity-heatmap thead th {
+  background: var(--space-gray);
+  color: var(--white);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.severity-heatmap thead th:first-child {
+  border-radius: 8px 0 0 0;
+  text-align: left;
+}
+.severity-heatmap thead th:last-child { border-radius: 0 8px 0 0; }
+
+.severity-heatmap tbody td {
+  padding: 16px 12px;
+  text-align: center;
+  font-weight: 600;
+  border-bottom: 2px solid var(--white);
+  transition: all 0.2s;
+}
+
+.severity-heatmap tbody td:first-child {
+  text-align: left;
+  background: var(--light-gray);
+  font-weight: 700;
+}
+
+/* Severity cell colors — bright, unmistakable */
+.severity-heatmap .severity--high {
+  background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
+  color: var(--white);
+  font-weight: 900;
+}
+
+.severity-heatmap .severity--medium {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  color: var(--white);
+  font-weight: 900;
+}
+
+.severity-heatmap .severity--low {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: var(--white);
+  font-weight: 900;
+}
+
+/* Score cells with color intensity */
+.severity-heatmap .score-cell {
+  font-size: 1.25rem;
+  font-weight: 900;
+  min-width: 60px;
+}
+
+.severity-heatmap .score-cell--1, .severity-heatmap .score-cell--2 {
+  background: #7F1D1D; color: var(--white);
+}
+.severity-heatmap .score-cell--3, .severity-heatmap .score-cell--4 {
+  background: #DC2626; color: var(--white);
+}
+.severity-heatmap .score-cell--5, .severity-heatmap .score-cell--6 {
+  background: #F59E0B; color: var(--white);
+}
+.severity-heatmap .score-cell--7, .severity-heatmap .score-cell--8 {
+  background: #10B981; color: var(--white);
+}
+.severity-heatmap .score-cell--9, .severity-heatmap .score-cell--10 {
+  background: #065F46; color: var(--white);
+}
+
+/* Row highlighting on hover (screen only) */
+@media screen {
+  .severity-heatmap tbody tr:hover td {
+    filter: brightness(1.1);
+  }
+}
+
+/* =============================================================================
+   27. TAPERED REVENUE FUNNEL (True SVG Funnel)
+   Visually communicates the narrowing from $7B → $2.45B → $367M → $18.4M
+   ============================================================================= */
+
+.funnel-svg {
+  width: 100%;
+  max-width: 500px;
+  margin: 40px auto;
+}
+
+.funnel-svg__container {
+  position: relative;
+}
+
+/* The actual funnel shape via SVG polygon/path */
+.funnel-tier {
+  transition: opacity 0.3s;
+}
+
+.funnel-tier:hover {
+  opacity: 0.85;
+}
+
+.funnel-tier__shape {
+  fill: var(--nebula-blue);
+}
+
+.funnel-tier__shape--level-1 { fill: rgba(0, 61, 255, 0.3); }
+.funnel-tier__shape--level-2 { fill: rgba(0, 61, 255, 0.5); }
+.funnel-tier__shape--level-3 { fill: rgba(0, 61, 255, 0.75); }
+.funnel-tier__shape--level-4 { fill: var(--nebula-blue); }
+
+.funnel-tier__label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--white);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.funnel-tier__value {
+  font-size: 16px;
+  font-weight: 900;
+  fill: var(--white);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+/* Side annotations for funnel */
+.funnel-annotation {
+  font-size: 11px;
+  fill: var(--dark-gray);
+}
+
+.funnel-annotation__line {
+  stroke: var(--dark-gray);
+  stroke-width: 1;
+  stroke-dasharray: 4 2;
+}
+
+/* Alternative: CSS trapezoid approach for simpler cases */
+.funnel-css {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.funnel-css__tier {
+  position: relative;
+  text-align: center;
+  padding: 20px 32px;
+  color: var(--white);
+  font-weight: 600;
+  clip-path: polygon(5% 0%, 95% 0%, 100% 100%, 0% 100%);
+}
+
+.funnel-css__tier--1 {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(0,61,255,0.25) 0%, rgba(0,61,255,0.35) 100%);
+  clip-path: polygon(0% 0%, 100% 0%, 92% 100%, 8% 100%);
+}
+
+.funnel-css__tier--2 {
+  width: 84%;
+  background: linear-gradient(180deg, rgba(0,61,255,0.4) 0%, rgba(0,61,255,0.55) 100%);
+  clip-path: polygon(0% 0%, 100% 0%, 88% 100%, 12% 100%);
+}
+
+.funnel-css__tier--3 {
+  width: 68%;
+  background: linear-gradient(180deg, rgba(0,61,255,0.6) 0%, rgba(0,61,255,0.75) 100%);
+  clip-path: polygon(0% 0%, 100% 0%, 84% 100%, 16% 100%);
+}
+
+.funnel-css__tier--4 {
+  width: 52%;
+  background: linear-gradient(180deg, var(--nebula-blue) 0%, #0030CC 100%);
+  clip-path: polygon(0% 0%, 100% 0%, 78% 100%, 22% 100%);
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.funnel-css__result {
+  margin-top: 24px;
+  padding: 20px 40px;
+  background: var(--nebula-blue);
+  border-radius: 8px;
+  color: var(--white);
+}
+
+.funnel-css__result-value {
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.funnel-css__result-label {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+/* =============================================================================
+   28. MULTI-SEGMENT DONUT CHART (Traffic Sources, Demographics)
+   Real charts with actual data segments
+   ============================================================================= */
+
+.donut-multi {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto;
+}
+
+.donut-multi__svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.donut-multi__segment {
+  fill: none;
+  stroke-width: 32;
+  stroke-linecap: butt;
+  transition: opacity 0.3s, stroke-width 0.2s;
+}
+
+.donut-multi__segment:hover {
+  stroke-width: 36;
+  opacity: 0.9;
+}
+
+/* Segment colors */
+.donut-multi__segment--organic { stroke: #003DFF; }
+.donut-multi__segment--direct { stroke: #5468FF; }
+.donut-multi__segment--referral { stroke: #36B37E; }
+.donut-multi__segment--social { stroke: #00B8D9; }
+.donut-multi__segment--paid { stroke: #F59E0B; }
+.donut-multi__segment--email { stroke: #6366F1; }
+
+/* Center label */
+.donut-multi__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.donut-multi__center-value {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--space-gray);
+}
+
+.donut-multi__center-label {
+  font-size: 0.75rem;
+  color: var(--dark-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Legend for donut chart */
+.donut-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.donut-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.donut-legend__color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.donut-legend__color--organic { background: #003DFF; }
+.donut-legend__color--direct { background: #5468FF; }
+.donut-legend__color--referral { background: #36B37E; }
+.donut-legend__color--social { background: #00B8D9; }
+.donut-legend__color--paid { background: #F59E0B; }
+.donut-legend__color--email { background: #6366F1; }
+
+.donut-legend__value {
+  font-weight: 700;
+  color: var(--space-gray);
+}
+
+/* =============================================================================
+   29. HORIZONTAL BAR CHART (Competitor Comparison)
+   Proper bar chart with data labels
+   ============================================================================= */
+
+.bar-chart-h {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bar-chart-h__row {
+  display: grid;
+  grid-template-columns: 140px 1fr 80px;
+  gap: 16px;
+  align-items: center;
+}
+
+.bar-chart-h__label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar-chart-h__label--highlight {
+  color: var(--nebula-blue);
+  font-weight: 700;
+}
+
+.bar-chart-h__track {
+  height: 40px;
+  background: var(--light-gray);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-chart-h__fill {
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+  min-width: 40px;
+  transition: width 0.5s ease-out;
+}
+
+.bar-chart-h__fill--primary {
+  background: linear-gradient(90deg, var(--nebula-blue) 0%, var(--algolia-purple) 100%);
+}
+
+.bar-chart-h__fill--secondary {
+  background: linear-gradient(90deg, #6B7280 0%, #9CA3AF 100%);
+}
+
+.bar-chart-h__fill--warning {
+  background: linear-gradient(90deg, #D97706 0%, #F59E0B 100%);
+}
+
+.bar-chart-h__fill--critical {
+  background: linear-gradient(90deg, #991B1B 0%, #DC2626 100%);
+}
+
+.bar-chart-h__fill-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.bar-chart-h__value {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: var(--space-gray);
+  text-align: right;
+}
+
+.bar-chart-h__value--highlight {
+  color: var(--nebula-blue);
+}
+
+/* =============================================================================
+   30. DEMOGRAPHICS PIE CHART
+   Age/gender breakdown with actual segments
+   ============================================================================= */
+
+.demographics-chart {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.demographics-chart__pie {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.demographics-chart__pie svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pie-segment {
+  transition: transform 0.2s, opacity 0.2s;
+  transform-origin: center;
+}
+
+.pie-segment:hover {
+  transform: scale(1.03);
+  opacity: 0.85;
+}
+
+/* Age bracket colors */
+.pie-segment--18-24 { fill: #E0E7FF; }
+.pie-segment--25-34 { fill: #A5B4FC; }
+.pie-segment--35-44 { fill: #818CF8; }
+.pie-segment--45-54 { fill: #6366F1; }
+.pie-segment--55-64 { fill: #4F46E5; }
+.pie-segment--65plus { fill: #3730A3; }
+
+/* Gender colors */
+.pie-segment--male { fill: var(--nebula-blue); }
+.pie-segment--female { fill: #EC4899; }
+.pie-segment--other { fill: var(--dark-gray); }
+
+.demographics-chart__legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.demographics-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.demographics-legend__color {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.demographics-legend__label {
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.demographics-legend__value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--space-gray);
+}
+
+/* =============================================================================
+   31. SCREENSHOT ANNOTATIONS (Circles, Arrows, Callouts)
+   Visual callouts pointing to "1 result" or "4 random products"
+   ============================================================================= */
+
+.annotated-screenshot {
+  position: relative;
+  display: inline-block;
+}
+
+.annotated-screenshot img {
+  display: block;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Red circle annotation */
+.annotation-circle {
+  position: absolute;
+  border: 4px solid var(--signal-critical);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+.annotation-circle--sm { width: 40px; height: 40px; }
+.annotation-circle--md { width: 60px; height: 60px; }
+.annotation-circle--lg { width: 90px; height: 90px; }
+.annotation-circle--xl { width: 140px; height: 140px; }
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.1); }
+  100% { box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3); }
+}
+
+/* Arrow annotation */
+.annotation-arrow {
+  position: absolute;
+  pointer-events: none;
+}
+
+.annotation-arrow svg {
+  width: 100%;
+  height: 100%;
+}
+
+.annotation-arrow__path {
+  fill: none;
+  stroke: var(--signal-critical);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.annotation-arrow__head {
+  fill: var(--signal-critical);
+}
+
+/* Callout box with pointer */
+.annotation-callout {
+  position: absolute;
+  background: var(--signal-critical);
+  color: var(--white);
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  z-index: 10;
+}
+
+/* Pointer directions */
+.annotation-callout--left::before {
+  content: '';
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 8px solid transparent;
+  border-right-color: var(--signal-critical);
+}
+
+.annotation-callout--right::after {
+  content: '';
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 8px solid transparent;
+  border-left-color: var(--signal-critical);
+}
+
+.annotation-callout--top::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-bottom-color: var(--signal-critical);
+}
+
+.annotation-callout--bottom::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: var(--signal-critical);
+}
+
+/* Number badge for multiple annotations */
+.annotation-number {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--signal-critical);
+  color: var(--white);
+  font-size: 0.875rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+  border: 2px solid var(--white);
+}
+
+/* Connecting line from number to element */
+.annotation-line {
+  position: absolute;
+  height: 2px;
+  background: var(--signal-critical);
+  transform-origin: left center;
+}
+
+/* =============================================================================
+   32. SVG ICON LIBRARY
+   Consistent, designed SVG icons replacing emoji/Unicode
+   ============================================================================= */
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon--sm { width: 16px; height: 16px; }
+.icon--md { width: 24px; height: 24px; }
+.icon--lg { width: 32px; height: 32px; }
+.icon--xl { width: 48px; height: 48px; }
+
+.icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Icon colors */
+.icon--primary svg path, .icon--primary svg circle, .icon--primary svg rect {
+  stroke: var(--nebula-blue);
+  fill: none;
+}
+.icon--primary-fill svg path { fill: var(--nebula-blue); stroke: none; }
+.icon--white svg path, .icon--white svg circle { stroke: var(--white); fill: none; }
+.icon--white-fill svg path { fill: var(--white); stroke: none; }
+.icon--critical svg path { stroke: var(--signal-critical); fill: none; }
+.icon--positive svg path { stroke: var(--signal-positive); fill: none; }
+.icon--gray svg path { stroke: var(--dark-gray); fill: none; }
+
+/* Common icon definitions (include in HTML or use inline) */
+/*
+<!-- Search icon -->
+<svg viewBox="0 0 24 24" stroke-width="2">
+  <circle cx="11" cy="11" r="7"/>
+  <path d="M21 21l-4.35-4.35"/>
+</svg>
+
+<!-- Settings/gear icon -->
+<svg viewBox="0 0 24 24" stroke-width="2">
+  <circle cx="12" cy="12" r="3"/>
+  <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+</svg>
+
+<!-- Dollar/revenue icon -->
+<svg viewBox="0 0 24 24" stroke-width="2">
+  <circle cx="12" cy="12" r="10"/>
+  <path d="M12 6v12M9 9c0-1.1.9-2 2-2h2c1.1 0 2 .9 2 2s-.9 2-2 2h-2c-1.1 0-2 .9-2 2s.9 2 2 2h2c1.1 0 2-.9 2-2"/>
+</svg>
+
+<!-- Chart/analytics icon -->
+<svg viewBox="0 0 24 24" stroke-width="2">
+  <path d="M3 3v18h18"/>
+  <path d="M7 14l4-4 4 4 6-6"/>
+</svg>
+
+<!-- Users/people icon -->
+<svg viewBox="0 0 24 24" stroke-width="2">
+  <circle cx="12" cy="7" r="4"/>
+  <path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
+</svg>
+
+<!-- Alert/warning icon -->
+<svg viewBox="0 0 24 24" stroke-width="2">
+  <path d="M12 2L2 22h20L12 2z"/>
+  <path d="M12 9v4M12 17h.01"/>
+</svg>
+
+<!-- Check icon -->
+<svg viewBox="0 0 24 24" stroke-width="2.5">
+  <path d="M5 12l5 5L20 7"/>
+</svg>
+
+<!-- X/close icon -->
+<svg viewBox="0 0 24 24" stroke-width="2.5">
+  <path d="M6 6l12 12M18 6L6 18"/>
+</svg>
+
+<!-- Target/bullseye icon -->
+<svg viewBox="0 0 24 24" stroke-width="2">
+  <circle cx="12" cy="12" r="10"/>
+  <circle cx="12" cy="12" r="6"/>
+  <circle cx="12" cy="12" r="2"/>
+</svg>
+
+<!-- Lightning/speed icon -->
+<svg viewBox="0 0 24 24" stroke-width="2">
+  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8"/>
+</svg>
+*/
+
+/* Icon button wrapper */
+.icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--light-gray);
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: var(--medium-gray);
+}
+
+.icon-btn--primary {
+  background: var(--nebula-blue);
+}
+
+.icon-btn--primary .icon svg path {
+  stroke: var(--white);
+}
+
+/* =============================================================================
+   33. GAP DIAGRAM (Strategy vs Execution / Expected vs Actual)
+   Two columns connected by a broken bridge, or radar chart
+   ============================================================================= */
+
+/* Two-column gap visualization */
+.gap-diagram {
+  display: grid;
+  grid-template-columns: 1fr 80px 1fr;
+  gap: 0;
+  align-items: stretch;
+}
+
+.gap-diagram__column {
+  padding: 24px;
+  border-radius: var(--card-radius);
+}
+
+.gap-diagram__column--expected {
+  background: linear-gradient(135deg, var(--signal-positive-bg) 0%, #D1FAE5 100%);
+  border: 2px solid var(--signal-positive-border);
+}
+
+.gap-diagram__column--actual {
+  background: linear-gradient(135deg, var(--signal-critical-bg) 0%, #FEE2E2 100%);
+  border: 2px solid var(--signal-critical-border);
+}
+
+.gap-diagram__column-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+.gap-diagram__column--expected .gap-diagram__column-header {
+  color: var(--signal-positive);
+}
+
+.gap-diagram__column--actual .gap-diagram__column-header {
+  color: var(--signal-critical);
+}
+
+.gap-diagram__items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gap-diagram__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--white);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* Broken bridge connector */
+.gap-diagram__bridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.gap-diagram__bridge-line {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--signal-critical) 0px,
+    var(--signal-critical) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+.gap-diagram__bridge-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--signal-critical);
+  z-index: 1;
+}
+
+.gap-diagram__bridge-icon svg {
+  width: 24px;
+  height: 24px;
+  color: var(--signal-critical);
+}
+
+/* Radar chart for multi-dimensional comparison */
+.radar-chart {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 0 auto;
+}
+
+.radar-chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.radar-chart__grid {
+  fill: none;
+  stroke: var(--medium-gray);
+  stroke-width: 1;
+}
+
+.radar-chart__axis {
+  stroke: var(--medium-gray);
+  stroke-width: 1;
+}
+
+.radar-chart__polygon--expected {
+  fill: rgba(16, 185, 129, 0.2);
+  stroke: var(--signal-positive);
+  stroke-width: 2;
+}
+
+.radar-chart__polygon--actual {
+  fill: rgba(220, 38, 38, 0.2);
+  stroke: var(--signal-critical);
+  stroke-width: 2;
+}
+
+.radar-chart__label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--space-gray);
+  text-anchor: middle;
+}
+
+.radar-chart__legend {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 20px;
+}
+
+.radar-chart__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.radar-chart__legend-color {
+  width: 20px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.radar-chart__legend-color--expected {
+  background: var(--signal-positive);
+}
+
+.radar-chart__legend-color--actual {
+  background: var(--signal-critical);
+}
+
+/* =============================================================================
+   34. ENHANCED FLOW DIAGRAMS (Visual Hierarchy)
+   Differentiate data flow from comparison from timeline
+   ============================================================================= */
+
+/* Base flow container */
+.flow-enhanced {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 40px 0;
+}
+
+/* Flow type: Data Pipeline (larger connector, gradient) */
+.flow-enhanced--pipeline {
+  background: linear-gradient(180deg, var(--light-gray) 0%, var(--white) 100%);
+  border-radius: var(--card-radius);
+  padding: 48px 32px;
+}
+
+.flow-enhanced--pipeline .flow-enhanced__box {
+  min-width: 180px;
+  padding: 32px 24px;
+}
+
+.flow-enhanced--pipeline .flow-enhanced__connector {
+  width: 60px;
+  height: 8px;
+  background: linear-gradient(90deg, var(--nebula-blue), var(--algolia-purple));
+  position: relative;
+}
+
+.flow-enhanced--pipeline .flow-enhanced__connector::after {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 12px solid transparent;
+  border-left-color: var(--algolia-purple);
+}
+
+/* Flow type: Comparison (vs badge in center) */
+.flow-enhanced--comparison {
+  gap: 24px;
+}
+
+.flow-enhanced--comparison .flow-enhanced__box {
+  flex: 1;
+  max-width: 280px;
+}
+
+.flow-enhanced__vs-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--space-gray);
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Flow type: Timeline (horizontal progression with dates) */
+.flow-enhanced--timeline {
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.flow-enhanced--timeline::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 40px;
+  bottom: 40px;
+  width: 4px;
+  background: linear-gradient(180deg, var(--medium-gray), var(--nebula-blue), var(--algolia-purple));
+  transform: translateX(-50%);
+}
+
+.flow-enhanced--timeline .flow-enhanced__step {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  gap: 20px;
+  align-items: center;
+  padding: 24px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.flow-enhanced--timeline .flow-enhanced__step:nth-child(odd) .flow-enhanced__content {
+  text-align: right;
+}
+
+.flow-enhanced--timeline .flow-enhanced__step:nth-child(even) .flow-enhanced__content {
+  order: 3;
+}
+
+.flow-enhanced--timeline .flow-enhanced__node {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--nebula-blue);
+  border: 4px solid var(--white);
+  box-shadow: 0 0 0 2px var(--nebula-blue);
+  margin: 0 auto;
+}
+
+.flow-enhanced--timeline .flow-enhanced__node--complete {
+  background: var(--signal-positive);
+  box-shadow: 0 0 0 2px var(--signal-positive);
+}
+
+.flow-enhanced--timeline .flow-enhanced__node--current {
+  background: var(--algolia-purple);
+  box-shadow: 0 0 0 4px rgba(84, 104, 255, 0.3);
+}
+
+/* Enhanced flow boxes */
+.flow-enhanced__box {
+  padding: 24px;
+  border-radius: var(--card-radius);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+.flow-enhanced__box--source {
+  background: var(--light-gray);
+  border: 2px solid var(--medium-gray);
+}
+
+.flow-enhanced__box--algolia {
+  background: linear-gradient(135deg, var(--nebula-blue) 0%, var(--algolia-purple) 100%);
+  color: var(--white);
+}
+
+.flow-enhanced__box--destination {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  color: var(--white);
+}
+
+.flow-enhanced__box--highlight {
+  border: 3px solid var(--nebula-blue);
+  box-shadow: 0 0 20px rgba(0, 61, 255, 0.15);
+}
+
+.flow-enhanced__box-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  opacity: 0.9;
+}
+
+.flow-enhanced__box-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.flow-enhanced__box-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Simple connector arrow */
+.flow-enhanced__connector-simple {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: var(--dark-gray);
+  font-size: 1.5rem;
+}
+
+/* =============================================================================
+   35. UTILITY CLASSES
+   ============================================================================= */
+
+.page-break { page-break-before: always; }
+.no-break { page-break-inside: avoid; }
+.mt-0 { margin-top: 0; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mt-32 { margin-top: 32px; }
+.mt-48 { margin-top: 48px; }
+.mb-0 { margin-bottom: 0; }
+.mb-16 { margin-bottom: 16px; }
+.mb-24 { margin-bottom: 24px; }
+.mb-32 { margin-bottom: 32px; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.flex-row { display: flex; gap: 16px; align-items: center; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--card-gap); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--card-gap); }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--card-gap); }
+
+/* Visibility utilities */
+.screen-only { display: block; }
+@media print { .screen-only { display: none !important; } }
+.print-only { display: none; }
+@media print { .print-only { display: block; } }

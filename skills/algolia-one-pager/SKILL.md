@@ -1,47 +1,65 @@
 ---
 name: algolia-one-pager
-description: Create an Algolia-branded one-pager or datasheet with structured layout, key benefits, and design specs.
-user-invocable: true
-allowed-tools: Read, Grep
-argument-hint: "[product/feature/use-case] [audience: technical|business|executive]"
+description: Create Algolia-branded one-page executive summaries, product overviews, or leave-behinds.
 ---
 
-# Algolia one-pager creator
+# Algolia Branded One-Pager
 
-Generate single-page datasheets or product one-pagers following brand guidelines.
+Create a single-page document with structured content blocks, data callouts, and visual hierarchy guidance. Designed for executive audiences who need key information at a glance.
 
-## Reference files
+## Input
 
-- [Voice & tone](../algolia-shared-reference/brand-core/voice-and-tone.md)
-- [Terminology](../algolia-shared-reference/brand-core/terminology.md)
-- [Editorial standards](../algolia-shared-reference/brand-core/editorial-standards.md)
-- [Messaging framework](../algolia-shared-reference/brand-core/messaging-framework.md)
-- [One-pager template](../algolia-shared-reference/content-templates/one-pager.md)
-- [Colors](../algolia-shared-reference/visual-identity/colors.md)
-- [Typography](../algolia-shared-reference/visual-identity/typography.md)
+- Topic or initiative to summarize
+- Target audience (executive, technical lead, partner, prospect)
+- Key message or value proposition (one sentence)
+- Three to five supporting points or data metrics
+- Desired CTA or next step
 
-## Layout
+## Process
 
-1. **Header**: Algolia logo (top-left) + document title (H1, Sora Light) + subtitle
-2. **Hero statement**: 1-2 sentence value prop in large, prominent text
-3. **Key benefits**: 3-4 items — icon + bold heading + 1-2 sentence description
-4. **How it works** (optional): 3-step visual flow with brief labels
-5. **Key metrics / social proof**: 2-3 standout numbers in large display text + customer logos
-6. **CTA**: Clear next step + contact info or URL
+1. **Header Block** -- Algolia logo top-left. Document title in Source Sans Pro Bold 24pt, Space Gray #21243D. Optional subtitle in 14pt regular. Thin Nebula Blue #003DFF accent line below header.
+2. **Key Message** -- One to two sentences that capture the core value proposition. Position directly below the header. Use 16pt Source Sans Pro in Space Gray. This is the single most important takeaway.
+3. **Content Blocks (3-4)** -- Each block contains an icon placeholder description, a bold heading (14pt), and two to three sentences of supporting text (11pt). Arrange in a two-column grid for visual balance. Each block should stand alone as a scannable unit.
+4. **Metrics/Stats Callout** -- Highlight two to four quantified data points in a horizontal strip. Use Nebula Blue #003DFF for the metric numbers (24pt bold) with Space Gray labels below (10pt). Only use approved Algolia stats or clearly attributed third-party data.
+5. **Supporting Detail** -- Optional section for a brief customer quote, technical specification, or timeline. Keep to three lines maximum. Use a light gray (#F5F5F7) background to visually separate from content blocks.
+6. **CTA Strip** -- Clear next step in Algolia Purple #5468FF. Include contact name, email, and one relevant URL. Keep to a single line if possible.
+7. **Footer** -- Algolia URL (algolia.com), document date, confidentiality notice if needed. 9pt Source Sans Pro in medium gray.
+8. **Word Budget** -- Total word count must not exceed 350 words. Edit ruthlessly. Every sentence must earn its place.
+9. **Visual Balance Check** -- Verify the page has adequate white space (at least 30% of the page). No section should dominate more than 25% of the vertical space.
+10. **Run `/algolia-brand-check`** on the final content before delivery.
 
-## Design specs
-- Font: Sora (Light 300 for title, Regular 400 for body, Semi-Bold 600 for benefit headings)
-- Title color: #23263B
-- Body color: #5A5E9A
-- CTA/accent color: Xenon Blue #003DFF
-- Background: white or light gray (#F5F5FA)
-- Layout: single column or two-column grid
+## Output Sections
 
-## Rules
-- Everything must fit on one page — be ruthlessly concise
-- Focus on outcomes and benefits, not feature lists
-- Include at least one approved metric from the messaging framework
-- Sentence case for all headings
-- No anthropomorphism
+### Document Metadata
+- Title, subtitle, date, audience, confidentiality level
 
-Create one-pager: $ARGUMENTS
+### Header
+- Logo placement, title, subtitle, accent line
+
+### Key Message
+- One to two sentence value proposition
+
+### Content Blocks (repeat 3-4 times)
+- Icon description, heading, body text (2-3 sentences)
+
+### Metrics Strip
+- Two to four data points with number + label
+
+### CTA
+- Action statement, contact info, URL
+
+### Footer
+- URL, date, legal notice
+
+### Layout Guidance
+- Margin, column, and spacing specifications for print or PDF export
+
+## Brand Requirements
+
+- **Voice**: Executive-grade -- concise, confident, data-driven. No filler words. Every claim substantiated.
+- **Colors**: Nebula Blue #003DFF (accent line, metric numbers), Space Gray #21243D (headings, body text), Algolia Purple #5468FF (CTA), White #FFFFFF (background), Light Gray #F5F5F7 (callout backgrounds)
+- **Font**: Source Sans Pro -- Bold for headings, Regular for body, numbers in Bold
+- **Logo**: Top-left, minimum 120px wide, with clear space equal to the height of the "A" in Algolia on all sides
+- **Stats**: Only approved metrics or clearly sourced third-party data
+- **Word Limit**: 350 words maximum -- one-pagers must fit on a single printed page
+- **No Competitor Names**: Use category terms ("legacy search", "traditional solutions") instead
