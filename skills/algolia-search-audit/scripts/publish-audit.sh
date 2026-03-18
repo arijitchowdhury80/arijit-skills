@@ -79,6 +79,10 @@ cp -r "$SPA_DIR/." "$HUB_DIR/$SLUG/"
 cp "$JSON_FILE" "$HUB_DIR/"
 
 if [ -d "$CWD/screenshots" ]; then
+  # Copy into the company subfolder (where the SPA resolves relative paths from)
+  mkdir -p "$HUB_DIR/$SLUG/screenshots"
+  cp -n "$CWD/screenshots/"*.png "$HUB_DIR/$SLUG/screenshots/" 2>/dev/null || true
+  # Also copy to hub root for shared access
   mkdir -p "$HUB_DIR/screenshots"
   cp -n "$CWD/screenshots/"*.png "$HUB_DIR/screenshots/" 2>/dev/null || true
 fi
