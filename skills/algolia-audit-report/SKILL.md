@@ -402,7 +402,13 @@ dynamic_facets_personalization | recommendations_merchandising | search_intellig
 **Finding rules** — each finding MUST have:
 - `id`: F01, F02, ... in severity order (critical first)
 - `screenshot_file`: relative path e.g. `screenshots/03-nlp-test.png` — MUST exist on disk
-- `impact_stat_source`: URL to Baymard/Forrester/industry benchmark. Do NOT fabricate.
+- `impact_stat`: MUST be a verbatim quote or paraphrase from a real, publicly accessible URL
+  - **Before writing any impact_stat**: WebFetch the source URL and confirm the stat appears on that page
+  - If the stat cannot be verified at a live URL: leave `impact_stat` as `""` and `impact_stat_source` as `""`
+  - **NEVER write a plausible-sounding stat and attach a plausible-sounding URL** — verify first, write second
+  - Acceptable sources: Baymard (free articles at baymard.com/blog), Algolia blog, McKinsey (free summaries), Salesforce State of Connected Customer (free), Forrester (free summaries)
+  - Paywalled content: do NOT cite if you cannot read the full stat on the page
+- `impact_stat_source`: URL to Baymard/Forrester/industry benchmark. Do NOT fabricate. Must have been WebFetched and confirmed to contain the stat before being written here.
 - `algolia_case_study_url`: Verified live URL from Case Study Verification Gate
 - `algolia_case_study_result`: Exact metric from live case study page (not paraphrased)
 - `tested_query`: Exact query string typed during browser audit

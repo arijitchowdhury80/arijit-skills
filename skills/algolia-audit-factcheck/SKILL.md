@@ -282,6 +282,30 @@ Spawn with `subagent_type: general-purpose`, `name: "citation-verifier"`.
 - WebFetch ALL source URLs found in deliverables + scratchpad
 - Report link rot rate (% of URLs that are dead or redirected)
 
+### IMPACT STAT VERIFICATION (BLOCKING — runs for every finding, all tiers)
+
+For every finding in `audit-data.json` (and the main report) with a non-empty `impact_stat`:
+1. WebFetch the `impact_stat_source` URL
+2. Search the page text for the exact number or percentage stated in the `impact_stat`
+3. If the URL returns 404 or cannot be fetched: mark as `[FAIL]` — **CRITICAL ISSUE — BLOCKING**
+4. If the URL exists but the stat (the specific number/percentage) does NOT appear on the page: mark as `[FAIL]` — **CRITICAL ISSUE — BLOCKING**
+5. If the number/percentage is confirmed present on the page: mark as `[PASS]` — CONFIRMED
+
+This check CANNOT be skipped regardless of tier. It runs even in Quick tier (it is the one external call Quick tier always makes, because the failure mode is invisible to read-only analysis).
+
+**Why this is BLOCKING**: Impact stats with unverified sources are the #1 hallucination vector in the audit pipeline. An AE presenting fabricated stats to a prospect destroys credibility with no recovery.
+
+**The failure mode that caused this rule**: Claude writes `"15-20% of search volume is NLP"` and links `baymard.com/research/ecommerce-search` — but that stat never appears on that page. The URL looks credible, the stat sounds plausible. Only WebFetch verification catches it. In the audit that triggered this rule, 7 of 10 impact_stat_source URLs were 404 and the remaining 3 existed but did not contain the claimed stat.
+
+**Remediation**: For each `[FAIL]` stat, the correction manifest must specify:
+- Either: a replacement URL where the stat is verified to appear (WebFetch confirmed)
+- Or: clear both fields to `""` if no verifiable source exists
+
+**Output**: Include impact stat results in `dim-5-6-citation-results.md` under a dedicated `## Impact Stat Verification` section with a table:
+```
+| Finding ID | impact_stat (first 60 chars) | Source URL | HTTP Status | Stat Found on Page? | Verdict |
+```
+
 **Dimension 6: Investor Quote Verification (Weight: 15%)**
 
 **Quick tier**: Read-only.
