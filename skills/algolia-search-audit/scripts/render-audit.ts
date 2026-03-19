@@ -1395,17 +1395,11 @@ async function main(): Promise<void> {
       data.cover.company_logo_url = fetched;
       console.log("✓ Company logo embedded as data URI");
     } else {
-      // Network unavailable — generate a clean SVG wordmark from company name
-      const companyName = data.meta.company || slug;
-      const words = companyName.split(/\s+/).slice(0, 3);
-      const abbrev = words.map(w => w[0].toUpperCase()).join("");
-      const svgText = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 36">` +
-        `<rect width="160" height="36" rx="4" fill="#21243D"/>` +
-        `<text x="80" y="25" text-anchor="middle" font-family="sans-serif" font-size="14" ` +
-        `font-weight="700" fill="white" letter-spacing="1">${companyName.length > 14 ? abbrev : companyName}</text>` +
-        `</svg>`;
-      data.cover.company_logo_url = `data:image/svg+xml;base64,${btoa(svgText)}`;
-      console.log(`✓ Company logo: SVG text fallback (${companyName.length > 14 ? abbrev : companyName})`);
+      // Network unavailable — keep the URL as-is so the browser loads it directly at runtime.
+      // clearbit.com URLs work in browsers even when Deno can't reach them during build.
+      // The topbar <img onerror> will hide it gracefully if clearbit fails for any reason.
+      data.cover.company_logo_url = rawLogoUrl;
+      console.log(`✓ Company logo: URL kept for browser-side loading (${rawLogoUrl})`);
     }
   }
 
