@@ -52,6 +52,19 @@ for i, line in enumerate(lines, 1):
         for h in hex_matches:
             violations.append(f'  [RAW-COLOR] Line {i}: #{h} — use var(--name) instead')
 
+
+    # ── Rule 4: T.compact must not wrap body content ──────────────────────────
+    # T.compact (12px) is for metadata/labels only.
+    # Body content (email text, descriptions, evidence, scripts) must use T.bodySm+
+    compact_content_indicators = [
+        'email_body', 'video_script', 't.body', 't.message',
+        'cleanEvidence', 'strategic_implication', 'search_stack',
+        'white-space:pre-wrap', 'line-height:1.6', 'line-height:1.7',
+    ]
+    if 'T.compact' in line or 'T.compactMid' in line:
+        if any(ind in line for ind in compact_content_indicators):
+            violations.append(f'  [COMPACT-BODY] Line {i}: T.compact used for body content — use T.bodySm (14px) for readable content')
+
     # ── Rule 3: No <pre> tags ─────────────────────────────────────────────
     if re.search(r'<pre[\s>]', line) and 'font-family:' not in line:
         violations.append(f'  [PRE-TAG]   Line {i}: <pre> causes monospace — use <div style="white-space:pre-wrap;font-family:\'Sora\',sans-serif">')
