@@ -50,6 +50,33 @@ function enforceStyleTokens(): void {
 
 enforceStyleTokens();
 
+// ─── JSON Schema Gate — blocks render if data keys don't match template ───────
+// Called after slug is resolved (see below)
+function enforceJsonSchema(slug: string): void {
+  const validateScript = join(dirname(fromFileUrl(import.meta.url)), "validate-json-schema.py");
+  try {
+    const result = new Deno.Command("python3", {
+      args: [validateScript, slug],
+      stdout: "piped",
+      stderr: "piped",
+      cwd: Deno.cwd(),
+    }).outputSync();
+    if (!result.success) {
+      const out = new TextDecoder().decode(result.stdout);
+      console.error("\n🚫 RENDER BLOCKED — JSON schema violations\n");
+      console.error(out);
+      console.error("Fix key names to match what the template reads. Wrong keys render as blank sections.\n");
+      Deno.exit(1);
+    }
+    const out = new TextDecoder().decode(result.stdout);
+    console.log(out.trim());
+  } catch {
+    console.warn("⚠  validate-json-schema.py not found — skipping schema gate");
+  }
+}
+
+// enforceJsonSchema called below after slug is defined
+
 // ─── Load brand CSS (injected into every output HTML) ───────────────────────
 function loadBrandCSS(): string {
   try {
@@ -1363,6 +1390,9 @@ async function main(): Promise<void> {
   const slug = args[0];
   const mode = args[1];
   const cwd = Deno.cwd();
+
+  // JSON Schema Gate — must run after slug is known
+  enforceJsonSchema(slug);
 
   // Load audit data
   const jsonPath = join(cwd, `${slug}-audit-data.json`);
