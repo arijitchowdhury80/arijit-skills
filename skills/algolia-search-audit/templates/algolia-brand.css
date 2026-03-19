@@ -564,3 +564,40 @@ a:hover {
   --teal:   var(--brand-teal);
   --violet: var(--brand-violet);
 }
+
+/* ── Unverified source warning — web search only, not URL-confirmed ──────────
+   Apply to any data point where source_url could not be WebFetched and confirmed.
+   Renders a red warning badge + amber border to flag it for the AE.
+────────────────────────────────────────────────────────────────────────────── */
+.unverified-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--red-tint);
+  border: 1px solid var(--red-border);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+.unverified-wrapper {
+  border: 1px solid var(--amber-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: var(--amber-tint);
+  position: relative;
+}
+.unverified-wrapper::before {
+  content: '⚠ Web search only — verify before using';
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--amber);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
