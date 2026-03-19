@@ -156,6 +156,28 @@ a:hover {
   color: var(--brand-blue);
 }
 
+/* ─── Digital Presence Tile — groups Tech Stack + Traffic as one chapter ─────
+   Matches the exec block pattern: .card with padding, inner sections transparent.
+   .dp-tile suppresses .audit-section margin-bottom so spacing is tile-controlled.
+────────────────────────────────────────────────────────────────────────────── */
+.dp-tile {
+  background: linear-gradient(135deg, rgba(5,150,105,0.06) 0%, rgba(5,150,105,0.02) 100%);
+  border: 1px solid rgba(5,150,105,0.12);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(35,38,59,0.06), 0 8px 24px rgba(35,38,59,0.05);
+  overflow: hidden;
+  margin-bottom: 96px;
+}
+.dp-tile .audit-section {
+  margin-bottom: 0 !important;
+  background: transparent !important;
+  padding-top: 32px;
+  padding-bottom: 32px;
+}
+.dp-tile .audit-section + .audit-section {
+  border-top: 1px solid rgba(5,150,105,0.12);
+}
+
 /* ─── 3D Shadow Card — floating bevel, no glow border ───────────────────────
    Use on content-heavy cards with internal interactivity (donut charts, bars).
    The glow border competes with internal hover states — 3D shadow instead.
