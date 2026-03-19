@@ -459,3 +459,69 @@ Each contact requires: `id`, `name`, `title`, `tier`, `role`, `linkedin_url`, `a
 - If the site already uses Algolia, focus on optimization opportunities
 - Never compress Phase 1 data into single lines — each scratchpad file is a chapter of research intelligence
 - Post-compaction data integrity: after any context compaction mid-audit, re-read scratchpad files before using any data point. Never regenerate from memory.
+
+---
+
+## MANDATORY FINAL STEP: Factcheck (Non-Negotiable)
+
+**Every audit MUST end with `/algolia-audit-factcheck` at FULL tier before any output is shown to the user or published. No exceptions.**
+
+This was established as a hard requirement on 2026-03-19 after multiple audits were delivered with unverified data, wrong math, and fabricated statistics. The factcheck is not optional — it is the last gate before an audit is considered complete.
+
+### The Three-Tier Data Standard (mandatory)
+
+Every data point in every audit must be classified by one of three tiers:
+
+#### Tier 1 — Verified (green, normal display)
+- WebFetched at a specific URL and the exact claim appears on that page
+- Live MCP API call (SimilarWeb, BuiltWith, Yahoo Finance) with timestamp
+- Public company filing (10-K, earnings press release) confirmed at IR URL
+- Algolia customer page metric confirmed verbatim via WebFetch
+- Earnings call quote confirmed verbatim via Motley Fool/Seeking Alpha transcript
+
+#### Tier 2 — Web Search Only (red warning, keep but flag)
+- Found via WebSearch but could not be WebFetched at specific URL
+- Source URL exists but the exact number/quote does not appear on that page
+- Paywalled source (Forrester, Gartner, Baymard) where the stat cannot be confirmed
+
+**Implementation:** Set `"verified": false` on the JSON field. The template automatically renders:
+- Source link in **red**
+- ⚠ amber badge: *"Web search only — verify before using"*
+
+#### Tier 3 — No Source (delete entirely)
+- No verifiable source exists at all
+- Completely unverifiable claim with no URL even to flag
+- Statistics that are "e-commerce folklore" with no traceable origin
+
+**Implementation:** Remove the data point from the JSON entirely. Do not keep it with a caveat.
+
+### Factcheck Scoring Requirement
+
+The `/algolia-audit-factcheck` skill produces a score out of 10. Target is 10/10 on every audit. In practice:
+- **9.0+ / HIGH CONFIDENCE** — acceptable to share with AE
+- **7.5–8.9 / MODERATE** — acceptable with all unverified items flagged red
+- **Below 7.5** — not acceptable, must re-run factcheck and fix issues
+
+### What Gets Flagged vs Deleted — Decision Rules
+
+| Situation | Action |
+|---|---|
+| Stat confirmed verbatim at live URL | Keep — display normally |
+| Stat from Forrester/Gartner/Baymard (paywalled) | Keep with `verified: false` — shows red warning |
+| Exec quote confirmed verbatim at transcript URL | Keep — display normally |
+| Exec quote from dead/404 URL | Keep with `verified: false` — shows red warning |
+| Exec quote is a paraphrase not verbatim | Convert to paraphrase notation, not in quote marks |
+| Traffic figures from SimilarWeb MCP | Keep — display normally with MCP date stamp |
+| Revenue figure from public 10-K | Keep — display normally with filing URL |
+| Revenue figure from private company (no filing) | Keep — label as `[ESTIMATE]` with source note |
+| Statistic with no source URL at all | Delete entirely |
+| Case study metric not found on Algolia customer page | Replace with what IS on the page, or remove |
+
+### Output Files Required
+
+The `/algolia-audit-factcheck` skill produces 3 mandatory output files:
+1. `{slug}-factcheck-report.md` — 7-dimension scored report with verdict
+2. `{slug}-correction-manifest.md` — every correction with file and field reference
+3. `{slug}-skill-feedback.md` — methodology patterns for SKILL.md improvement
+
+These files must be committed to GitHub alongside the corrected `{slug}-audit-data.json` and re-rendered `{slug}/index.html`.

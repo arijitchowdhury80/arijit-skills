@@ -421,9 +421,34 @@ Dimension Score = max(0, Base Score + Penalties)
 | 7. Browser Observation Fidelity | 15% |
 
 **Verdict**:
-- **8.0+ = HIGH CONFIDENCE** — Safe to share with AE/prospect. Minor issues only.
-- **6.0-7.9 = MODERATE** — Review flagged issues before sharing. Fix `[DISC]` and `[FAIL]` items.
-- **<6.0 = LOW CONFIDENCE** — Fix required before sharing. Multiple material errors detected.
+- **9.0+ = HIGH CONFIDENCE** — Acceptable to share with AE. Target for all audits.
+- **7.5–8.9 = MODERATE** — Acceptable only if all unverified items are flagged red in the SPA (`verified: false`).
+- **Below 7.5 = NOT ACCEPTABLE** — Must re-run factcheck, fix all issues, and re-score before sharing.
+
+**Target score: 10/10 on every audit.** The factcheck skill does not stop at "good enough."
+
+### Three-Tier Data Standard (mandatory outcome of every factcheck)
+
+Every claim must be classified and handled as follows:
+
+**TIER 1 — VERIFIED:** WebFetched at specific URL, exact claim confirmed on that page. OR live MCP API call with timestamp. OR public 10-K/earnings confirmed at IR URL. → Keep, display normally.
+
+**TIER 2 — WEB SEARCH ONLY:** Found via search but cannot be WebFetched, or source URL exists but exact claim not on that page (paywalled Forrester/Gartner/Baymard counts here). → Keep in JSON with `"verified": false`. Template renders red source link + amber ⚠ "Web search only — verify before using" badge automatically.
+
+**TIER 3 — NO SOURCE:** No URL exists at all. E-commerce folklore. Completely unverifiable. → **DELETE from JSON entirely.** Not kept with caveat, not kept with warning. Removed.
+
+**How to apply in JSON:**
+```json
+// Verified — no flag needed
+{"impact_stat": "37% increase in CVR", "impact_stat_source": "https://algolia.com/customers/lacoste"}
+
+// Web search only — flag it
+{"impact_stat": "15-20% conversion lift", "impact_stat_source": "https://forrester.com", "impact_stat_verified": false}
+
+// No source — delete the field entirely, do not include
+```
+
+Same pattern applies to: `executives[].verified`, `gap_pairs[].verified`, `intelligence_signals[].verified`
 
 #### Claim Verification Statuses
 
