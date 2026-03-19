@@ -3995,6 +3995,32 @@ const T = {
 
 ────────────────────────────────────────────────────────────────────── */
 
+/* ── Unverified source badge ──────────────────────────────────────────────────
+   Call unverifiedBadge() wherever a data point has verification_status="web_search_only"
+   or where source could not be WebFetched and confirmed at a specific URL.
+   Renders amber warning: "⚠ Web search only — verify before using"
+────────────────────────────────────────────────────────────────────────────── */
+function unverifiedBadge() {
+  return `<span class="unverified-warning">⚠ Web search only — verify before using</span>`;
+}
+
+/* Wraps any content block in the amber warning wrapper */
+function unverifiedWrap(content) {
+  return `<div class="unverified-wrapper">${content}</div>`;
+}
+
+/* Use on source links — shows red if unverified, normal if verified */
+function sourceLink(url, label, isVerified) {
+  if (!url) return '';
+  if (isVerified === false) {
+    return `<span style="display:inline-flex;align-items:center;gap:4px;">
+      <a href="${url}" target="_blank" style="${T.bodySmGray12};color:var(--red);text-decoration:underline;">${escHtml(label||'Source')}</a>
+      ${unverifiedBadge()}
+    </span>`;
+  }
+  return `<a href="${url}" target="_blank" style="${T.labelBlue};">${escHtml(label||'Source')} ↗</a>`;
+}
+
 function proofPill(url, company, result, variant) {
 
   // variant: 'green' (default) | 'blue' | 'white' (on dark backgrounds)
@@ -5911,13 +5937,15 @@ function sectionCompanySnapshot(D) {
 
               <a href="${e.source_url}" target="_blank"
 
-                 style="color:var(--blue);font-weight:600;text-decoration:none;"
+                 style="color:${e.verified===false?'var(--red)':'var(--blue)'};font-weight:600;text-decoration:none;"
 
                  onmouseenter="this.style.textDecoration='underline'" onmouseleave="this.style.textDecoration='none'">
 
                 ${escHtml(e.source_label || sourceName(e.source_url))}
 
               </a>
+
+              ${e.verified===false ? unverifiedBadge() : ''}
 
             </div>` : ''}
 
@@ -7063,11 +7091,13 @@ function sectionFinding(f, displayId) {
 
         ${f.impact_stat_source
 
-          ? `<a href="${f.impact_stat_source}" target="_blank" rel="noopener" class="ic-source-link">
+          ? `<a href="${f.impact_stat_source}" target="_blank" rel="noopener"
+               style="color:${f.impact_stat_verified===false?'var(--red)':'inherit'};"
+               class="ic-source-link">
 
                ↗ ${escHtml(sourceName(f.impact_stat_source))}
 
-             </a>`
+             </a>${f.impact_stat_verified===false ? unverifiedBadge() : ''}`
 
           : `<span class="ic-source-missing">⚠ Source needed</span>`}
 
@@ -8309,7 +8339,7 @@ function sectionBusinessCaseHook(D) {
 
                 <div style="${T.bodySmGray12};">— ${escHtml(g.said_attr)}</div>
 
-                ${g.said_source_url ? `<a href="${g.said_source_url}" target="_blank" style="${T.bodySmGray12};color:var(--blue);font-weight:600;">${escHtml(g.said_source_label||'Source')}</a>` : ''}
+                ${g.said_source_url ? `<a href="${g.said_source_url}" target="_blank" style="${T.bodySmGray12};color:${g.verified===false?'var(--red)':'var(--blue)'};font-weight:600;">${escHtml(g.said_source_label||'Source')}</a>${g.verified===false ? unverifiedBadge() : ''}` : ''}
 
               </td>
 
