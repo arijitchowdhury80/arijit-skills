@@ -2757,11 +2757,8 @@ function sectionExecSummary(D) {
 
       const navCard = (tab, accent, eyebrow, headline, bullets) => {
         const nav = `document.querySelector('[data-tab=\\'${tab}\\']').click();window.scrollTo({top:0,behavior:'instant'});`;
-        return `<div data-tab-target="${tab}"
-          style="background:white;border:1px solid var(--border);border-radius:10px;padding:20px 22px;cursor:pointer;
-                 border-top:3px solid ${accent};transition:box-shadow 0.3s ease,transform 0.25s ease;"
-          onmouseenter="this.style.boxShadow='0 0 40px rgba(0,61,255,0.15),0 8px 24px rgba(0,61,255,0.08)';this.style.transform='translateY(-2px)'"
-          onmouseleave="this.style.boxShadow='';this.style.transform=''"
+        return `<div data-tab-target="${tab}" class="card card-3d"
+          style="padding:20px 22px;cursor:pointer;border:none;transition:box-shadow 0.3s ease,transform 0.25s ease;"
           onclick="${nav}">
           <div style="${T.eyebrowMdCol(accent)};margin-bottom:4px;">${eyebrow}</div>
           <div style="${T.title};margin-bottom:10px;">${headline}</div>
@@ -2785,8 +2782,8 @@ function sectionExecSummary(D) {
       <div id="deep-dive-nav" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;">
         ${navCard('intel','#0891B2','Company Intel','Who They Are',[
           `${escHtml(cs.revenue||'~$1.2B est.')} revenue · ${escHtml(fin.margin_zone||'Yellow')} margin`,
-          `${escHtml(ts.ecommerce_platform||'Salesforce Commerce Cloud')}`,
-          `${hir.total_open_roles||38} open roles · Technical Buyer VACANT`,
+          `${escHtml(cs.ecommerce_platform||ts.primary_platform||ts.ecommerce_platform||'Commerce Platform')}`,
+          `${hir.total_open_roles||38} open roles · ${(hir.buying_committee||[]).find(r=>r.status?.includes('VACAN'))?'Technical Buyer VACANT':'Buying committee mapped'}`,
         ])}
         ${navCard('audit','#D97706','Search Audit','The Evidence',[
           `4.4/10 — ${n(sc.critical_count)} critical gaps · ${n(sc.moderate_count)} moderate`,
