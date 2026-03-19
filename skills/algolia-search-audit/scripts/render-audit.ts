@@ -27,6 +27,29 @@ const TEMPLATES_DIR = join(dirname(fromFileUrl(import.meta.url)), "..", "templat
 const BRAND_CSS_PATH = join(TEMPLATES_DIR, "algolia-brand.css");
 const CRITICAL_TOKENS = ["COMPANY_NAME", "OVERALL_SCORE"];
 
+// ─── Style Token Gate — blocks render if T token violations exist ────────────
+function enforceStyleTokens(): void {
+  const checkScript = join(dirname(fromFileUrl(import.meta.url)), "check-style-tokens.py");
+  try {
+    const result = new Deno.Command("python3", {
+      args: [checkScript],
+      stdout: "piped",
+      stderr: "piped",
+    }).outputSync();
+    if (!result.success) {
+      const out = new TextDecoder().decode(result.stdout);
+      console.error("\n🚫 RENDER BLOCKED — Style token violations in index-template.html\n");
+      console.error(out);
+      console.error("Fix all violations before rendering. Use T.* tokens, not raw font-size values.\n");
+      Deno.exit(1);
+    }
+  } catch {
+    console.warn("⚠  check-style-tokens.py not found — skipping style gate");
+  }
+}
+
+enforceStyleTokens();
+
 // ─── Load brand CSS (injected into every output HTML) ───────────────────────
 function loadBrandCSS(): string {
   try {
@@ -1251,13 +1274,10 @@ async function renderSite(data: AuditData, slug: string, cwd: string): Promise<v
     throw new Error(`Template not found: ${templatePath}`);
   }
 
-  // Prefix screenshot paths with ../ so they resolve from {slug}/index.html → workspace/screenshots/
+  // Screenshots are in {slug}/screenshots/ (same folder as index.html)
+  // Path "screenshots/file.png" resolves correctly from {slug}/index.html
+  // DO NOT prefix with ../ — screenshots are no longer in hub root
   const siteData = JSON.parse(JSON.stringify(data)) as AuditData;
-  for (const f of siteData.findings ?? []) {
-    if (f.screenshot_file && !f.screenshot_file.startsWith("..") && !f.screenshot_file.startsWith("http")) {
-      f.screenshot_file = "../" + f.screenshot_file;
-    }
-  }
 
   // Inject window.AUDIT_DATA before closing </head>
   const script = `<script>window.AUDIT_DATA = ${JSON.stringify(siteData, null, 2)};</script>`;
