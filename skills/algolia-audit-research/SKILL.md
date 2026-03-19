@@ -390,7 +390,12 @@ When a search vendor tag is detected, record it as `Status: TAG DETECTED (unveri
 Use **SimilarWeb MCP ONLY** for all traffic metrics. **DO NOT scrape or WebFetch third-party analytics sites** (Semrush, Ahrefs, SEMrush, Moz, etc.) for traffic/engagement data. These sites use different measurement methodologies than SimilarWeb, and mixing sources creates unverifiable discrepancies. All traffic, engagement, demographics, and ranking data MUST come from SimilarWeb MCP endpoints so the fact-checker can reproduce exact results with identical API calls.
 
 Use SimilarWeb MCP with ALL of these endpoints:
-- `get-websites-traffic-and-engagement` — monthly visits, bounce rate, pages per visit, avg visit duration
+- `get-websites-traffic-and-engagement` (web_source: "total") — monthly visits, bounce rate, pages per visit, avg visit duration
+- `get-websites-traffic-and-engagement` (web_source: "desktop") — desktop visit volume for device split
+- `get-websites-traffic-and-engagement` (web_source: "mobile_web") — mobile visit volume for device split
+  → Calculate device_share: `mobile_pct = mobile_visits / (mobile_visits + desktop_visits) * 100`
+  → Store in scratchpad AND in JSON as `traffic.device_share: {mobile: X, desktop: Y, source: "SimilarWeb", insight: "..."}`
+  → AE insight template: "{mobile_pct}% mobile — search failures hit {mobile_pct}% of visitors on their phones"
 - `get-websites-traffic-sources` — channel breakdown (organic, direct, paid, social, referral, mail)
 - `get-websites-geography-agg` — top countries by traffic share
 - `get-websites-demographics-agg` — age and gender breakdown
