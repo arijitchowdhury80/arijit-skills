@@ -156,6 +156,54 @@ a:hover {
   color: var(--brand-blue);
 }
 
+/* ─── Glowing Effect — mouse-tracking conic-gradient border glow ─────────────
+   Vanilla CSS + JS replication of Aceternity glowing-effect.
+   Usage: add class="glow-card" to any card element.
+   JS: call initGlowEffect(containerEl) after DOM insertion.
+   The glow tracks mouse position and activates when near the card border.
+────────────────────────────────────────────────────────────────────────────── */
+.glow-card {
+  position: relative;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid var(--brand-border);
+  isolation: isolate;
+}
+/* Gradient border layer — sits behind the card */
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--glow-angle, 0deg),
+    transparent 0%,
+    #dd7bbb 8%,
+    #d79f1e 22%,
+    #5a922c 42%,
+    #4c7894 62%,
+    transparent 72%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+/* White fill to cover gradient except the border */
+.glow-card::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(12px - 1px);
+  background: white;
+  z-index: -1;
+}
+.glow-card.glow-active::before {
+  opacity: 1;
+}
+.glow-card.glow-active {
+  border-color: transparent;
+}
+
 /* ─── Bounce Card — shrink + rotate on hover with gradient reveal ────────────
    Vanilla CSS replication of uniquesonu/bounce-card-features.
    Usage:
