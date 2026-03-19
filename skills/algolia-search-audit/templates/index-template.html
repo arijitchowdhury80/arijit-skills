@@ -2935,8 +2935,8 @@ function sectionTraffic(D) {
     <div class="section-title">Traffic & Digital Presence</div>
     <p class="section-desc">Data as of ${s(D.meta?.data_vintage?.similarweb || t.data_vintage)} · ${lnk(t.source_url, 'View in SimilarWeb')}</p>
 
-    <!-- Row 1: 6 KPI tiles across full width -->
-    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:28px;">
+    <!-- Row 1: 6 KPI tiles — glow effect on hover -->
+    <div id="traffic-kpi-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:28px;">
       ${[
         { label:'Monthly Visits',  value: t.monthly_visits || D.company_snapshot?.monthly_visits },
         { label:'Avg. Visit',      value: t.visit_duration },
@@ -2945,17 +2945,17 @@ function sectionTraffic(D) {
         { label:'Global Rank',     value: t.global_rank ? '#' + n(t.global_rank) : null },
         { label:'Category Rank',   value: t.category_rank ? '#' + n(t.category_rank) + (t.category ? ' · ' + t.category : '') : null },
       ].filter(m => m.value).map(m => `
-        <div class="metric-tile">
+        <div class="metric-tile glow-card" style="border:none;">
           <div class="metric-tile__label">${m.label}</div>
           <div class="metric-tile__value" style="font-size:14px;">${escHtml(s(m.value))}</div>
         </div>`).join('')}
     </div>
 
-    <!-- Row 2: Two matching cards — same height, same padding, aligned headings -->
+    <!-- Row 2: Two 3D shadow cards (no glow — internal interactivity takes priority) -->
     <div style="display:grid;grid-template-columns:55fr 45fr;gap:16px;align-items:stretch;">
 
-      <!-- LEFT CARD: Interactive donut + full breakdown -->
-      <div class="glow-card" style="padding:24px;">
+      <!-- LEFT CARD: Interactive donut + device split -->
+      <div class="card-3d" style="padding:24px;">
         <div class="section-eyebrow" style="margin-bottom:16px;">Traffic Sources</div>
 
         <!-- Donut + legend row -->
@@ -2998,7 +2998,7 @@ function sectionTraffic(D) {
       </div>
 
       <!-- RIGHT CARD: Audience Profile -->
-      <div class="glow-card" style="padding:24px;">
+      <div class="card-3d" style="padding:24px;">
         <div class="section-eyebrow" style="margin-bottom:16px;">Audience Profile</div>
         ${Object.keys(gender).length ? `
         <!-- Gender split bar -->
@@ -4864,6 +4864,9 @@ function init() {
     document.querySelectorAll('.ab-container').forEach(el => initAnimatedBg(el));
     // Init interactive donut charts
     document.querySelectorAll('.donut-chart').forEach(el => initDonutChart(el.id));
+    // Init glow on traffic KPI grid specifically
+    const kpiGrid = document.getElementById('traffic-kpi-grid');
+    if (kpiGrid) initGlowEffect(kpiGrid);
     // Init glow effect on all containers with .glow-card children
     document.querySelectorAll('[id$="-glow-grid"], .glow-grid').forEach(el => initGlowEffect(el));
     // Also init on direct parent containers of glow cards

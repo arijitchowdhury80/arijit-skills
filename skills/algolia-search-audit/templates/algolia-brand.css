@@ -156,6 +156,30 @@ a:hover {
   color: var(--brand-blue);
 }
 
+/* ─── 3D Shadow Card — floating bevel, no glow border ───────────────────────
+   Use on content-heavy cards with internal interactivity (donut charts, bars).
+   The glow border competes with internal hover states — 3D shadow instead.
+────────────────────────────────────────────────────────────────────────────── */
+.card-3d {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid var(--brand-border);
+  box-shadow:
+    0 1px 2px rgba(35,38,59,0.04),
+    0 4px 8px rgba(35,38,59,0.06),
+    0 12px 24px rgba(35,38,59,0.06),
+    0 24px 48px rgba(35,38,59,0.04);
+  transition: box-shadow 0.3s ease, transform 0.25s ease;
+}
+.card-3d:hover {
+  box-shadow:
+    0 2px 4px rgba(35,38,59,0.06),
+    0 8px 16px rgba(35,38,59,0.10),
+    0 20px 40px rgba(35,38,59,0.10),
+    0 40px 64px rgba(35,38,59,0.06);
+  transform: translateY(-2px);
+}
+
 /* ─── Glowing Effect — mouse-tracking conic-gradient border glow ─────────────
    Vanilla CSS + JS replication of Aceternity glowing-effect.
    Usage: add class="glow-card" to any card element.
