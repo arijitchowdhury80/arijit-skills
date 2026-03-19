@@ -2548,8 +2548,10 @@ function sectionExecSummary(D) {
                   ${escHtml(sig.badge_label||sig.type)}
                 </span>
               </div>
-              <div class="fc-accent-bar"></div>
-              <div class="fc-title">${escHtml(sig.text?.slice(0,80)||'')}</div>
+              <div class="fc-title-row">
+                <div class="fc-accent-bar"></div>
+                <div class="fc-title">${escHtml(sig.text?.slice(0,80)||'')}</div>
+              </div>
               <div class="fc-desc">${escHtml((sig.text||'').slice(80,220))}${(sig.text||'').length>220?'…':''}</div>
               ${sig.relevance ? `<div class="fc-desc" style="font-style:italic;">${escHtml(sig.relevance.slice(0,100))}</div>` : ''}
               <div class="fc-source">
