@@ -367,6 +367,90 @@ Next: /algolia-audit-factcheck {company-slug}
 
 ---
 
+## Key Architecture Principles
+
+### Style Token Enforcement (2 layers — added 2026-03-19)
+
+- **Layer 1 — PostToolUse hook**: Project settings at `.claude/settings.local.json` in the audit working directory. Runs `check-style-tokens.py` after every Edit/Write to `index-template.html`. Immediately flags violations in the session.
+- **Layer 2 — Renderer gate**: `render-audit.ts` runs `check-style-tokens.py` before rendering. If violations exist, render is BLOCKED with `Deno.exit(1)`. Cannot produce output with T token violations.
+- **T token system**: All inline `font-size`, `font-weight`, `color`, `text-transform`, `letter-spacing` must use `T.*` tokens defined at top of `index-template.html`. Never write these freehand.
+- **Extended T tokens added**: `T.h3` (28px), `T.h4` (20px), `T.label15` / `T.label15Col()`, `T.eyebrowMd` / `T.eyebrowMdCol()`, `T.microCol()`, `T.scoreNum()`.
+
+### Visual Patterns Established (2026-03-19)
+
+- **dp-tile grouping**: Wrap related sections in `<div class="dp-tile">` to group them visually with light blue gradient card. Used for: Tech Stack + Traffic (Company Intel), Competitive Synthesis (Business Case). The competitive synthesis dp-tile uses `overflow:visible; margin-left:-16px; margin-right:-16px` to allow the capability matrix table to fit.
+- **Capability matrix**: Must use `table-layout:fixed` with `<colgroup>` percentage widths. Never use `overflow-x:auto` wrapper — the table must fit without scrollbar.
+- **Competitor tiers table**: Render ONE row per tier (not one row per competitor). Multiple competitors in a tier are joined with `, ` in the first cell. The old `comps.map()` pattern that iterated each competitor as a separate row is REMOVED — it created ghost empty rows.
+- **Why Act Now section**: Uses Aceternity `.feature-grid` / `.feature-card` with `grid-template-columns:repeat(2,1fr)` — same template as Timing Signals and Hiring sections.
+- **Vertical Case Studies**: Cards use `.card.card-3d` (white shadow card, no border). Links use `proofPill(url, company, result, 'green')` — NOT `'var(--blue)'` (invalid variant). Grid uses `min-width:0; box-sizing:border-box` on each card to prevent overflow.
+- **Berkshire/Investor note**: Rendered via `renderBerkshire(f)` helper function (NOT inline IIFE — inline IIFEs in template literals corrupt the script). Parses `(1)...(2)...(3)...` pattern into `<ol>`. Shows source link from `f.berkshire_source`.
+- **Scrolling disclaimer**: Topbar ticker uses `position:absolute` inner span inside `overflow:hidden` wrapper div. Uses `left:100%` → `left:calc(-100% - 8px)` animation (NOT translateX — translateX escapes overflow:hidden). 120s cycle: 60s scroll, 60s wait.
+- **Case study section header**: Must have `color:white` on each `<th>` inline — do NOT rely on inheritance from `<tr>` as browsers don't reliably inherit into `<th>`.
+
+---
+
+## audit-data.json Fields Reference
+
+### `financials` object — required fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `total_digital_revenue` | string | E-commerce/digital revenue (e.g. `"$1.105B"`). **Required** — if missing, template falls back to generic `~$540M` default |
+| `berkshire_source` | string (URL) | Only for Berkshire-owned companies. Source URL confirming ownership |
+| `berkshire_note` | string | Only for Berkshire-owned companies. Text with `(1)...(2)...(3)...` pattern |
+| `berkshire_label` | string | Only for Berkshire-owned companies. Display label |
+
+### `competitive_synthesis.competitor_tiers[]` structure
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `tier` | string | Tier key: `"AHEAD"`, `"GOLDEN"`, `"DISRUPTOR"`, or `"PARITY"` |
+| `competitors` | string[] | Array of competitor names — multiple allowed, rendered as ONE row joined with `, ` |
+| `search_stack` | string | Search technology string (from BuiltWith live scan) |
+| `strategic_implication` | string | Strategic angle text |
+| `source_url` | string (URL) | BuiltWith or verification URL |
+
+### `competitive_synthesis.matrix_col_labels` — capability matrix competitor column names
+
+**Critical for non-Brooks companies.** Maps generic row keys to display competitor names:
+
+```json
+"matrix_col_labels": {
+  "nike_has": "REI",
+  "asics_has": "Patagonia",
+  "on_running_has": "The North Face",
+  "new_balance_has": "Eddie Bauer"
+}
+```
+
+The capability matrix template always uses `nike_has`, `asics_has`, `on_running_has`, `new_balance_has` as row keys. Use `matrix_col_labels` to display any competitor names. Brooks Running omits this (uses defaults: Nike, Asics, On Running, New Balance). Every other company MUST set this.
+
+### `gap_pairs[]` structure — "Said vs. Found" section
+
+**Critical** — must use these exact keys or the section renders blank:
+
+| Key | Description |
+|-----|-------------|
+| `said_quote` | Verbatim executive quote |
+| `said_attr` | Attribution: `"— Name, Title"` |
+| `said_source_url` | Source URL |
+| `said_source_label` | Source display name |
+| `found_title` | What the audit found (short title) |
+| `found_evidence` | Evidence text with query tested and observed result |
+| `finding_id` | Links to a `findings[]` entry (e.g. `"F01"`) |
+| `algolia_angle` | Algolia solution description |
+
+### `abx_sequence.contacts[]` — who to target in outreach
+
+**ABX contacts must NEVER include CEO.** CEOs do not evaluate or buy SaaS tools. Correct targets:
+- **Tier 1 Champion** — Director/VP of Digital Commerce, eCommerce, or Digital Products. Feels the pain daily. Initiates evaluation.
+- **Tier 2 Technical Buyer** — CIO or VP Engineering. Engaged *after* champion is already in conversation. Budget authority.
+- **Tier 3 Co-champion** — Director of Analytics/Personalization/CX. Personalization angle.
+
+Each contact requires: `id`, `name`, `title`, `tier`, `role`, `linkedin_url`, `angle`.
+
+---
+
 ## Notes
 
 - Be objective — note both strengths and weaknesses
