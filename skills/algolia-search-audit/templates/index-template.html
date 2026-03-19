@@ -2473,6 +2473,11 @@ function sectionExecSummary(D) {
       `;
     })()}
 
+    <!-- SCORE BY DIMENSION — right below the score, before revenue/competitive -->
+    <div style="margin-top:40px;">
+      ${sectionAppendixScoring(D)}
+    </div>
+
     <!-- REVENUE BANNER + GOLDEN ANGLE + TIMING -->
     ${(() => {
       const fin = D.financials || {};
@@ -2518,28 +2523,41 @@ function sectionExecSummary(D) {
         <div class="section-eyebrow">Timing Signals</div>
         <div style="${T.overviewTitle};">Three reasons this is the right moment to engage</div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-bottom:40px;">
+      <!-- Aceternity feature-section-with-hover-effects — CSS in algolia-brand.css -->
+      <div class="feature-grid" style="margin-bottom:40px;">
         ${(() => {
-          // Pull timing signals from intelligence_signals — hiring + media types = urgency signals
           const allSigs = D.intelligence_signals || [];
-          const urgentSigs = allSigs.filter(s => ['media','competitor','news-leadership','news-funding'].includes(s.type)).slice(0,3);
-          const colMap = { hiring:'#DC2626', media:'#D97706', competitor:'#059669' };
-          const shadowMap = { hiring:'glow-shadow-red', media:'glow-shadow-amber', competitor:'glow-shadow-green' };
+          const urgentSigs = allSigs
+            .filter(s => !['hiring'].includes(s.type))
+            .slice(0, 6);
+          if (!urgentSigs.length) return '<div class="feature-card"><div class="fc-title">No timing signals found</div></div>';
+          const urgencyClass = (type) =>
+            type==='exec'||type==='funding' ? 'high'
+            : type==='competitor'||type==='industry-risk' ? 'medium'
+            : 'positive';
+          const urgencyIcon = (type) =>
+            type==='exec'?'💬': type==='funding'?'🏦': type==='competitor'?'⚠️':
+            type==='hiring'?'👤': type==='media'?'📰': type==='industry-opp'?'📈':'🔔';
           return urgentSigs.map(sig => {
-            const col = colMap[sig.type] || '#6B7280';
-            const shadow = shadowMap[sig.type] || '';
+            const urg = urgencyClass(sig.type);
             const hasUrl = sig.source_url && sig.source_url.startsWith('http');
-            return `<div class="card ${shadow}" style="border-left:4px solid ${col};padding:16px 18px;cursor:${hasUrl?'pointer':'default'};"
-              ${hasUrl ? `onclick="window.open('${sig.source_url}','_blank')"` : ''}>
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;margin-top:5px;"></span>
-                  <span style="${T.title};">${escHtml(sig.badge_label||sig.type)}</span>
-                </div>
-                ${hasUrl ? `<span style="font-size:13px;color:var(--blue);flex-shrink:0;">Source</span>` : ''}
+            return `<div class="feature-card feature-card--${urg}">
+              <div class="fc-icon">
+                <span style="font-size:20px;">${urgencyIcon(sig.type)}</span>
+                <span style="${T.eyebrowSmCol(urg==='high'?'#DC2626':urg==='medium'?'#D97706':'#059669')}">
+                  ${escHtml(sig.badge_label||sig.type)}
+                </span>
               </div>
-              <div style="${T.bodySmMid};margin-bottom:${hasUrl?'10px':'0'};">${escHtml(sig.text||'')}</div>
-              ${hasUrl ? `<div style="${T.bodySmGray12};opacity:0.7;">${escHtml(sig.source_name||'')} · ${escHtml(sig.source_date?.slice(0,7)||'')}</div>` : ''}
+              <div class="fc-accent-bar"></div>
+              <div class="fc-title">${escHtml(sig.text?.slice(0,80)||'')}</div>
+              <div class="fc-desc">${escHtml((sig.text||'').slice(80,220))}${(sig.text||'').length>220?'…':''}</div>
+              ${sig.relevance ? `<div class="fc-desc" style="font-style:italic;">${escHtml(sig.relevance.slice(0,100))}</div>` : ''}
+              <div class="fc-source">
+                ${hasUrl
+                  ? `<a href="${sig.source_url}" target="_blank">${escHtml(sig.source_name||'Source')}</a>`
+                  : escHtml(sig.source_name||'')}
+                ${sig.source_date ? ` · ${escHtml(sig.source_date.slice(0,7))}` : ''}
+              </div>
             </div>`;
           }).join('');
         })()}
@@ -4230,7 +4248,7 @@ function renderSections(D) {
   const positiveFindings = findings.filter(f => f.severity === 'positive');
 
   /* ── TAB 1: OVERVIEW ─────────────────────────── */
-  const overviewHTML = [sectionExecSummary(D), sectionAppendixScoring(D)].join('');
+  const overviewHTML = sectionExecSummary(D); // Score by Dimension is embedded inside exec summary
 
   /* ── TAB 2: COMPANY INTEL ────────────────────── */
   const intelHTML = [
@@ -4674,14 +4692,20 @@ function initChapterObserver() {
   chapters.forEach(ch => obs.observe(ch));
 }
 
-// Boot: run if data already injected, otherwise wait
-if (window.AUDIT_DATA) {
-  document.addEventListener('DOMContentLoaded', init);
+// Boot: inline scripts execute after DOMContentLoaded has already fired.
+// Guard with readyState check so init() always runs.
+function _boot() {
+  if (window.AUDIT_DATA) {
+    init();
+  } else {
+    const el = document.getElementById('no-data');
+    if (el) el.style.display = 'flex';
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _boot);
 } else {
-  // Data will be injected by renderer — show placeholder
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('no-data').style.display = 'flex';
-  });
+  _boot();
 }
 </script>
 </body>
