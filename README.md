@@ -12,6 +12,61 @@ cd algolia-claude-skills
 chmod +x install.sh && ./install.sh
 ```
 
+
+---
+
+## Search Audit — Workspace Setup
+
+The search audit skill uses **two separate directories**:
+
+| Directory | Purpose | Set by |
+|---|---|---|
+| `~/.claude/skills/algolia-search-audit/` | Skill files (templates, scripts) | Installer — never edit manually |
+| `$ALGOLIA_AUDIT_DIR/` | Your audit output files | You — set once during install |
+
+### What is `$ALGOLIA_AUDIT_DIR`?
+
+This is the folder on your machine where all audit research, screenshots, and deliverables are stored. You choose where it lives.
+
+```bash
+# Set once — installer adds this to your ~/.zshrc automatically
+export ALGOLIA_AUDIT_DIR="~/Documents/Algolia Search Audits"
+```
+
+### Folder structure created per audit
+
+```
+$ALGOLIA_AUDIT_DIR/
+└── {CompanyName}/                    ← one folder per prospect
+    ├── research/                     ← Phase 1 scratchpads (01-12 files)
+    │   ├── 01-company-context.md
+    │   ├── 02-tech-stack.md
+    │   └── ... (12 files total)
+    ├── factcheck/                    ← factcheck dimension files
+    ├── scripts/                      ← company-specific browser scripts
+    └── deliverables/                 ← everything shared with the AE
+        ├── index.html                ← interactive SPA
+        ├── screenshots/              ← browser audit screenshots
+        ├── ae-report.html
+        ├── battle-card.html
+        ├── leave-behind.html
+        └── {company}-search-audit.md
+```
+
+### What gets published to Vercel
+
+The `deliverables/` folder mirrors your GitHub publishing repo:
+
+```
+your-audits-repo/
+└── {slug}/
+    ├── index.html          → yoursite.vercel.app/{slug}/
+    ├── screenshots/
+    ├── ae-report.html      → yoursite.vercel.app/{slug}/ae-report
+    ├── battle-card.html    → yoursite.vercel.app/{slug}/battle-card
+    └── leave-behind.html   → yoursite.vercel.app/{slug}/leave-behind
+```
+
 ---
 
 ## Required MCP Servers & API Keys
