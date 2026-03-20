@@ -1337,11 +1337,11 @@ async function renderSite(data: AuditData, slug: string, cwd: string): Promise<v
 
 // ─── PDF template modes ───────────────────────────────────────────────────────
 
-const TEMPLATE_MAP: Record<string, { file: string; out: string }> = {
-  binder:       { file: "book-template.html",                    out: "{slug}-book.html" },
-  "ae-report":  { file: "ae-action-report-template.html",        out: "{slug}-ae-report.html" },
-  "battle-card":{ file: "strategic-battle-card-template.html",   out: "{slug}-battle-card.html" },
-  "leave-behind":{ file: "prospect-leave-behind-template.html",  out: "{slug}-leave-behind.html" },
+const TEMPLATE_MAP: Record<string, { file: string; out: string; inSlugDir: boolean }> = {
+  binder:        { file: "book-template.html",                   out: "{slug}-book.html",  inSlugDir: false },
+  "ae-report":   { file: "ae-action-report-template.html",       out: "ae-report.html",    inSlugDir: true },
+  "battle-card": { file: "strategic-battle-card-template.html",  out: "battle-card.html",  inSlugDir: true },
+  "leave-behind":{ file: "prospect-leave-behind-template.html",  out: "leave-behind.html", inSlugDir: true },
 };
 
 async function renderPdfTemplate(data: AuditData, slug: string, mode: string, cwd: string): Promise<void> {
@@ -1370,7 +1370,9 @@ async function renderPdfTemplate(data: AuditData, slug: string, mode: string, cw
   if (!ok) return;
 
   const outFile = cfg.out.replace("{slug}", slug);
-  const outPath = join(cwd, outFile);
+  // ae-report, battle-card, leave-behind go into {slug}/ subfolder (mirrors Vercel URL structure)
+  // binder stays at cwd root (local-only, not published)
+  const outPath = cfg.inSlugDir ? join(cwd, slug, outFile) : join(cwd, outFile);
   await Deno.writeTextFile(outPath, html);
   const size = (new TextEncoder().encode(html).length / 1024).toFixed(1);
   console.log(`✓ [${mode.padEnd(12)}] ${outPath} (${size} KB)`);
