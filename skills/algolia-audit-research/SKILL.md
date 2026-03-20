@@ -1,7 +1,43 @@
 ---
 name: algolia-audit-research
-description: Run Phase 1 pre-audit research for Algolia Search Audit. Collects company context, tech stack, traffic, competitors, financials, hiring, and investor intelligence. No browser required (Chrome optional for Step 13). Output: {company}-audit-workspace/ with 12 scratchpad files.
+description: Run Phase 1 pre-audit research for Algolia Search Audit. Collects company context, tech stack, traffic, competitors, financials, hiring, and investor intelligence. No browser required (Chrome optional for Step 13). Output: $AUDIT_DIR/{CompanyName}/research/ with 12 scratchpad files.
 ---
+
+## CANONICAL PATH DEFINITIONS
+
+```
+AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
+ARIAN_DIR  = ~/algolia-arian-v2
+SKILLS_DIR = ~/.claude/skills/algolia-search-audit
+```
+
+**Every audit MUST use this structure:**
+```
+$AUDIT_DIR/{CompanyName}/
+├── research/          ← scratchpads 01-12, CHECKPOINT.md, FACTCHECK_GATE.md
+├── factcheck/         ← factcheck dimension files (never published)
+├── scripts/           ← company-specific scripts only
+└── deliverables/
+    ├── index.html                ← SPA
+    ├── screenshots/              ← browser audit screenshots
+    ├── ae-report.html
+    ├── battle-card.html
+    ├── leave-behind.html
+    └── {slug}-*.md               ← markdown reports
+```
+
+**Published to GitHub/Vercel:**
+```
+$ARIAN_DIR/{slug}/                ← mirrors $AUDIT_DIR/{CompanyName}/deliverables/
+├── index.html
+├── screenshots/
+├── ae-report.html
+├── battle-card.html
+└── leave-behind.html
+$ARIAN_DIR/{slug}-audit-data.json ← JSON stays at root
+```
+
+
 
 # Algolia Audit — Phase 1 Research
 
@@ -42,10 +78,12 @@ When `--refresh` is passed: load the existing workspace, skip all steps except t
 
 ## Output Directory
 
-All output files written to `./{company}-audit-workspace/` in the current working directory:
+All output files written to `$AUDIT_DIR/{CompanyName}/research/` (canonical audit location):
+
+`$AUDIT_DIR = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit`
 
 ```
-{company}-audit-workspace/
+{{CompanyName}}/research/
 ├── 01-company-context.md          ← Company overview, executives, financials, vertical, case studies
 ├── 02-tech-stack.md               ← BuiltWith + SimilarWeb technologies deep dive
 ├── 03-traffic-data.md             ← SimilarWeb 11-endpoint traffic analysis
@@ -58,13 +96,13 @@ All output files written to `./{company}-audit-workspace/` in the current workin
 ├── 10-scoring-matrix.md           ← (empty placeholder — Phase 3 writes here)
 ├── 11-investor-intelligence.md    ← Investor quotes, 10-K risk factors, forward guidance
 ├── 12-icp-priority-mapping.md     ← "Speaking Their Language" priority-to-product map
-├── screenshots/                   ← (empty placeholder — Phase 2 writes here)
+├── (screenshots go to: $AUDIT_DIR/{CompanyName}/deliverables/screenshots/ — Phase 2 writes there)
 └── _workspace-manifest.md         ← Step status checklist (enables resume after interruption)
 ```
 
 ## Checkpoint File
 
-Write `{company}-audit-workspace/CHECKPOINT.md` immediately at the start (before any API calls) and update it after EVERY completed step. This file enables resume after context reset, session timeout, or interruption.
+Write `{{CompanyName}}/research/CHECKPOINT.md` immediately at the start (before any API calls) and update it after EVERY completed step. This file enables resume after context reset, session timeout, or interruption.
 
 ```markdown
 # Research Checkpoint
@@ -223,7 +261,7 @@ Every data point collected in Phase 1 must come from the highest-tier source ava
 Before starting, create the scratchpad workspace. Write CHECKPOINT.md first (before any API calls).
 
 ```
-{company}-audit-workspace/
+{{CompanyName}}/research/
 ├── 01-company-context.md
 ├── 02-tech-stack.md
 ├── 03-traffic-data.md
@@ -995,7 +1033,7 @@ Note: `10-scoring-matrix.md` is referenced here but will be empty at this stage 
 After Step 14, verify all 12 scratchpad files exist and have content > 500 bytes:
 
 ```bash
-ls -la {company}-audit-workspace/*.md | awk '{print $5, $9}'
+ls -la {{CompanyName}}/research/*.md | awk '{print $5, $9}'
 ```
 
 If any file is under 500 bytes or missing: re-run that step before proceeding.
@@ -1005,7 +1043,7 @@ If any file is under 500 bytes or missing: re-run that step before proceeding.
 Check that `03-traffic-data.md` contains real traffic numbers (not N/A, not error responses):
 
 ```bash
-grep -E "visits|monthly|traffic|bounce" {company}-audit-workspace/03-traffic-data.md | head -5
+grep -E "visits|monthly|traffic|bounce" {{CompanyName}}/research/03-traffic-data.md | head -5
 ```
 
 Pass criteria:
@@ -1020,7 +1058,7 @@ Pass criteria:
 Check that `02-tech-stack.md` contains at least one confirmed technology in each of: search, e-commerce platform, analytics:
 
 ```bash
-grep -E "search|platform|analytics|commerce" {company}-audit-workspace/02-tech-stack.md | head -10
+grep -E "search|platform|analytics|commerce" {{CompanyName}}/research/02-tech-stack.md | head -10
 ```
 
 Pass criteria:
@@ -1035,7 +1073,7 @@ Pass criteria:
 Count hyperlinks across all scratchpad files:
 
 ```bash
-grep -c '](http' {company}-audit-workspace/*.md | awk -F: '{sum += $2} END {print "Total citations:", sum}'
+grep -c '](http' {{CompanyName}}/research/*.md | awk -F: '{sum += $2} END {print "Total citations:", sum}'
 ```
 
 Pass criteria: Total citations ≥ 15 across all scratchpad files.
@@ -1047,7 +1085,7 @@ If below 15: identify which files have the fewest citations and add missing sour
 Check that key financial and traffic figures are not universally missing:
 
 ```bash
-grep -E "N/A|unavailable|not available|private company" {company}-audit-workspace/08-financial-profile.md | wc -l
+grep -E "N/A|unavailable|not available|private company" {{CompanyName}}/research/08-financial-profile.md | wc -l
 ```
 
 If > 5 lines return N/A: confirm in `01-company-context.md` that the company is private. Private companies legitimately have fewer data points — this is acceptable. Public companies should not have >5 N/A fields; if they do, re-run Step 9 (financials).
@@ -1118,7 +1156,7 @@ Output a summary table to the user:
 
 Then inform the user:
 
-> Phase 1 research complete for {company}. All 12 scratchpad files written to `./{company}-audit-workspace/`.
+> Phase 1 research complete for {company}. All 12 scratchpad files written to `./{{CompanyName}}/research/`.
 >
 > Next step: Run `/algolia-audit-browser {company}` (or `/algolia-search-audit {company} --phase searchaudit`) to begin Phase 2 browser testing.
 >

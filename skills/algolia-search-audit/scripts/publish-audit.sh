@@ -1,8 +1,15 @@
 #!/bin/bash
 # Algolia Audit Publisher
 #
-# Copies a rendered audit SPA into the algolia-arian-v2 hub,
+# Copies a rendered audit SPA + deliverables into the algolia-arian-v2 hub,
 # regenerates the index page, and optionally pushes to GitHub.
+#
+# CANONICAL PATHS:
+#   Source SPA:       ~/algolia-arian-v2/{slug}/index.html
+#   Source extras:    ~/algolia-arian-v2/{slug}/ae-report.html, battle-card.html, leave-behind.html
+#   Source JSON:      ~/algolia-arian-v2/{slug}-audit-data.json
+#   Source screenshots: ~/algolia-arian-v2/{slug}/screenshots/
+#   Destination:      ~/algolia-arian-v2/{slug}/ (same repo — staging then push)
 #
 # Usage:
 #   ./publish-audit.sh <slug> [hub-dir] [--stage-only | --push-only]

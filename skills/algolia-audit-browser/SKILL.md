@@ -1,7 +1,43 @@
 ---
 name: algolia-audit-browser
-description: Run Phase 2 browser-based search audit. Tests 20 search behaviors using real Chrome. Requires Phase 1 workspace to exist. Output: screenshots/ directory + 09-browser-findings.md.
+description: Run Phase 2 browser-based search audit. Tests 20 search behaviors using real Chrome. Requires Phase 1 workspace to exist. Output: $AUDIT_DIR/{CompanyName}/deliverables/screenshots/ + research/09-browser-findings.md
 ---
+
+## CANONICAL PATH DEFINITIONS
+
+```
+AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
+ARIAN_DIR  = ~/algolia-arian-v2
+SKILLS_DIR = ~/.claude/skills/algolia-search-audit
+```
+
+**Every audit MUST use this structure:**
+```
+$AUDIT_DIR/{CompanyName}/
+├── research/          ← scratchpads 01-12, CHECKPOINT.md, FACTCHECK_GATE.md
+├── factcheck/         ← factcheck dimension files (never published)
+├── scripts/           ← company-specific scripts only
+└── deliverables/
+    ├── index.html                ← SPA
+    ├── screenshots/              ← browser audit screenshots
+    ├── ae-report.html
+    ├── battle-card.html
+    ├── leave-behind.html
+    └── {slug}-*.md               ← markdown reports
+```
+
+**Published to GitHub/Vercel:**
+```
+$ARIAN_DIR/{slug}/                ← mirrors $AUDIT_DIR/{CompanyName}/deliverables/
+├── index.html
+├── screenshots/
+├── ae-report.html
+├── battle-card.html
+└── leave-behind.html
+$ARIAN_DIR/{slug}-audit-data.json ← JSON stays at root
+```
+
+
 
 # Algolia Audit — Phase 2 Browser Testing
 
@@ -15,7 +51,9 @@ This is a standalone sub-skill that runs Phase 2 (Browser-Based Search Audit) of
 
 `$ARGUMENTS` — company slug or workspace path (e.g., `costco` or `./costco-audit-workspace`)
 
-Resolves workspace at: `./{company}-audit-workspace/`
+Resolves workspace at: `$AUDIT_DIR/{CompanyName}/research/`
+
+`$AUDIT_DIR = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit`
 
 If `--resume-from {step}` is passed (e.g., `--resume-from 2c`), skip all prior steps without re-running them. Jump directly to the named step and continue sequentially through 2t.
 
@@ -37,7 +75,7 @@ If any of these files are missing, stop and warn the user: "Phase 1 must be comp
 
 ## Checkpoint File
 
-Write `{company}-audit-workspace/CHECKPOINT.md` updates after EACH step. Format:
+Write `$AUDIT_DIR/{{CompanyName}}/research/CHECKPOINT.md` updates after EACH step. Format:
 
 ```
 # Browser Audit Checkpoint
@@ -255,7 +293,7 @@ If all selectors fail, take a screenshot of the page and manually inspect the DO
 | 2s Banners | `19-banners.png` |
 | 2t Analytics | `20-analytics.png` |
 
-All files: `screenshots/{nn}-{slug}.png`
+All files: `$AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png`
 
 ---
 
@@ -287,12 +325,12 @@ Screenshots are the #1 audit artifact — PROOF that testing was done.
    **Method 3 — Chrome DevTools Protocol**:
    Capture viewport via canvas, convert to data URL, write base64 to disk via Bash.
 
-4. **VERIFY file exists**: `ls -la screenshots/{nn}-{slug}.png`
+4. **VERIFY file exists**: `ls -la $AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png`
 5. **Log to scratchpad** in `09-browser-findings.md`:
    ```
    ### Step 2x: {Test Name}
    - Query: "{query}"
-   - Screenshot: screenshots/{nn}-{slug}.png (VERIFIED ON DISK)
+   - Screenshot: $AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png (VERIFIED ON DISK)
    - Result count: {n}
    - Observation: {what happened}
    ```
@@ -572,7 +610,7 @@ find screenshots/ -empty | wc -l
 Must return 0. Delete and re-capture any empty files.
 
 **Check 3 — Disk path verification**:
-Each entry in `09-browser-findings.md` must include `Screenshot: screenshots/{nn}-{slug}.png (VERIFIED ON DISK)`. Entries with Chrome MCP imageIds like `ss_XXXXXXX` instead of file paths indicate persistence failure — fix immediately.
+Each entry in `09-browser-findings.md` must include `Screenshot: $AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png (VERIFIED ON DISK)`. Entries with Chrome MCP imageIds like `ss_XXXXXXX` instead of file paths indicate persistence failure — fix immediately.
 
 **Check 4 — WAF/Error Page Detection**:
 ```bash
@@ -615,7 +653,7 @@ Use this format consistently for all 20 steps:
 # Browser Findings — {Company}
 Audit Date: {ISO date}
 Auditor: Algolia (Claude Code)
-Workspace: {company}-audit-workspace/
+Workspace: $AUDIT_DIR/{{CompanyName}}/research/
 
 ---
 

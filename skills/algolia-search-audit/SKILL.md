@@ -3,6 +3,42 @@ name: algolia-search-audit
 description: Run a comprehensive Algolia Search Audit on a prospect website with browser tests and report.
 ---
 
+## CANONICAL PATH DEFINITIONS
+
+```
+AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
+ARIAN_DIR  = ~/algolia-arian-v2
+SKILLS_DIR = ~/.claude/skills/algolia-search-audit
+```
+
+**Every audit MUST use this structure:**
+```
+$AUDIT_DIR/{CompanyName}/
+├── research/          ← scratchpads 01-12, CHECKPOINT.md, FACTCHECK_GATE.md
+├── factcheck/         ← factcheck dimension files (never published)
+├── scripts/           ← company-specific scripts only
+└── deliverables/
+    ├── index.html                ← SPA
+    ├── screenshots/              ← browser audit screenshots
+    ├── ae-report.html
+    ├── battle-card.html
+    ├── leave-behind.html
+    └── {slug}-*.md               ← markdown reports
+```
+
+**Published to GitHub/Vercel:**
+```
+$ARIAN_DIR/{slug}/                ← mirrors $AUDIT_DIR/{CompanyName}/deliverables/
+├── index.html
+├── screenshots/
+├── ae-report.html
+├── battle-card.html
+└── leave-behind.html
+$ARIAN_DIR/{slug}-audit-data.json ← JSON stays at root
+```
+
+
+
 # Algolia Search Audit — Orchestrator
 
 Full-stack search experience audit pipeline with mandatory factcheck gate and human review before publishing.
@@ -52,14 +88,14 @@ Phase 6  → /algolia-audit-factcheck      ← MANDATORY BEFORE ANY PUBLISH
 
 ### Step 6: Run Factcheck (MANDATORY — never skip)
 ```
-/algolia-audit-factcheck {slug}-audit-workspace/
+/algolia-audit-factcheck $AUDIT_DIR/{CompanyName}/research/
 ```
 
-The factcheck writes `FACTCHECK_GATE.md` to the workspace root. Read it immediately after.
+The factcheck writes `FACTCHECK_GATE.md` to `$AUDIT_DIR/{CompanyName}/research/`. Read it immediately after.
 
 ### Step 7: Evaluate the Gate
 
-Read `{slug}-audit-workspace/FACTCHECK_GATE.md` and parse:
+Read `$AUDIT_DIR/{CompanyName}/research/FACTCHECK_GATE.md` and parse:
 
 **If `ACTION: BLOCKED`:**
 ```
@@ -70,7 +106,7 @@ Blocking issues:
 
 These must be corrected before this audit can be staged or published.
 Reply with what you'd like to fix, or run:
-  /algolia-audit-factcheck {slug}-audit-workspace/
+  /algolia-audit-factcheck $AUDIT_DIR/{CompanyName}/research/
 again after corrections.
 ```
 DO NOT stage. DO NOT push. Wait for user direction.
@@ -106,7 +142,7 @@ cd ~/algolia-arian-v2 && python3 -m http.server 8766 &>/dev/null &
 sleep 1
 
 # Stage to hub (LOCAL commit, not pushed yet)
-cd {slug}-audit-workspace
+cd $AUDIT_DIR/{CompanyName}/research
 bash ~/.claude/skills/algolia-search-audit/scripts/publish-audit.sh {slug} ~/algolia-arian-v2 --stage-only
 ```
 
@@ -157,7 +193,7 @@ Then confirm:
 ### Step 11: On "fix {issue}" (iterative fixes)
 
 1. Make the requested fix (edit JSON, re-render SPA, update scratchpad as needed)
-2. Re-run factcheck if the fix touches a factual claim: `/algolia-audit-factcheck {slug}-audit-workspace/`
+2. Re-run factcheck if the fix touches a factual claim: `/algolia-audit-factcheck $AUDIT_DIR/{CompanyName}/research/`
 3. Re-stage: `bash publish-audit.sh {slug} ~/algolia-arian-v2 --stage-only`
 4. Return to Step 9 (show updated review prompt)
 
@@ -219,11 +255,11 @@ Before starting any audit run:
 
 1. Determine company slug: lowercase, hyphens, no spaces (e.g., `costco`, `the-realreal`)
 2. Check for existing audit directories:
-   - Workspace: `{company}-audit-workspace/` — always reuse/append (never recreate from scratch)
+   - Workspace: `$AUDIT_DIR/{CompanyName}/research/` — always reuse/append (never recreate from scratch)
    - Deliverables: check for `{company}-audit-v1/`, `{company}-audit-v2/`, etc.
-3. Write deliverables to `{company}-audit-v{N}/` where N = next unused integer
+3. Write deliverables to `$AUDIT_DIR/{CompanyName}/deliverables/` (canonical — no versioning)
    - Never overwrite previous audit deliverable directories
-   - Note in CHECKPOINT.md: `Deliverables version: v{N}`
+   - Note in CHECKPOINT.md: `Deliverables written to: $AUDIT_DIR/{CompanyName}/deliverables/`
 
 ---
 

@@ -3,6 +3,42 @@ name: algolia-audit-report
 description: Run Phase 3-5 of Algolia Search Audit. Scores search gaps, generates audit-data.json, runs the renderer pipeline (SPA + HTML deliverables + PDF), and writes AE Pre-Call Brief and Strategic Signal Brief. Requires Phase 1 + Phase 2 workspace to exist.
 ---
 
+## CANONICAL PATH DEFINITIONS
+
+```
+AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
+ARIAN_DIR  = ~/algolia-arian-v2
+SKILLS_DIR = ~/.claude/skills/algolia-search-audit
+```
+
+**Every audit MUST use this structure:**
+```
+$AUDIT_DIR/{CompanyName}/
+├── research/          ← scratchpads 01-12, CHECKPOINT.md, FACTCHECK_GATE.md
+├── factcheck/         ← factcheck dimension files (never published)
+├── scripts/           ← company-specific scripts only
+└── deliverables/
+    ├── index.html                ← SPA
+    ├── screenshots/              ← browser audit screenshots
+    ├── ae-report.html
+    ├── battle-card.html
+    ├── leave-behind.html
+    └── {slug}-*.md               ← markdown reports
+```
+
+**Published to GitHub/Vercel:**
+```
+$ARIAN_DIR/{slug}/                ← mirrors $AUDIT_DIR/{CompanyName}/deliverables/
+├── index.html
+├── screenshots/
+├── ae-report.html
+├── battle-card.html
+└── leave-behind.html
+$ARIAN_DIR/{slug}-audit-data.json ← JSON stays at root
+```
+
+
+
 # Algolia Audit — Phase 3-5: Scoring & Deliverables
 
 Standalone sub-skill. Reads existing scratchpad files and browser findings produced by `/algolia-search-audit --phase research` and `--phase searchaudit`. Produces all scored output and final deliverables.
@@ -11,7 +47,9 @@ Standalone sub-skill. Reads existing scratchpad files and browser findings produ
 
 ## Input
 
-`$ARGUMENTS` — company slug matching the workspace directory (e.g., `costco` → `costco-audit-workspace/`)
+`$ARGUMENTS` — company slug (e.g., `costco`). Workspace at `$AUDIT_DIR/Costco/research/`
+
+`$AUDIT_DIR = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit`
 
 Optional flags:
 - `--deliverable {name}` — generate only one deliverable: `site` | `ae-report` | `battle-card` | `leave-behind` | `aebrief` | `signalbrief`
@@ -22,7 +60,7 @@ Optional flags:
 All files below must exist before starting. If any are missing, warn the user and stop.
 
 ```
-{company}-audit-workspace/
+$AUDIT_DIR/{CompanyName}/research/
 ├── 01-company-context.md       ← Company overview, ticker, executives, case studies
 ├── 02-tech-stack.md            ← BuiltWith + SimilarWeb technology findings
 ├── 03-traffic-data.md          ← SimilarWeb traffic metrics (with API Parameters header)
@@ -44,9 +82,9 @@ All files below must exist before starting. If any are missing, warn the user an
 |------|--------|----------|---------------|
 | `{company}-audit-data.json` | JSON | Internal (source of truth) | Claude writes from scratchpad |
 | `{company}/index.html` | HTML SPA | AE, SE, BD | `render-audit.ts site` |
-| `{company}-ae-report.html` | HTML | AE action card | `render-audit.ts ae-report` |
-| `{company}-battle-card.html` | HTML | AE/SE deal room | `render-audit.ts battle-card` |
-| `{company}-leave-behind.html` | HTML | Prospect-facing | `render-audit.ts leave-behind` |
+| `{slug}/ae-report.html` | HTML | AE action card | `render-audit.ts ae-report` |
+| `{slug}/battle-card.html` | HTML | AE/SE deal room | `render-audit.ts battle-card` |
+| `{slug}/leave-behind.html` | HTML | Prospect-facing | `render-audit.ts leave-behind` |
 | `{company}-leave-behind.pdf` | PDF | Prospect-facing | `generate-pdf.sh leave-behind` |
 | `{company}-ae-precall-brief.md` | Markdown | AE internal | Claude writes |
 | `{company}-strategic-signal-brief.md` | Markdown | Downstream LLM | Claude writes |
@@ -55,7 +93,7 @@ Also retained: `{company}-search-audit.md` — Phase 4 full research report.
 
 ## Checkpoint
 
-Write/update `{company}-audit-workspace/CHECKPOINT.md` at each phase boundary:
+Write/update `$AUDIT_DIR/{CompanyName}/research/CHECKPOINT.md` at each phase boundary:
 - Phase 3 complete: scoring matrix written
 - Phase 4 complete: audit report written + Gate 4 passed
 - Phase 5a complete: audit-data.json written + validated

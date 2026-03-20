@@ -3,6 +3,19 @@ name: algolia-audit-factcheck
 description: Fact-check and validate Algolia Search Audit outputs across 7 dimensions. Run after /algolia-search-audit.
 ---
 
+## CANONICAL PATH DEFINITIONS
+
+```
+AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
+ARIAN_DIR  = ~/algolia-arian-v2
+```
+
+**Factcheck reads from:** `$AUDIT_DIR/{CompanyName}/research/` (scratchpads)
+**Factcheck writes to:** `$AUDIT_DIR/{CompanyName}/deliverables/` (3 output files)
+**Factcheck workspace:** `$AUDIT_DIR/{CompanyName}/factcheck/` (6 dimension files)
+
+
+
 # Algolia Audit Fact-Check (v1.1)
 
 Validate every factual claim across all deliverables produced by `/algolia-search-audit`. Catches cross-file inconsistencies, math errors, stale API data, broken citations, unverifiable quotes, and scratchpad-to-deliverable drift. Produces 3 output files: a human-readable confidence report, a machine-readable correction manifest, and a methodology feedback file for continuous skill improvement.
@@ -98,7 +111,9 @@ The fact-check MUST follow this priority order — no exceptions:
 
 Accept a path to an audit directory as `$ARGUMENTS` (e.g., `costco-v2/`, `therealreal-v2/`).
 
-If no path is provided, look for the most recently modified `*-audit-workspace/` directory in the current working directory. If none found, ask the user.
+If no path is provided, look for `$AUDIT_DIR/{CompanyName}/research/` matching the company. Ask the user for CompanyName if ambiguous.
+
+`$AUDIT_DIR = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit` If none found, ask the user.
 
 Optionally the user may specify:
 - **Tier**: `full` (default), `standard`, or `quick` — controls depth of external verification. Full is the default because external validation is the primary job.
@@ -125,7 +140,7 @@ For parallel agent execution (Team Mode):
 
 1. **Locate audit files** — Scan the provided directory for:
    - **Deliverables** (6 files): `{company}-search-audit.md`, `{company}-landing-page.html`, `{company}-search-audit-deck.md`, `{company}-landing-page.md`, `{company}-ae-precall-brief.md`, `{company}-strategic-signal-brief.md`
-   - **Workspace** (11+ files): `{company}-audit-workspace/` containing `01-company-context.md` through `11-investor-intelligence.md` plus `_workspace-manifest.md`
+   - **Workspace** (11+ files): `$AUDIT_DIR/{CompanyName}/research/` containing `01-company-context.md` through `11-investor-intelligence.md` plus `_workspace-manifest.md`
    - **Screenshots**: `screenshots/` directory — count files present
 
 2. **Extract company slug** — Derive from filenames (e.g., `costco` from `costco-search-audit.md`)
@@ -134,7 +149,7 @@ For parallel agent execution (Team Mode):
 
 4. **Create factcheck workspace**:
    ```
-   {company}-factcheck/
+   $AUDIT_DIR/{CompanyName}/factcheck/
    ├── claim-registry.md          ← Phase 1 output (Agent 1)
    ├── dim-1-2-3-results.md       ← Phase 1 output (Agent 1)
    ├── dim-4-api-results.md       ← Phase 2 output (Agent 2)
@@ -561,6 +576,8 @@ The fact-check also produces THREE report files in the audit directory:
 
 ### Output 1: `{company}-factcheck-report.md`
 
+**Write to:** `$AUDIT_DIR/{CompanyName}/deliverables/{company}-factcheck-report.md`
+
 Human-readable scored verification report.
 
 ```markdown
@@ -756,6 +773,8 @@ Human-readable scored verification report.
 
 ### Output 2: `{company}-correction-manifest.md`
 
+**Write to:** `$AUDIT_DIR/{CompanyName}/deliverables/{company}-correction-manifest.md`
+
 Machine-readable fix list for correcting deliverables.
 
 ```markdown
@@ -821,6 +840,8 @@ These claims are already labeled with ⚠️. Listing here for AE transparency.
 ```
 
 ### Output 3: `{company}-skill-feedback.md`
+
+**Write to:** `$AUDIT_DIR/{CompanyName}/deliverables/{company}-skill-feedback.md`
 
 Methodology improvement analysis for the audit skill.
 
