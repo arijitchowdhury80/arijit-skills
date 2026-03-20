@@ -141,6 +141,62 @@ echo "    Run once per project. Then: /get-up-to-speed at every session start."
 echo ""
 echo "────────────────────────────────────────────────────"
 echo ""
+
+# ── ALGOLIA_AUDIT_DIR setup ───────────────────────────────────────────────────
+if grep -q "algolia-search-audit" "$SKILLS_DIR" 2>/dev/null || [ -d "$SKILLS_DIR/algolia-search-audit" ]; then
+
+  echo "────────────────────────────────────────────────────"
+  echo ""
+  echo "SEARCH AUDIT WORKSPACE SETUP"
+  echo ""
+  echo "  The search audit skill needs a directory to store:"
+  echo "    • Company research files (scratchpads)"
+  echo "    • Browser screenshots"
+  echo "    • Deliverables (reports, HTML files, PDFs)"
+  echo ""
+
+  # Check if already set
+  if [ -n "$ALGOLIA_AUDIT_DIR" ]; then
+    echo "  ✓ ALGOLIA_AUDIT_DIR already set: $ALGOLIA_AUDIT_DIR"
+    AUDIT_DIR="$ALGOLIA_AUDIT_DIR"
+  else
+    DEFAULT_AUDIT_DIR="$HOME/Documents/Algolia Search Audits"
+    echo -n "  Enter audit workspace path [${DEFAULT_AUDIT_DIR}]: "
+    read -r USER_AUDIT_DIR
+    AUDIT_DIR="${USER_AUDIT_DIR:-$DEFAULT_AUDIT_DIR}"
+  fi
+
+  # Create the directory
+  mkdir -p "$AUDIT_DIR"
+  echo "  ✓ Audit workspace: $AUDIT_DIR"
+
+  # Add to shell profile if not already there
+  SHELL_RC=""
+  if [ -f "$HOME/.zshrc" ]; then
+    SHELL_RC="$HOME/.zshrc"
+  elif [ -f "$HOME/.bashrc" ]; then
+    SHELL_RC="$HOME/.bashrc"
+  elif [ -f "$HOME/.bash_profile" ]; then
+    SHELL_RC="$HOME/.bash_profile"
+  fi
+
+  if [ -n "$SHELL_RC" ]; then
+    if ! grep -q "ALGOLIA_AUDIT_DIR" "$SHELL_RC"; then
+      echo "" >> "$SHELL_RC"
+      echo "# Algolia Search Audit — workspace directory" >> "$SHELL_RC"
+      echo "export ALGOLIA_AUDIT_DIR="$AUDIT_DIR"" >> "$SHELL_RC"
+      echo "  ✓ Added to $SHELL_RC"
+      echo "  ✓ Run: source $SHELL_RC  (or restart terminal)"
+    else
+      echo "  ✓ ALGOLIA_AUDIT_DIR already in $SHELL_RC"
+    fi
+  else
+    echo "  ⚠  Could not detect shell profile. Add manually:"
+    echo "     export ALGOLIA_AUDIT_DIR=\"$AUDIT_DIR\""
+  fi
+  echo ""
+fi
+
 echo "Open any project in Claude Code and type / to see all commands."
 echo ""
 echo "Done!"
