@@ -1,21 +1,73 @@
 #!/usr/bin/env python3
 """
 Algolia Audit — Workspace Pre-Flight Validator
-Checks every scratchpad file for completeness before Phase 3-5 runs.
-Exits 1 if critical gaps found.
+Checks every scratchpad file for completeness AND that output paths are canonical.
+Exits 1 if critical gaps found or paths are wrong.
+
 Usage: python3 validate-workspace.py $AUDIT_DIR/{CompanyName}/research/
          (also accepts legacy: python3 validate-workspace.py {slug}-audit-workspace/)
 """
 import os, sys, glob, re
 
+CANONICAL_BASE = os.path.expanduser(
+    "~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com"
+    "/My Drive/AI/MarketingProject/Algolia Search Audit"
+)
+
 ws = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
-# Derive company slug from workspace path
+ws = os.path.realpath(ws)
+
+# Derive company name/slug from workspace path
 # New canonical: $AUDIT_DIR/{CompanyName}/research/
 # Legacy: {slug}-audit-workspace/
-slug = os.path.basename(os.path.dirname(ws)) if os.path.basename(ws) == 'research' else os.path.basename(ws).replace('-audit-workspace','')
+is_canonical = os.path.basename(ws) == 'research'
+company_name = os.path.basename(os.path.dirname(ws)) if is_canonical else None
+slug = company_name.lower().replace(' ', '-') if company_name else os.path.basename(ws).replace('-audit-workspace','')
+
 print(f"\n══════════════════════════════════════════════════")
-print(f"  PRE-FLIGHT VALIDATION — {slug}")
+print(f"  PRE-FLIGHT VALIDATION — {company_name or slug}")
 print(f"══════════════════════════════════════════════════\n")
+
+# ── Canonical path check ──────────────────────────────────────────────────────
+print("── Canonical Path Check ──────────────────────────")
+if is_canonical:
+    expected = os.path.join(CANONICAL_BASE, company_name, 'research')
+    if os.path.realpath(ws) == os.path.realpath(expected):
+        print(f"  ✓ Workspace at canonical path")
+        print(f"    {ws}")
+    else:
+        print(f"  ⚠️  Workspace is named 'research' but not at canonical base")
+        print(f"    Current:  {ws}")
+        print(f"    Expected: {expected}")
+else:
+    legacy_name = os.path.basename(ws)
+    print(f"  ❌ WRONG PATH — workspace is at legacy location:")
+    print(f"     {ws}")
+    print(f"  → Move to canonical: $AUDIT_DIR/{{CompanyName}}/research/")
+    print(f"     where AUDIT_DIR = {CANONICAL_BASE}")
+    print(f"  ⚠️  Proceeding with validation but output will go to wrong location")
+
+# ── Output paths check ────────────────────────────────────────────────────────
+print("\n── Output Path Check ─────────────────────────────")
+if is_canonical:
+    parent = os.path.dirname(ws)  # $AUDIT_DIR/{CompanyName}/
+    deliverables_dir = os.path.join(parent, 'deliverables')
+    screenshots_dir  = os.path.join(deliverables_dir, 'screenshots')
+    factcheck_dir    = os.path.join(parent, 'factcheck')
+    scripts_dir      = os.path.join(parent, 'scripts')
+
+    for label, path in [
+        ('deliverables/', deliverables_dir),
+        ('deliverables/screenshots/', screenshots_dir),
+        ('factcheck/', factcheck_dir),
+    ]:
+        if os.path.exists(path):
+            print(f"  ✓ {label} exists")
+        else:
+            print(f"  ⚠️  {label} missing — will be created on first write")
+else:
+    print(f"  ⚠️  Cannot verify output paths — workspace not at canonical location")
+print()
 
 PASS = True
 missing_steps = []
@@ -70,9 +122,14 @@ for i in ['01','02','03','04','05','06','07','08','09','10','11','12']:
 
     print(f"  ✓ {fname} ({size}b)")
 
-# Screenshots
+# Screenshots — check canonical deliverables/screenshots/ first, then legacy
 print("\n── Screenshots ───────────────────────────────────")
-shot_dir = os.path.join(ws, 'screenshots')
+if is_canonical:
+    shot_dir = os.path.join(os.path.dirname(ws), 'deliverables', 'screenshots')
+    print(f"  (checking canonical: deliverables/screenshots/)")
+else:
+    shot_dir = os.path.join(ws, 'screenshots')
+    print(f"  (checking legacy: workspace/screenshots/)")
 shots = glob.glob(os.path.join(shot_dir, '*.png')) if os.path.isdir(shot_dir) else []
 if len(shots) < 10:
     print(f"  ❌ SCREENSHOTS: only {len(shots)} found (minimum 10 required)")
