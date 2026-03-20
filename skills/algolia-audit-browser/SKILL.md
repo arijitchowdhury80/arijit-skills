@@ -5,15 +5,17 @@ description: Run Phase 2 browser-based search audit. Tests 20 search behaviors u
 
 ## CANONICAL PATH DEFINITIONS
 
-```
-AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
-ARIAN_DIR  = ~/algolia-arian-v2
-SKILLS_DIR = ~/.claude/skills/algolia-search-audit
+The skill uses a user-configured audit directory. Set this once:
+
+```bash
+export ALGOLIA_AUDIT_DIR="/path/to/your/Algolia Search Audit"
+# Example: export ALGOLIA_AUDIT_DIR="~/Documents/Algolia Search Audit"
+# Add to ~/.zshrc or ~/.bashrc to persist across sessions
 ```
 
-**Every audit MUST use this structure:**
+**Required folder structure** (structure is enforced, base path is user-configured):
 ```
-$AUDIT_DIR/{CompanyName}/
+$ALGOLIA_AUDIT_DIR/{CompanyName}/
 ├── research/          ← scratchpads 01-12, CHECKPOINT.md, FACTCHECK_GATE.md
 ├── factcheck/         ← factcheck dimension files (never published)
 ├── scripts/           ← company-specific scripts only
@@ -22,30 +24,22 @@ $AUDIT_DIR/{CompanyName}/
     ├── screenshots/              ← browser audit screenshots
     ├── ae-report.html
     ├── battle-card.html
-    ├── leave-behind.html
-    └── {slug}-*.md               ← markdown reports
+    └── leave-behind.html
 ```
 
 **Published to GitHub/Vercel:**
 ```
-$ARIAN_DIR/{slug}/                ← mirrors $AUDIT_DIR/{CompanyName}/deliverables/
+$ALGOLIA_ARIAN_DIR/{slug}/                ← mirrors $ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/
 ├── index.html
 ├── screenshots/
 ├── ae-report.html
 ├── battle-card.html
 └── leave-behind.html
-$ARIAN_DIR/{slug}-audit-data.json ← JSON stays at root
+$ALGOLIA_ARIAN_DIR/{slug}-audit-data.json  ← JSON stays at root
 ```
 
+**Note:** If `ALGOLIA_AUDIT_DIR` is not set, the skill will ask you to provide the path or use the current working directory as the base.
 
-
-# Algolia Audit — Phase 2 Browser Testing
-
-This is a standalone sub-skill that runs Phase 2 (Browser-Based Search Audit) of the Algolia Search Audit methodology. It requires Phase 1 to have been completed first — specifically, the workspace directory and these scratchpad files must already exist before this skill can run.
-
-> **Why standalone?** Phase 2 browser testing is the most time-sensitive and failure-prone phase. Extracting it as a dedicated sub-skill allows it to be re-run independently after a WAF block, session reset, or interrupted context — without re-running 14 steps of Phase 1 research.
-
----
 
 ## Input
 
@@ -53,7 +47,7 @@ This is a standalone sub-skill that runs Phase 2 (Browser-Based Search Audit) of
 
 Resolves workspace at: `$AUDIT_DIR/{CompanyName}/research/`
 
-`$AUDIT_DIR = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit`
+`$AUDIT_DIR = $ALGOLIA_AUDIT_DIR`
 
 If `--resume-from {step}` is passed (e.g., `--resume-from 2c`), skip all prior steps without re-running them. Jump directly to the named step and continue sequentially through 2t.
 

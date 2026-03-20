@@ -5,22 +5,41 @@ description: Fact-check and validate Algolia Search Audit outputs across 7 dimen
 
 ## CANONICAL PATH DEFINITIONS
 
+The skill uses a user-configured audit directory. Set this once:
+
+```bash
+export ALGOLIA_AUDIT_DIR="/path/to/your/Algolia Search Audit"
+# Example: export ALGOLIA_AUDIT_DIR="~/Documents/Algolia Search Audit"
+# Add to ~/.zshrc or ~/.bashrc to persist across sessions
 ```
-AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
-ARIAN_DIR  = ~/algolia-arian-v2
+
+**Required folder structure** (structure is enforced, base path is user-configured):
+```
+$ALGOLIA_AUDIT_DIR/{CompanyName}/
+├── research/          ← scratchpads 01-12, CHECKPOINT.md, FACTCHECK_GATE.md
+├── factcheck/         ← factcheck dimension files (never published)
+├── scripts/           ← company-specific scripts only
+└── deliverables/
+    ├── index.html                ← SPA
+    ├── screenshots/              ← browser audit screenshots
+    ├── ae-report.html
+    ├── battle-card.html
+    └── leave-behind.html
 ```
 
-**Factcheck reads from:** `$AUDIT_DIR/{CompanyName}/research/` (scratchpads)
-**Factcheck writes to:** `$AUDIT_DIR/{CompanyName}/deliverables/` (3 output files)
-**Factcheck workspace:** `$AUDIT_DIR/{CompanyName}/factcheck/` (6 dimension files)
+**Published to GitHub/Vercel:**
+```
+$ALGOLIA_ARIAN_DIR/{slug}/                ← mirrors $ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/
+├── index.html
+├── screenshots/
+├── ae-report.html
+├── battle-card.html
+└── leave-behind.html
+$ALGOLIA_ARIAN_DIR/{slug}-audit-data.json  ← JSON stays at root
+```
 
+**Note:** If `ALGOLIA_AUDIT_DIR` is not set, the skill will ask you to provide the path or use the current working directory as the base.
 
-
-# Algolia Audit Fact-Check (v1.1)
-
-Validate every factual claim across all deliverables produced by `/algolia-search-audit`. Catches cross-file inconsistencies, math errors, stale API data, broken citations, unverifiable quotes, and scratchpad-to-deliverable drift. Produces 3 output files: a human-readable confidence report, a machine-readable correction manifest, and a methodology feedback file for continuous skill improvement.
-
----
 
 ## EVIDENCE TIER SYSTEM (MANDATORY — applies to every claim in every deliverable)
 
@@ -113,7 +132,7 @@ Accept a path to an audit directory as `$ARGUMENTS` (e.g., `costco-v2/`, `therea
 
 If no path is provided, look for `$AUDIT_DIR/{CompanyName}/research/` matching the company. Ask the user for CompanyName if ambiguous.
 
-`$AUDIT_DIR = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit` If none found, ask the user.
+`$AUDIT_DIR = $ALGOLIA_AUDIT_DIR` If none found, ask the user.
 
 Optionally the user may specify:
 - **Tier**: `full` (default), `standard`, or `quick` — controls depth of external verification. Full is the default because external validation is the primary job.

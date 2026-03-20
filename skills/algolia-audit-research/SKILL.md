@@ -5,15 +5,17 @@ description: Run Phase 1 pre-audit research for Algolia Search Audit. Collects c
 
 ## CANONICAL PATH DEFINITIONS
 
-```
-AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
-ARIAN_DIR  = ~/algolia-arian-v2
-SKILLS_DIR = ~/.claude/skills/algolia-search-audit
+The skill uses a user-configured audit directory. Set this once:
+
+```bash
+export ALGOLIA_AUDIT_DIR="/path/to/your/Algolia Search Audit"
+# Example: export ALGOLIA_AUDIT_DIR="~/Documents/Algolia Search Audit"
+# Add to ~/.zshrc or ~/.bashrc to persist across sessions
 ```
 
-**Every audit MUST use this structure:**
+**Required folder structure** (structure is enforced, base path is user-configured):
 ```
-$AUDIT_DIR/{CompanyName}/
+$ALGOLIA_AUDIT_DIR/{CompanyName}/
 ├── research/          ← scratchpads 01-12, CHECKPOINT.md, FACTCHECK_GATE.md
 ├── factcheck/         ← factcheck dimension files (never published)
 ├── scripts/           ← company-specific scripts only
@@ -22,28 +24,22 @@ $AUDIT_DIR/{CompanyName}/
     ├── screenshots/              ← browser audit screenshots
     ├── ae-report.html
     ├── battle-card.html
-    ├── leave-behind.html
-    └── {slug}-*.md               ← markdown reports
+    └── leave-behind.html
 ```
 
 **Published to GitHub/Vercel:**
 ```
-$ARIAN_DIR/{slug}/                ← mirrors $AUDIT_DIR/{CompanyName}/deliverables/
+$ALGOLIA_ARIAN_DIR/{slug}/                ← mirrors $ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/
 ├── index.html
 ├── screenshots/
 ├── ae-report.html
 ├── battle-card.html
 └── leave-behind.html
-$ARIAN_DIR/{slug}-audit-data.json ← JSON stays at root
+$ALGOLIA_ARIAN_DIR/{slug}-audit-data.json  ← JSON stays at root
 ```
 
+**Note:** If `ALGOLIA_AUDIT_DIR` is not set, the skill will ask you to provide the path or use the current working directory as the base.
 
-
-# Algolia Audit — Phase 1 Research
-
-This is a standalone sub-skill of `/algolia-search-audit`. It runs only Phase 0 (Workspace Setup) and Phase 1 (Pre-Audit Research, Steps 1-14) — no browser testing, no scoring, no deliverable generation. Use this sub-skill to collect all research data before running `/algolia-audit-browser` for Phase 2 browser testing, or to refresh specific research steps without re-running the full audit.
-
-When the full audit is run end-to-end via `/algolia-search-audit`, this sub-skill's logic runs as the first stage. Running it standalone lets you front-load research, parallelize work across sessions, or refresh stale data.
 
 ## Input
 
@@ -80,7 +76,7 @@ When `--refresh` is passed: load the existing workspace, skip all steps except t
 
 All output files written to `$AUDIT_DIR/{CompanyName}/research/` (canonical audit location):
 
-`$AUDIT_DIR = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit`
+`$AUDIT_DIR = $ALGOLIA_AUDIT_DIR`
 
 ```
 {{CompanyName}}/research/

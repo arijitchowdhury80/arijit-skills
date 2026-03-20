@@ -5,15 +5,17 @@ description: Run Phase 3-5 of Algolia Search Audit. Scores search gaps, generate
 
 ## CANONICAL PATH DEFINITIONS
 
-```
-AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
-ARIAN_DIR  = ~/algolia-arian-v2
-SKILLS_DIR = ~/.claude/skills/algolia-search-audit
+The skill uses a user-configured audit directory. Set this once:
+
+```bash
+export ALGOLIA_AUDIT_DIR="/path/to/your/Algolia Search Audit"
+# Example: export ALGOLIA_AUDIT_DIR="~/Documents/Algolia Search Audit"
+# Add to ~/.zshrc or ~/.bashrc to persist across sessions
 ```
 
-**Every audit MUST use this structure:**
+**Required folder structure** (structure is enforced, base path is user-configured):
 ```
-$AUDIT_DIR/{CompanyName}/
+$ALGOLIA_AUDIT_DIR/{CompanyName}/
 ├── research/          ← scratchpads 01-12, CHECKPOINT.md, FACTCHECK_GATE.md
 ├── factcheck/         ← factcheck dimension files (never published)
 ├── scripts/           ← company-specific scripts only
@@ -22,34 +24,28 @@ $AUDIT_DIR/{CompanyName}/
     ├── screenshots/              ← browser audit screenshots
     ├── ae-report.html
     ├── battle-card.html
-    ├── leave-behind.html
-    └── {slug}-*.md               ← markdown reports
+    └── leave-behind.html
 ```
 
 **Published to GitHub/Vercel:**
 ```
-$ARIAN_DIR/{slug}/                ← mirrors $AUDIT_DIR/{CompanyName}/deliverables/
+$ALGOLIA_ARIAN_DIR/{slug}/                ← mirrors $ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/
 ├── index.html
 ├── screenshots/
 ├── ae-report.html
 ├── battle-card.html
 └── leave-behind.html
-$ARIAN_DIR/{slug}-audit-data.json ← JSON stays at root
+$ALGOLIA_ARIAN_DIR/{slug}-audit-data.json  ← JSON stays at root
 ```
 
+**Note:** If `ALGOLIA_AUDIT_DIR` is not set, the skill will ask you to provide the path or use the current working directory as the base.
 
-
-# Algolia Audit — Phase 3-5: Scoring & Deliverables
-
-Standalone sub-skill. Reads existing scratchpad files and browser findings produced by `/algolia-search-audit --phase research` and `--phase searchaudit`. Produces all scored output and final deliverables.
-
-**Do not run this if Phase 1 scratchpad files or Phase 2 browser findings are missing — it will produce hallucinated data.**
 
 ## Input
 
 `$ARGUMENTS` — company slug (e.g., `costco`). Workspace at `$AUDIT_DIR/Costco/research/`
 
-`$AUDIT_DIR = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit`
+`$AUDIT_DIR = $ALGOLIA_AUDIT_DIR`
 
 Optional flags:
 - `--deliverable {name}` — generate only one deliverable: `site` | `ae-report` | `battle-card` | `leave-behind` | `aebrief` | `signalbrief`

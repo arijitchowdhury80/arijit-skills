@@ -5,15 +5,17 @@ description: Run a comprehensive Algolia Search Audit on a prospect website with
 
 ## CANONICAL PATH DEFINITIONS
 
-```
-AUDIT_DIR  = ~/Library/CloudStorage/GoogleDrive-arijit.chowdhury@algolia.com/My Drive/AI/MarketingProject/Algolia Search Audit
-ARIAN_DIR  = ~/algolia-arian-v2
-SKILLS_DIR = ~/.claude/skills/algolia-search-audit
+The skill uses a user-configured audit directory. Set this once:
+
+```bash
+export ALGOLIA_AUDIT_DIR="/path/to/your/Algolia Search Audit"
+# Example: export ALGOLIA_AUDIT_DIR="~/Documents/Algolia Search Audit"
+# Add to ~/.zshrc or ~/.bashrc to persist across sessions
 ```
 
-**Every audit MUST use this structure:**
+**Required folder structure** (structure is enforced, base path is user-configured):
 ```
-$AUDIT_DIR/{CompanyName}/
+$ALGOLIA_AUDIT_DIR/{CompanyName}/
 ├── research/          ← scratchpads 01-12, CHECKPOINT.md, FACTCHECK_GATE.md
 ├── factcheck/         ← factcheck dimension files (never published)
 ├── scripts/           ← company-specific scripts only
@@ -22,59 +24,22 @@ $AUDIT_DIR/{CompanyName}/
     ├── screenshots/              ← browser audit screenshots
     ├── ae-report.html
     ├── battle-card.html
-    ├── leave-behind.html
-    └── {slug}-*.md               ← markdown reports
+    └── leave-behind.html
 ```
 
 **Published to GitHub/Vercel:**
 ```
-$ARIAN_DIR/{slug}/                ← mirrors $AUDIT_DIR/{CompanyName}/deliverables/
+$ALGOLIA_ARIAN_DIR/{slug}/                ← mirrors $ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/
 ├── index.html
 ├── screenshots/
 ├── ae-report.html
 ├── battle-card.html
 └── leave-behind.html
-$ARIAN_DIR/{slug}-audit-data.json ← JSON stays at root
+$ALGOLIA_ARIAN_DIR/{slug}-audit-data.json  ← JSON stays at root
 ```
 
+**Note:** If `ALGOLIA_AUDIT_DIR` is not set, the skill will ask you to provide the path or use the current working directory as the base.
 
-
-# Algolia Search Audit — Orchestrator
-
-Full-stack search experience audit pipeline with mandatory factcheck gate and human review before publishing.
-
-| Sub-skill | Phase | Time | SKILL.md |
-|-----------|-------|------|----------|
-| `/algolia-audit-research` | Phase 1: Research (14 steps) | ~15 min | `~/.claude/skills/algolia-audit-research/SKILL.md` |
-| `/algolia-live-signals` | Phase 1b: Live Intel — Hiring, Social, News (Apify) | ~3 min | `~/.claude/skills/algolia-live-signals/SKILL.md` |
-| `/algolia-audit-browser` | Phase 2: Browser Testing (20 steps) | ~25 min | `~/.claude/skills/algolia-audit-browser/SKILL.md` |
-| `/algolia-audit-report` | Phase 3-5: Scoring + Deliverables | ~20 min | `~/.claude/skills/algolia-audit-report/SKILL.md` |
-| `/algolia-audit-factcheck` | Phase 6: Fact Verification (**MANDATORY**) | ~25 min | `~/.claude/skills/algolia-audit-factcheck/SKILL.md` |
-
-**Full execution order (non-negotiable):**
-```
-Phase 1  → /algolia-audit-research       (14 research steps)
-Phase 1b → /algolia-live-signals         (Apify: hiring + social + news)
-Phase 2  → /algolia-audit-browser        (20 browser tests + screenshots)
-Phase 3-5→ /algolia-audit-report         (score + render SPA + deliverables)
-Phase 6  → /algolia-audit-factcheck      ← MANDATORY BEFORE ANY PUBLISH
-           ↓
-         Read FACTCHECK_GATE.md
-           ↓
-         ACTION = BLOCKED  → Stop. Show issues. Fix required.
-         ACTION = WARN     → Stage + show warnings. Explicit approval needed.
-         ACTION = PROCEED  → Stage to hub. Present for local review.
-           ↓
-         USER REVIEWS locally at http://127.0.0.1:8766/{slug}/
-           ↓
-         User says "publish" → git push → Vercel auto-deploys
-```
-
-**Why factcheck is mandatory:** Claude fabricates data. Stats are wrong. Links break. ROI math errors occur. Case study metrics get paraphrased. The factcheck is the only thing standing between an AE presenting wrong data to a prospect and an accurate audit. Every single audit must pass factcheck before it can be staged or published. No exceptions.
-
-**Each sub-skill is fully self-contained** — it can be run independently. `/algolia-live-signals` can be re-run standalone to refresh data. `/algolia-audit-factcheck` can be re-run after fixes without re-running the full audit.
-
----
 
 ## THE PUBLISH PIPELINE (Full Detail)
 
