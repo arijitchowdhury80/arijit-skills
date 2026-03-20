@@ -3,9 +3,72 @@ name: algolia-audit-factcheck
 description: Fact-check and validate Algolia Search Audit outputs across 7 dimensions. Run after /algolia-search-audit.
 ---
 
-# Algolia Audit Fact-Check (v1.0)
+# Algolia Audit Fact-Check (v1.1)
 
 Validate every factual claim across all deliverables produced by `/algolia-search-audit`. Catches cross-file inconsistencies, math errors, stale API data, broken citations, unverifiable quotes, and scratchpad-to-deliverable drift. Produces 3 output files: a human-readable confidence report, a machine-readable correction manifest, and a methodology feedback file for continuous skill improvement.
+
+---
+
+## EVIDENCE TIER SYSTEM (MANDATORY — applies to every claim in every deliverable)
+
+Every fact, stat, quote, and data point must be classified into one of three evidence tiers. The tier determines how it is labeled in deliverables and what action to take.
+
+### Tier 1 — Data Source Verified ✅
+**Definition**: Confirmed via a structured data source (MCP API, SEC filing, official company IR page, official press release at original URL).
+
+**Accepted sources**: SimilarWeb MCP, BuiltWith MCP, Yahoo Finance MCP, SEC EDGAR, official company press release (press.{company}.com), Crunchbase API data, Bloomberg Terminal.
+
+**Action**: Cite normally. No warning label needed.
+
+**Example**: Traffic data from SimilarWeb MCP → cite as `[FACT — SimilarWeb MCP]`
+
+---
+
+### Tier 2 — Web Search / WebFetch Only ⚠️
+**Definition**: Found via WebSearch or WebFetch of a third-party article/blog/database, but NOT independently confirmed through a structured data source.
+
+**This includes**: Trade press articles (WWD, Retail Dive), analyst reports (CBInsights, Crunchbase web pages), company LinkedIn posts, third-party databases (Zippia, LeadIQ, Tracxn web pages), non-official interview transcripts.
+
+**Action**: Keep the claim BUT display the following warning label in RED wherever it appears in deliverables:
+
+```
+🔴 ⚠️ Web search only — verify before using
+```
+
+And in the factcheck report and correction manifest, tag as:
+```
+[WEB-ONLY] Found in web search — not verified through a structured data source. Use at your own risk.
+```
+
+**Example**: Revenue estimate from Zippia → `🔴 ⚠️ Web search only — verify before using | $17M est. (Zippia)`
+
+---
+
+### Tier 3 — Cannot Be Verified ❌ → DROP
+**Definition**: Cannot be confirmed via WebFetch of source URL, cannot be found via WebSearch, AND no structured data source exists for this claim. This includes: URLs that return 404/403, paywalled pages where the stat doesn't appear in the preview, quotes not found at the attributed source, stats where the source URL doesn't contain the number cited.
+
+**Action**: **REMOVE ENTIRELY** from all deliverables. Do not replace with a weaker claim. Do not hedge. Delete it.
+
+In the correction manifest, mark as:
+```
+[DROPPED] Cannot be verified by any means — removed from all deliverables.
+```
+
+**Example**: "77% of consumers prefer brands with ESG commitments" cited on a page where that number doesn't appear → DROP.
+
+---
+
+### Evidence Tier Summary
+
+| Tier | Label | Action | Display |
+|------|-------|--------|---------|
+| **1 — Data Source** | `[FACT]` | Keep, cite source | Normal |
+| **2 — Web Search Only** | `[WEB-ONLY]` | Keep with prominent red warning | `🔴 ⚠️ Web search only — verify before using` |
+| **3 — Unverifiable** | `[DROPPED]` | Remove from all deliverables | Nothing (deleted) |
+
+**The 10/10 standard**: A score of 10/10 is only achievable when ZERO Tier 3 claims remain in any deliverable, and all Tier 2 claims are explicitly flagged. An unflagged Tier 2 claim is treated as a Tier 3 violation (score penalty same as `[FAIL]`).
+
+---
 
 ## CRITICAL: Validation Priority Order (MANDATORY)
 
@@ -452,15 +515,25 @@ Same pattern applies to: `executives[].verified`, `gap_pairs[].verified`, `intel
 
 #### Claim Verification Statuses
 
-| Status | Symbol | Meaning | Severity |
-|--------|--------|---------|----------|
-| VERIFIED | `[PASS]` | Confirmed correct against external source or traceable through full chain | None |
-| CONSISTENT | `[CONS]` | Matches across all files (no external check performed) | None |
-| STALE | `[STALE]` | Was correct at time of audit but live data has drifted >15% | Low |
-| DISCREPANT | `[DISC]` | Different values found across files | High |
-| UNVERIFIABLE | `[UNVF]` | Source broken, no scratchpad trace, or session-bound screenshot | Medium |
-| INCORRECT | `[FAIL]` | Demonstrably wrong (math error, fabricated stat, misattribution) | Critical |
-| MISSING | `[MISS]` | Expected data point absent from deliverable that should include it | Medium |
+| Status | Symbol | Evidence Tier | Meaning | Severity | Action |
+|--------|--------|--------------|---------|----------|--------|
+| VERIFIED | `[PASS]` | Tier 1 | Confirmed correct against structured data source (MCP/API/SEC/official PR) | None | Cite normally |
+| CONSISTENT | `[CONS]` | Tier 1 | Matches across all files (no external check needed — source is MCP data) | None | Cite normally |
+| WEB-ONLY | `[WEB-ONLY]` | Tier 2 | Found via WebSearch/WebFetch of third-party page — NOT from structured data source | Medium | Keep with `🔴 ⚠️ Web search only — verify before using` label |
+| STALE | `[STALE]` | Tier 1 | Was correct at time of audit but live data has drifted >15% | Low | Note staleness; re-verify if critical |
+| DISCREPANT | `[DISC]` | — | Different values found across files (source of truth = scratchpad) | High | Correct to scratchpad value |
+| DROPPED | `[DROPPED]` | Tier 3 | Cannot be verified by any means — source URL 404/paywalled/stat not on page, AND not findable via WebSearch | Critical | **REMOVE from all deliverables entirely** |
+| INCORRECT | `[FAIL]` | Tier 3 | Demonstrably wrong (math error, fabricated stat, misattribution, URL doesn't contain cited stat) | Critical | **REMOVE or correct with verified replacement** |
+| MISSING | `[MISS]` | — | Expected data point absent from deliverable that should include it | Medium | Add from scratchpad source of truth |
+
+**Scoring impact (per occurrence)**:
+- `[PASS]` / `[CONS]`: +0 (correct baseline)
+- `[WEB-ONLY]` unflagged in deliverable: -1.5 (same as `[FAIL]` — unflagged Tier 2 = Tier 3 violation)
+- `[WEB-ONLY]` properly labeled with ⚠️: -0.25 (minor, acceptable)
+- `[STALE]`: -0.25
+- `[DISC]`: -1.0
+- `[DROPPED]` / `[FAIL]` still present in deliverable: -1.5
+- `[MISS]`: -0.25
 
 ---
 
@@ -492,27 +565,40 @@ Human-readable scored verification report.
 
 ```markdown
 # {Company} — Audit Fact-Check Report
-*Generated by /algolia-audit-factcheck v1.0 on {date}*
+*Generated by /algolia-audit-factcheck v1.1 on {date}*
 *Tier: {Quick/Standard/Full} | Files scanned: {count} | Claims verified: {count}*
+
+---
+
+## 🔴 EVIDENCE TIER SUMMARY (read this first)
+
+| Tier | Count | Status | Action |
+|------|-------|--------|--------|
+| ✅ Tier 1 — Data Source Verified | {N} | Confirmed via MCP/API/SEC/official PR | None — cite normally |
+| 🔴 Tier 2 — Web Search Only (flagged ⚠️) | {N} | Found via WebSearch/third-party, not verified at structured source | Keep — labeled with `🔴 ⚠️ Web search only — verify before using` |
+| 🔴 Tier 2 — Web Search Only (UNFLAGGED) | {N} | Same as above but WARNING LABEL MISSING in deliverable | **BLOCKING — add label before sharing** |
+| ❌ Tier 3 — DROPPED (unverifiable) | {N} | Cannot be verified by any means | **REMOVED from all deliverables** |
+
+> **10/10 requires**: Zero Tier 3 claims remaining. Zero unflagged Tier 2 claims. All Tier 2 claims labeled with `🔴 ⚠️ Web search only — verify before using`.
 
 ---
 
 ## Verification Summary
 
-| # | Dimension | Claims | PASS | CONS | STALE | DISC | UNVF | FAIL | MISS | Score |
-|---|-----------|--------|------|------|-------|------|------|------|------|-------|
-| 1 | Cross-File Consistency | {n} | {n} | {n} | — | {n} | — | — | {n} | {x}/10 |
-| 2 | Math & Logic | {n} | {n} | {n} | — | {n} | — | {n} | — | {x}/10 |
-| 3 | Reference Data | {n} | {n} | {n} | — | — | — | {n} | — | {x}/10 |
-| 4 | API Data Accuracy | {n} | {n} | {n} | {n} | {n} | {n} | — | — | {x}/10 |
-| 5 | Source Citation Integrity | {n} | {n} | {n} | — | {n} | {n} | — | {n} | {x}/10 |
-| 6 | Investor Quote Verification | {n} | {n} | {n} | — | {n} | {n} | {n} | — | {x}/10 |
-| 7 | Browser Observation Fidelity | {n} | {n} | {n} | {n} | {n} | {n} | — | — | {x}/10 |
+| # | Dimension | Claims | PASS | CONS | WEB-ONLY | STALE | DISC | FAIL | MISS | Score |
+|---|-----------|--------|------|------|----------|-------|------|------|------|-------|
+| 1 | Cross-File Consistency | {n} | {n} | {n} | — | — | {n} | — | {n} | {x}/10 |
+| 2 | Math & Logic | {n} | {n} | {n} | — | — | {n} | {n} | — | {x}/10 |
+| 3 | Reference Data | {n} | {n} | {n} | {n} | — | — | {n} | — | {x}/10 |
+| 4 | API Data Accuracy | {n} | {n} | {n} | — | {n} | {n} | — | — | {x}/10 |
+| 5 | Source Citation Integrity | {n} | {n} | {n} | {n} | — | {n} | — | {n} | {x}/10 |
+| 6 | Investor Quote Verification | {n} | {n} | {n} | {n} | — | {n} | {n} | — | {x}/10 |
+| 7 | Browser Observation Fidelity | {n} | {n} | {n} | — | {n} | {n} | — | — | {x}/10 |
 | | **OVERALL** | **{N}** | | | | | | | | **{X}/10** |
 
 ## Verdict: {HIGH CONFIDENCE / MODERATE / LOW CONFIDENCE}
 
-{1-2 sentence summary. E.g., "The Costco audit scores 6.8/10 (MODERATE). Three data discrepancies between scratchpad and deliverables need correction before sharing. All SAIM stats and ROI math check out."}
+{1-2 sentence summary. E.g., "The Savage X Fenty audit scores 8.2/10 (HIGH CONFIDENCE). 3 Tier 2 web-search-only claims flagged with ⚠️ warning labels. All SAIM stats and ROI math verified. 1 unverifiable stat dropped."}
 
 ---
 
@@ -525,15 +611,31 @@ Human-readable scored verification report.
 | 1 | {description} | [DISC] | bounce_rate | 31.3% | 37.2% | report L169, MEMORY.md |
 | 2 | {description} | [FAIL] | roi_conservative | $150M | $148M | landing-page.html L456 |
 
+## 🔴 Tier 3 DROPPED Claims (removed from deliverables)
+
+> These claims were present in deliverables but could not be verified by any means. They have been removed.
+
+| # | Claim | Was In | Reason Dropped |
+|---|-------|--------|----------------|
+| 1 | "{exact claim text}" | {file} L{n} | {URL 404 / stat not on cited page / not found in any search} |
+
+## ⚠️ Tier 2 Web-Search-Only Claims (flagged — labeled in deliverables)
+
+> These claims are kept but labeled with `🔴 ⚠️ Web search only — verify before using`. Use at your own risk.
+
+| # | Claim | Found In | Label Applied? |
+|---|-------|----------|----------------|
+| 1 | "{claim text}" | {file} L{n} | ✅ Yes — `🔴 ⚠️ Web search only — verify before using` |
+
 ## Warnings (review before sharing)
 
-> These are `[STALE]`, `[UNVF]`, and `[MISS]` items that may or may not need action.
+> These are `[STALE]`, `[WEB-ONLY]` unflagged, and `[MISS]` items that may need action.
 
 | # | Issue | Status | Details | Recommendation |
 |---|-------|--------|---------|---------------|
-| 1 | {description} | [UNVF] | CEO quote not in scratchpad | Add to 11-investor-intelligence.md or remove |
+| 1 | {description} | [WEB-ONLY] unflagged | Claim present without ⚠️ label | Add `🔴 ⚠️ Web search only — verify before using` label |
 | 2 | {description} | [STALE] | Traffic drifted +12% | Note: normal monthly shift, low risk |
-| 3 | {description} | [MISS] | investor_quote_3 not in deck | Add to slide N+2 or remove from report |
+| 3 | {description} | [MISS] | investor_quote_3 not in deck | Add from scratchpad or remove from report |
 
 ---
 
@@ -649,7 +751,7 @@ Human-readable scored verification report.
 | ... | | |
 
 ---
-*Report generated by /algolia-audit-factcheck v1.0. Verification tier: {tier}.*
+*Report generated by /algolia-audit-factcheck v1.1. Verification tier: {tier}.*
 ```
 
 ### Output 2: `{company}-correction-manifest.md`
@@ -658,10 +760,39 @@ Machine-readable fix list for correcting deliverables.
 
 ```markdown
 # {Company} — Correction Manifest
-*Generated by /algolia-audit-factcheck v1.0 on {date}*
+*Generated by /algolia-audit-factcheck v1.1 on {date}*
 *Feed this file to the audit skill or use it as a manual fix checklist.*
 
+## Evidence Tier Summary
+| Tier | Count | Status |
+|------|-------|--------|
+| Tier 1 — Data Source Verified | {N} | ✅ Cite normally |
+| Tier 2 — Web Search Only (flagged) | {N} | ⚠️ Labeled in deliverables |
+| Tier 2 — Web Search Only (UNFLAGGED) | {N} | 🔴 MUST ADD WARNING LABEL |
+| Tier 3 — Dropped (unverifiable) | {N} | ❌ Removed from deliverables |
+
 ## Corrections Required: {N total}
+
+### 🔴 TIER 3 DROPS — REMOVE FROM ALL DELIVERABLES (blocking)
+These claims cannot be verified by any method. They must be deleted from every deliverable file.
+
+| # | Claim | File(s) | Reason | Action |
+|---|-------|---------|--------|--------|
+| 1 | "{claim text}" | {file1}, {file2} | {URL 404 / stat not on page / not found in WebSearch} | **DELETE** |
+
+### 🔴 TIER 2 UNFLAGGED — ADD WARNING LABEL (blocking)
+These claims were found only via WebSearch/WebFetch of third-party pages but appear in deliverables WITHOUT the required ⚠️ warning. This is treated as a Tier 3 violation until labeled.
+
+| # | Claim | File(s) | Current State | Required Label |
+|---|-------|---------|---------------|----------------|
+| 1 | "{claim text}" | {file} (L{n}) | No warning | Add: `🔴 ⚠️ Web search only — verify before using` |
+
+### ⚠️ TIER 2 FLAGGED — Web Search Only (properly labeled, for AE awareness)
+These claims are already labeled with ⚠️. Listing here for AE transparency.
+
+| # | Claim | Source | Label Present? |
+|---|-------|--------|----------------|
+| 1 | "{claim text}" | {WebSearch/third-party URL} | ✅ Labeled |
 
 ### DISCREPANCY FIXES (propagate single source of truth)
 | # | Data Point | Correct Value | Source of Truth | Files to Fix | Current Wrong Value |
@@ -687,11 +818,6 @@ Machine-readable fix list for correcting deliverables.
 | # | Claim | Current Source | Issue | Fix |
 |---|-------|---------------|-------|-----|
 | 1 | {claim text} | {current or "None"} | {issue} | {recommended fix} |
-
-### UNVERIFIABLE CLAIMS (flag or remove)
-| # | Claim | File | Issue | Recommendation |
-|---|-------|------|-------|---------------|
-| 1 | {claim text} | {file} (L{n}) | {issue} | {add to scratchpad / verify / remove} |
 ```
 
 ### Output 3: `{company}-skill-feedback.md`
