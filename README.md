@@ -1,22 +1,8 @@
 # Algolia Claude Skills · v3.0
 
-**40 skills · Modular pipeline architecture · 2026-03-23**
+**40 skills · 3 folders · Modular pipeline architecture**
 
-A suite of Claude Code skills for Algolia Account Executives and Sales Engineers. Automates search audits, sales intelligence, content generation, and prospect research.
-
-**v3.0 — Major update:** The search audit is now a fully modular pipeline. 17 independent intelligence modules replace the old monolithic `algolia-audit-research` skill. Each module runs in parallel, is independently testable, and can be invoked standalone.
-
----
-
-## What's New in v3.0
-
-| Before (v2.x) | After (v3.0) |
-|---|---|
-| 1 monolithic research skill | 13 independent intel modules (Wave 1 parallel) |
-| `algolia-audit-research` does everything | Each module has its own SKILL.md + schema |
-| Sequential execution | Wave 1: 11 modules in parallel |
-| Not independently testable | Each module eval'd with Claude Skill 2.0 |
-| 16 skills total | 40 skills total |
+A suite of Claude Code skills for Algolia Account Executives, Sales Engineers, and Marketing teams. Automates prospect research, search audits, sales intelligence, and brand content.
 
 ---
 
@@ -28,64 +14,92 @@ cd algolia-claude-skills
 chmod +x install.sh && ./install.sh
 ```
 
+The installer copies all skills to `~/.claude/skills/` and sets up your audit workspace.
 
 ---
 
-## Search Audit — Workspace Setup
-
-The search audit skill uses **two separate directories**:
-
-| Directory | Purpose | Set by |
-|---|---|---|
-| `~/.claude/skills/algolia-search-audit/` | Skill files (templates, scripts) | Installer — never edit manually |
-| `$ALGOLIA_AUDIT_DIR/` | Your audit output files | You — set once during install |
-
-### What is `$ALGOLIA_AUDIT_DIR`?
-
-This is the folder on your machine where all audit research, screenshots, and deliverables are stored. You choose where it lives.
-
-```bash
-# Set once — installer adds this to your ~/.zshrc automatically
-export ALGOLIA_AUDIT_DIR="~/Documents/Algolia Search Audits"
-```
-
-### Folder structure created per audit
+## Folder Structure
 
 ```
-$ALGOLIA_AUDIT_DIR/
-└── {CompanyName}/                    ← one folder per prospect
-    ├── research/                     ← Phase 1 scratchpads (01-12 files)
-    │   ├── 01-company-context.md
-    │   ├── 02-tech-stack.md
-    │   └── ... (12 files total)
-    ├── factcheck/                    ← factcheck dimension files
-    ├── scripts/                      ← company-specific browser scripts
-    └── deliverables/                 ← everything shared with the AE
-        ├── index.html                ← interactive SPA
-        ├── screenshots/              ← browser audit screenshots
-        ├── ae-report.html
-        ├── battle-card.html
-        ├── leave-behind.html
-        └── {company}-search-audit.md
+skills/
+├── algolia-audit-skills/     ← 24 skills — full audit pipeline + intelligence modules
+├── algolia-branding-skills/  ← 13 skills — brand content & marketing collateral
+└── general-skills/           ←  3 skills — general sales & project tools
 ```
 
-### What gets published to Vercel
-
-The `deliverables/` folder mirrors your GitHub publishing repo:
-
-```
-your-audits-repo/
-└── {slug}/
-    ├── index.html          → yoursite.vercel.app/{slug}/
-    ├── screenshots/
-    ├── ae-report.html      → yoursite.vercel.app/{slug}/ae-report
-    ├── battle-card.html    → yoursite.vercel.app/{slug}/battle-card
-    └── leave-behind.html   → yoursite.vercel.app/{slug}/leave-behind
-```
+> **Note for developers:** The installer flattens this into `~/.claude/skills/` — the subfolders are for organization only. Claude Code behavior is unchanged.
 
 ---
 
-## Required MCP Servers & API Keys
+## `algolia-audit-skills/` — Audit Pipeline
+
+Everything needed to run a full Algolia Search Audit on a prospect, from raw research through to published deliverables.
+
+### Architecture
+
+```
+algolia-search-audit (orchestrator)
+│
+├── WAVE 1 — 11 intelligence modules run in parallel:
+│   ├── algolia-intel-company          Company overview, executives, vertical
+│   ├── algolia-intel-techstack        Search vendor, ecommerce platform, CDN, analytics
+│   ├── algolia-intel-traffic          SimilarWeb: visits, bounce, channels, demographics
+│   ├── algolia-intel-competitors      Who competes, what search tech they use, Golden Angle
+│   ├── algolia-intel-financial-public  Yahoo Finance: 3-year revenue, margins, analyst ratings
+│   ├── algolia-intel-financial-private 6-source revenue waterfall for private companies
+│   ├── algolia-intel-investor         Verbatim exec quotes from earnings calls + 10-K
+│   ├── algolia-intel-hiring           LinkedIn Jobs: open roles, buying committee signals
+│   ├── algolia-intel-social           LinkedIn + Twitter/X posts: exec strategic signals
+│   ├── algolia-intel-news             Google News: leadership changes, tech investments
+│   ├── algolia-intel-partner          Crossbeam: tech partners + SI/agency relationships
+│   └── algolia-intel-industry         Baymard/Forrester benchmarks, vertical trends
+│
+├── WAVE 2 — depends on Wave 1:
+│   └── algolia-intel-queries          14-18 vertically-calibrated browser test queries
+│
+├── LAYER 2 — Browser Audit:
+│   └── algolia-audit-browser          20 search behavior tests, WAF bypass, screenshots
+│
+├── LAYER 3 — Synthesis:
+│   ├── algolia-synth-business-case    6-component ROI model (conversion, AOV, bounce, etc.)
+│   ├── algolia-synth-sales-plays      AE/BDR playbook: MEDDPICC, objections, talk track
+│   ├── algolia-audit-report           Scoring + all 8 deliverables (SPA, deck, PDF, etc.)
+│   └── algolia-campaign-abx           5-email sequence, LinkedIn messages, Loom script
+│
+└── LAYER 4 — Quality Gate:
+    └── algolia-audit-factcheck        20-dimension verification → PROCEED/WARN/BLOCKED
+```
+
+### Skills Reference
+
+| Skill | Purpose | MCP Required |
+|-------|---------|-------------|
+| `algolia-search-audit` | **Orchestrator.** Pure router — calls all 15 modules in wave order. Entry point for all audits. | All |
+| `algolia-intel-company` | Company overview, founding, HQ, executive team, vertical classification | WebSearch |
+| `algolia-intel-techstack` | Current search vendor, ecommerce platform, analytics stack, CDN/WAF, removed tech | BuiltWith |
+| `algolia-intel-traffic` | Monthly visits, bounce rate, device split, channel breakdown, top keywords | SimilarWeb |
+| `algolia-intel-competitors` | Competitor matrix, search vendor per competitor, Golden Angle detection | BuiltWith, SimilarWeb |
+| `algolia-intel-financial-public` | 3-year revenue trend, EBITDA margin, analyst ratings, earnings call quotes | Yahoo Finance |
+| `algolia-intel-financial-private` | Revenue estimate via 6-source waterfall (ecdb, Crunchbase, LinkedIn, trade press) | WebSearch |
+| `algolia-intel-investor` | Verbatim exec quotes from earnings calls, 10-K MD&A, investor presentations | WebFetch |
+| `algolia-intel-hiring` | ICP-relevant open roles, buying committee map, vacancy signals | Apify |
+| `algolia-intel-social` | LinkedIn + Twitter/X posts scored for Algolia relevance | Apify |
+| `algolia-intel-news` | Leadership changes, funding, tech investments from Google News + RSS | Apify |
+| `algolia-intel-partner` | Tech partner overlaps (Adobe, Salesforce, etc.) + SI/agency relationships | Crossbeam |
+| `algolia-intel-industry` | Vertical benchmarks, analyst quotes, industry search trends | WebSearch |
+| `algolia-intel-queries` | 14-18 test queries calibrated to the prospect's vertical and product catalog | None |
+| `algolia-audit-browser` | 20 browser tests: NLP, typo tolerance, facets, federated, recommendations | Chrome |
+| `algolia-synth-business-case` | ROI model: conversion lift, AOV, bounce reduction, no-results, speed, long-tail | None |
+| `algolia-synth-sales-plays` | Personalized AE playbook from exec quotes: MEDDPICC, discovery Qs, objections | None |
+| `algolia-audit-report` | Scores 10 search areas + renders 8 deliverables (SPA, AE report, battle card, PDF) | None |
+| `algolia-campaign-abx` | 5-email ABX sequence, LinkedIn messages, Loom video script | None |
+| `algolia-audit-factcheck` | Verifies 20 dimensions across all deliverables → confidence gate | WebFetch |
+| `algolia-audit-eval` | Quality scorer for any module output (5 dimensions, 7.0 pass threshold) | None |
+| `algolia-audit-research` | *(Legacy)* Original monolithic research skill. Kept as standalone fallback. | All |
+| `algolia-live-signals` | Targeted Apify scraper for hiring, social, and news signals for one company | Apify |
+| `algolia-shared-reference` | Shared brand reference files used by branding skills | None |
+
+### Required MCP Servers
 
 Add to `~/.claude/settings.json`:
 
@@ -121,272 +135,90 @@ Add to `~/.claude/settings.json`:
 
 | Service | Used For | Get Key |
 |---------|---------|---------|
-| **Apify** | LinkedIn Jobs, Twitter/X, Google News scraping | [apify.com](https://apify.com) → Settings → API token |
+| **Apify** | LinkedIn Jobs, social posts, Google News | [apify.com](https://apify.com) → Settings → API token |
 | **SimilarWeb** | Traffic analytics | [similarweb.com/corp/developer](https://www.similarweb.com/corp/developer/) |
 | **BuiltWith** | Tech stack detection | [api.builtwith.com](https://api.builtwith.com) |
-| **Yahoo Finance MCP** | Financial data (open source) | No key needed |
+| **Yahoo Finance MCP** | Financial statements + stock data | Open source — no key |
 | **Chrome DevTools MCP** | Browser automation | No key needed |
 
 ---
 
-## Skill Architecture — v3.0 Modular Pipeline
+## `algolia-branding-skills/` — Brand & Marketing Content
+
+Skills for creating Algolia-branded content across all formats. All skills use the shared brand reference for consistent voice, tone, and visual identity.
+
+| Skill | Purpose |
+|-------|---------|
+| `algolia-brand-check` | Scans any content for brand compliance across 7 dimensions. Returns 1-10 score with specific fixes. |
+| `algolia-algolialize` | Transforms any text, slide, or document into Algolia brand voice and tone. |
+| `algolia-blog` | Writes SEO-optimized blog posts with meta descriptions, CTAs, and social snippets. |
+| `algolia-brief` | Creates campaign briefs for Marketing and ABX teams from a prompt or opportunity context. |
+| `algolia-case-study` | Builds customer case studies using the challenge → solution → results framework. |
+| `algolia-deck` | Creates presentation decks with speaker notes, formatted for Google Slides. |
+| `algolia-email` | Writes branded email templates for campaigns, product updates, and nurture sequences. |
+| `algolia-landing` | Generates landing page copy and HTML with conversion optimization. |
+| `algolia-one-pager` | Creates executive one-pagers, product overviews, or leave-behind summaries. |
+| `algolia-partner` | Produces co-branded partner materials: solution briefs, integration guides, co-marketing. |
+| `algolia-social` | Writes LinkedIn and Twitter/X posts optimized for Algolia's brand voice. |
+| `algolia-ui-copy` | Writes UI microcopy: buttons, tooltips, error messages, empty states, onboarding. |
+| `algolia-boilerplate` | Returns approved company descriptions, taglines, and boilerplate copy. |
+
+---
+
+## `general-skills/` — General Sales & Project Tools
+
+Standalone skills that support Algolia sales and project work but are not audit-specific.
+
+| Skill | Purpose |
+|-------|---------|
+| `market-research` | Produces competitive intelligence briefs using SimilarWeb, BuiltWith, and web search. Covers market sizing, competitor positioning, and technology landscape. |
+| `partnerforge` | Partner Intelligence Platform for Algolia Sales. Finds companies using partner technologies (Adobe AEM, Amplience, Spryker, etc.) who are NOT using Algolia — displacement opportunities for co-sell motions. |
+| `project-governance` | Bootstraps complete governance for any project: STATUS.md, CHECKPOINT.md, SESSION.md, CLAUDE.md, git hooks, PRD and test plan templates. Run once per project. |
+
+---
+
+## Audit Output
+
+Each audit produces a complete package:
 
 ```
-algolia-search-audit (pure router — no data logic)
-│
-├── WAVE 1 — 11 modules in parallel:
-│   ├── algolia-intel-company          → 01-company-context.md
-│   ├── algolia-intel-techstack        → 02-tech-stack.md
-│   ├── algolia-intel-traffic          → 03-traffic-data.md
-│   ├── algolia-intel-competitors      → 04-competitors.md
-│   ├── algolia-intel-financial-public → 08-financial-profile.md (public co.)
-│   │   OR algolia-intel-financial-private               (private co.)
-│   ├── algolia-intel-investor         → 11-investor-intelligence.md
-│   ├── algolia-intel-hiring           → 09d-hiring-signals.md
-│   ├── algolia-intel-social           → 09b-social-signals.md
-│   ├── algolia-intel-news             → 09c-news-signals.md
-│   ├── algolia-intel-partner          → 07-partner-intel.md
-│   └── algolia-intel-industry         → 06-industry-intel.md
-│
-├── WAVE 2 — after Wave 1:
-│   └── algolia-intel-queries          → 05-test-queries.md
-│
-├── LAYER 2 — Browser Audit:
-│   └── algolia-audit-browser          → 09-browser-findings.md + screenshots/
-│
-├── LAYER 3 — Synthesis (sequential):
-│   ├── algolia-synth-business-case    → {slug}-business-case.md
-│   ├── algolia-synth-sales-plays      → {slug}-playbook.md
-│   ├── algolia-audit-report           → audit-data.json + 8 deliverables
-│   └── algolia-campaign-abx           → abx-campaign/ (5-email sequence, etc.)
-│
-└── LAYER 4 — Quality Gate:
-    └── algolia-audit-factcheck        → FACTCHECK_GATE.md (PROCEED/WARN/BLOCKED)
+$ALGOLIA_AUDIT_DIR/{CompanyName}/
+├── research/
+│   ├── 01-company-context.md       ← Company overview + executives
+│   ├── 02-tech-stack.md            ← Search vendor + platform detection
+│   ├── 03-traffic-data.md          ← SimilarWeb traffic profile
+│   ├── 04-competitors.md           ← Competitor matrix + Golden Angle
+│   ├── 05-test-queries.md          ← Browser test query set
+│   ├── 06-industry-intel.md        ← Vertical benchmarks
+│   ├── 07-partner-intel.md         ← Partner + SI landscape
+│   ├── 08-financial-profile.md     ← Revenue + margins + exec quotes
+│   ├── 09-browser-findings.md      ← 20 browser test observations
+│   ├── 09b-social-signals.md       ← LinkedIn/Twitter signals
+│   ├── 09c-news-signals.md         ← Recent news coverage
+│   ├── 09d-hiring-signals.md       ← Open roles + buying committee
+│   ├── 11-investor-intelligence.md ← Earnings call quotes
+│   └── FACTCHECK_GATE.md           ← PROCEED / WARN / BLOCKED
+└── deliverables/
+    ├── {slug}-audit-data.json      ← Master data (source of truth)
+    ├── {slug}/index.html           ← Interactive SPA (5 tabs)
+    ├── {slug}-ae-report.html       ← AE action card
+    ├── {slug}-battle-card.html     ← Feature comparison
+    ├── {slug}-leave-behind.html/pdf ← Prospect-facing
+    ├── {slug}-ae-precall-brief.md  ← Pre-call brief
+    ├── {slug}-strategic-signal-brief.md
+    ├── {slug}-business-case.md     ← ROI model
+    ├── {slug}-playbook.md          ← AE/BDR sales playbook
+    └── abx-campaign/               ← Email sequence + LinkedIn messages
 ```
 
 ---
 
-## All Skills
-
-### 🔍 Search Audit (Parent + Sub-Skills)
-
-#### `/algolia-search-audit` — Orchestrator
-Runs the full audit pipeline end-to-end.
+## Prerequisites
 
 ```bash
-/algolia-search-audit https://brooksrunning.com
-/algolia-search-audit https://brooksrunning.com --phase research
-/algolia-search-audit https://brooksrunning.com --phase searchaudit
-/algolia-search-audit https://brooksrunning.com --phase deliverables
-/algolia-search-audit https://brooksrunning.com --deliverable site
-/algolia-search-audit https://brooksrunning.com --skip-pdf
-```
-
-**MCP required:** Chrome, SimilarWeb, BuiltWith, Yahoo Finance, Apify  
-**Output:** Complete workspace with all 12 scratchpads + all deliverables
-
----
-
-#### `/algolia-audit-research` — Phase 1: Research
-Collects company context, tech stack, traffic, competitors, financials, hiring, and investor intelligence.
-
-```bash
-/algolia-audit-research brooks-running
-/algolia-audit-research brooks-running --refresh hiring
-/algolia-audit-research brooks-running --no-browser
-```
-
-**Parent:** `/algolia-search-audit`  
-**Calls:** `/algolia-live-signals` at Step 8  
-**MCP required:** SimilarWeb, BuiltWith, Yahoo Finance, Apify  
-**Output:** `{slug}-audit-workspace/` with 12 scratchpad .md files
-
----
-
-#### `/algolia-live-signals` — Phase 1b: Live Intelligence (Apify)
-Scrapes LinkedIn Jobs, company social posts, and Google News in real-time. Replaces Chrome MCP for hiring data.
-
-```bash
-/algolia-live-signals brooks-running
-```
-
-**Parent:** `/algolia-audit-research` (Step 8)  
-**MCP required:** Apify (`APIFY_TOKEN`)  
-**Actors used:**
-- `curious_coder/linkedin-jobs-scraper` — 50 jobs, 90-day lookback, $0.05
-- `harvestapi/linkedin-company-posts` — 30 posts, 30-day lookback, $0.06
-- `apidojo/tweet-scraper` — 30 tweets, 90-day lookback, $0.01
-- `data_xplorer/google-news-scraper-fast` — 20 articles, 60-day lookback, $0.02
-
-**ICP roles detected:** VP/Director Digital, Senior Engineers (eCommerce/Platform), Performance Marketing, Merchandising, CRO, Analytics  
-**Cost:** ~$0.14/audit  
-**Output:** `07-hiring-signals.md`, `09b-social-signals.md`, `09c-news-signals.md`
-
----
-
-#### `/algolia-audit-browser` — Phase 2: Browser Testing
-Runs 20 browser-based search tests using real Chrome. Tests NLP, typo tolerance, personalization, recommendations, facets, and 14 more.
-
-```bash
-/algolia-audit-browser brooks-running
-```
-
-**Parent:** `/algolia-search-audit`  
-**MCP required:** Chrome DevTools MCP  
-**Output:** `09-browser-findings.md` + `screenshots/` (20+ PNG files)
-
----
-
-#### `/algolia-audit-report` — Phase 3-5: Scoring & Deliverables
-Scores 10 search areas, generates the full JSON schema, renders the SPA and all HTML deliverables.
-
-```bash
-/algolia-audit-report brooks-running
-/algolia-audit-report brooks-running --deliverable site
-/algolia-audit-report brooks-running --skip-pdf
-```
-
-**Parent:** `/algolia-search-audit`  
-**Requires:** All 12 scratchpad files + screenshots  
-**Output:**
-- `{slug}-audit-data.json` — 22-section master data
-- `{slug}/index.html` — 5-tab SPA (primary deliverable)
-- `{slug}-ae-report.html` — AE action card
-- `{slug}-battle-card.html` — Feature comparison
-- `{slug}-leave-behind.html/pdf` — Prospect-facing
-- `{slug}-ae-precall-brief.md` — AE brief
-- `{slug}-strategic-signal-brief.md` — Signal brief
-
----
-
-#### `/algolia-audit-factcheck` — Quality Verification
-Verifies all factual claims across deliverables. 7-dimension scoring.
-
-```bash
-/algolia-audit-factcheck brooks-running-audit-workspace/
-```
-
-**Output:** Factcheck report (0-10 score), correction manifest, skill feedback
-
----
-
-### 📊 Intelligence & Research
-
-| Skill | Command | Description | MCP |
-|-------|---------|-------------|-----|
-| **market-research** | `/market-research` | Competitive intelligence briefs | SimilarWeb, BuiltWith |
-| **partnerforge** | `/partnerforge enrich {domain}` | Partner displacement opportunities | BuiltWith |
-| **persona-research** | `/persona-research` | B2B buyer persona creation | None |
-
----
-
-### 📝 Content & Collateral
-
-| Skill | Command | Description |
-|-------|---------|-------------|
-| algolia-brief | `/algolia-brief` | Campaign briefs for Marketing/ABX |
-| algolia-blog | `/algolia-blog` | SEO blog posts |
-| algolia-case-study | `/algolia-case-study` | Customer case studies |
-| algolia-deck | `/algolia-deck` | Presentation decks with speaker notes |
-| algolia-email | `/algolia-email` | Email templates |
-| algolia-landing | `/algolia-landing` | Landing page content + HTML |
-| algolia-one-pager | `/algolia-one-pager` | Executive one-pagers |
-| algolia-partner | `/algolia-partner` | Co-branded partner materials |
-| algolia-social | `/algolia-social` | LinkedIn + Twitter/X posts |
-| algolia-ui-copy | `/algolia-ui-copy` | UI microcopy |
-| algolia-algolialize | `/algolia-algolialize` | Transform any content to Algolia brand voice |
-| algolia-brand-check | `/algolia-brand-check` | Brand compliance audit (1-10 score) |
-
----
-
-### 🏗️ Engineering & Architecture
-
-| Skill | Command | Description |
-|-------|---------|-------------|
-| architect | `/architect` | System architecture + ADRs |
-| ui-architect | `/ui-architect` | Frontend architecture + wireframes |
-| frontend-design | `/frontend-design` | Production frontend interfaces |
-| prd | `/prd` | Product Requirements Documents |
-| project-plan | `/project-plan` | Project plans with RACI |
-| brainstorm | `/brainstorm` | Structured brainstorming |
-| supabase | `/supabase` | Supabase Edge Functions + migrations |
-| vercel-deploy | `/vercel-deploy` | Vercel deployment |
-
----
-
-## Audit Web App
-
-The audit system outputs a deployable webapp:
-
-```
-workspace/
-├── index.html              ← Hub listing all audits (auto-generated)
-├── {company}/
-│   └── index.html          ← 5-tab SPA per company
-└── {company}-audit-data.json
-```
-
-**Generate index page (after each new audit):**
-```bash
-deno run --allow-read --allow-write \
-  ~/.claude/skills/algolia-search-audit/scripts/generate-index.ts
-```
-
-**Serve locally:**
-```bash
-python3 -m http.server 8766
-# Open: http://127.0.0.1:8766
-```
-
-**Deploy to Vercel:**
-```bash
-vercel --prod
-# Each audit available at: your-url.vercel.app/{company}/
-```
-
----
-
-## SPA Tab Structure
-
-| Tab | Contents |
-|-----|---------|
-| **Overview** | Score card (4.4/10), G1–G3 critical gaps, M1–M4 moderate gaps, Revenue at risk ($4.85M–$14.55M), Golden angle (Nike + Asics use Algolia), Timing signals, Section nav cards |
-| **Company Intel** | Company bento (name/HQ/founded/execs), Financial profile, Tech stack, Hiring intelligence (buying committee), Intelligence signals (news/social/competitive) |
-| **Search Audit** | Score heatmap (10 areas), Critical findings (G1–G3 with screenshots), Moderate findings (M1–M4), Positive findings, Test query log |
-| **Business Case** | Said vs Found (exec gap pairs), Competitive landscape (4-tier matrix + capability table), Revenue at risk (3 scenarios), Vertical case studies, Why Act Now, Strategic angles |
-| **Sales Play** | ICP anchor lines + talk track, Buying committee map, Battle card (SFCC vs Algolia), Discovery questions (in their language), Objection counters, 4-week outreach sequence |
-
-**Features:** Draggable pill navbar, Cmd+K search, ← back breadcrumbs, clickable source links on every data point
-
----
-
-## Design System
-
-Centralized in `skills/algolia-search-audit/templates/algolia-brand.css`.  
-Edit once → all deliverables update automatically on next render.
-
-| Token | Value |
-|-------|-------|
-| Font | Sora (300/400/600) |
-| Primary text | `#23263B` |
-| Algolia Blue | `#003DFF` |
-| Min font size | 14px |
-| Link style | Blue, underline on hover only (no arrows/icons) |
-
----
-
-## Prerequisites for Full Installation
-
-```bash
-# Required runtimes
 node --version    # 18+
 deno --version    # 1.4+
-
-# CLI tools
 npm install -g vercel
-brew install gh
-
-# Apify MCP server
 npm install -g @apify/actors-mcp-server
 ```
 
@@ -394,5 +226,5 @@ npm install -g @apify/actors-mcp-server
 
 ## License
 
-Internal Algolia tool. Not for external distribution.  
-Built with Claude Code (claude-sonnet-4-6).
+Internal Algolia tool. Not for external distribution.
+Built with Claude Code (claude-sonnet-4-6) · v3.0 · 2026-03-23
