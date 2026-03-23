@@ -1,6 +1,22 @@
-# Algolia Claude Skills
+# Algolia Claude Skills · v3.0
+
+**40 skills · Modular pipeline architecture · 2026-03-23**
 
 A suite of Claude Code skills for Algolia Account Executives and Sales Engineers. Automates search audits, sales intelligence, content generation, and prospect research.
+
+**v3.0 — Major update:** The search audit is now a fully modular pipeline. 17 independent intelligence modules replace the old monolithic `algolia-audit-research` skill. Each module runs in parallel, is independently testable, and can be invoked standalone.
+
+---
+
+## What's New in v3.0
+
+| Before (v2.x) | After (v3.0) |
+|---|---|
+| 1 monolithic research skill | 13 independent intel modules (Wave 1 parallel) |
+| `algolia-audit-research` does everything | Each module has its own SKILL.md + schema |
+| Sequential execution | Wave 1: 11 modules in parallel |
+| Not independently testable | Each module eval'd with Claude Skill 2.0 |
+| 16 skills total | 40 skills total |
 
 ---
 
@@ -113,17 +129,39 @@ Add to `~/.claude/settings.json`:
 
 ---
 
-## Skill Architecture
-
-### The Algolia Search Audit System
+## Skill Architecture — v3.0 Modular Pipeline
 
 ```
-/algolia-search-audit {url}           ← PARENT ORCHESTRATOR
-├── /algolia-audit-research {slug}    ← Phase 1: Research (14 steps, ~15 min)
-│   └── /algolia-live-signals {slug}  ← Phase 1b: Apify live intel (~3 min, $0.14)
-├── /algolia-audit-browser {slug}     ← Phase 2: Browser testing (~25 min)
-├── /algolia-audit-report {slug}      ← Phase 3-5: Scoring + deliverables (~20 min)
-└── /algolia-audit-factcheck {slug}   ← Optional: Quality verification
+algolia-search-audit (pure router — no data logic)
+│
+├── WAVE 1 — 11 modules in parallel:
+│   ├── algolia-intel-company          → 01-company-context.md
+│   ├── algolia-intel-techstack        → 02-tech-stack.md
+│   ├── algolia-intel-traffic          → 03-traffic-data.md
+│   ├── algolia-intel-competitors      → 04-competitors.md
+│   ├── algolia-intel-financial-public → 08-financial-profile.md (public co.)
+│   │   OR algolia-intel-financial-private               (private co.)
+│   ├── algolia-intel-investor         → 11-investor-intelligence.md
+│   ├── algolia-intel-hiring           → 09d-hiring-signals.md
+│   ├── algolia-intel-social           → 09b-social-signals.md
+│   ├── algolia-intel-news             → 09c-news-signals.md
+│   ├── algolia-intel-partner          → 07-partner-intel.md
+│   └── algolia-intel-industry         → 06-industry-intel.md
+│
+├── WAVE 2 — after Wave 1:
+│   └── algolia-intel-queries          → 05-test-queries.md
+│
+├── LAYER 2 — Browser Audit:
+│   └── algolia-audit-browser          → 09-browser-findings.md + screenshots/
+│
+├── LAYER 3 — Synthesis (sequential):
+│   ├── algolia-synth-business-case    → {slug}-business-case.md
+│   ├── algolia-synth-sales-plays      → {slug}-playbook.md
+│   ├── algolia-audit-report           → audit-data.json + 8 deliverables
+│   └── algolia-campaign-abx           → abx-campaign/ (5-email sequence, etc.)
+│
+└── LAYER 4 — Quality Gate:
+    └── algolia-audit-factcheck        → FACTCHECK_GATE.md (PROCEED/WARN/BLOCKED)
 ```
 
 ---

@@ -1,8 +1,17 @@
 ---
 name: algolia-live-signals
-description: Apify-powered live intelligence for Algolia Search Audits. Scrapes hiring signals (LinkedIn Jobs), social signals (LinkedIn + Twitter/X posts), and news signals (Google News). Replaces Chrome MCP for hiring data. Adds social + news as net-new capabilities. Called by algolia-audit-research after company context is established.
+description: Use this skill — not algolia-audit-research — when the specific task is to collect live signals for a prospect company: LinkedIn job postings (what roles are open now?), executive social media posts from LinkedIn or Twitter/X, or recent news articles. Invoke when asked to: scrape hiring data for a company, pull social signals from leadership, run the live signals module, find what a company is actively recruiting for in engineering or ecommerce, or generate the 09b/09c/09d audit scratchpad files. This is the targeted real-time data collection sub-skill. algolia-audit-research handles full research orchestration; this handles live signal scraping for a single company only.
 ---
 
+## MANDATORY FIRST ACTION — Platform Constitution
+
+**Before executing any step in this skill:**
+
+Read `~/.claude/skills/algolia-search-audit/AGENT-CONTEXT.md`
+
+This file defines the platform rules: JSON field names, CSS classes, T.* tokens, function names, naming conventions, sub-skill invocation pattern (Skill tool + verification gate), path convention ($ALGOLIA_AUDIT_DIR). These rules apply to every action this skill takes. No exceptions.
+
+---
 # Algolia Live Signals — Apify Intelligence Layer
 
 Sub-skill of the Algolia Search Audit system. Runs 3 phases of live data collection using Apify actors.
@@ -17,7 +26,7 @@ Sub-skill of the Algolia Search Audit system. Runs 3 phases of live data collect
 - Internet access
 
 **Produces:**
-- `07-hiring-signals.md` — enriched from LinkedIn Jobs (replaces Chrome MCP version)
+- `09d-hiring-signals.md` — enriched from LinkedIn Jobs (replaces Chrome MCP version)
 - `09b-social-signals.md` — LinkedIn + Twitter/X posts with relevance scoring
 - `09c-news-signals.md` — Google News articles with signal tagging
 
@@ -140,7 +149,7 @@ For each job returned:
    - Role is Tier 1 or 2 AND score ≥ 7
    - These are the most actionable — Technical/Economic buyer roles are OPEN
 
-### Step 1d: Write 07-hiring-signals.md
+### Step 1d: Write 09d-hiring-signals.md
 
 ```markdown
 # {Company} — Hiring Signals (Apify/LinkedIn)
@@ -359,6 +368,35 @@ For each:
 
 ---
 
+## Apify MCP — Mandatory Call Policy
+
+**Always attempt `mcp__apify__call-actor` first.** Do NOT pre-decide the tool is unavailable. Do NOT skip to WebSearch without trying. The Apify MCP is configured — assume it is available and call it.
+
+**Correct sequence:**
+1. Call `mcp__apify__call-actor` with the actor and input payload
+2. If the tool call itself ERRORS (HTTP 4xx/5xx, tool not found) → STOP. Do not silently substitute WebSearch. Output:
+   ```
+   ⛔ APIFY MCP CALL FAILED — actor: {actor_id}
+   Error: {error message}
+   Action required: Check Apify MCP configuration. Run /algolia-live-signals again after resolving.
+   ```
+3. If the tool call SUCCEEDS but returns 0 results → document "0 results from {actor} for {company}" and continue to next phase (this is a data availability issue, not a tool failure)
+
+**WebSearch fallback is ONLY permitted when:**
+- The actor call returns 0 results AND you have already tried at least 2 actor configurations (e.g., both keyword search and company URL)
+- Never use WebSearch as a substitute for a missing or unconfigured Apify MCP
+
+**Why this matters:** WebSearch produces narrative summaries, not structured scrape data. Silently falling back to WebSearch produces files that look complete but contain no real LinkedIn job postings, no actual company posts, and no verified news signals. The gates pass, the audit looks done, but the data is useless. A loud failure is better than silent degraded output.
+
+**If WebSearch fallback IS used** (zero results after genuine actor attempts):
+Label ALL fallback data `[WEBSEARCH — {source}, {date}]` — never `[FACT — Apify]`.
+Add this banner at top of each affected file:
+```
+> ⚠️ Apify returned 0 results for this phase — WebSearch fallback used. Data is narrative only, not structured scrape.
+```
+
+---
+
 ## Error Handling
 
 - If actor returns 0 results: log "No results from {actor} for {company}" and continue to next phase
@@ -374,7 +412,7 @@ After all 3 phases complete, print:
 
 ```
 ✓ Phase 1 Hiring: {N} ICP roles found, {N} vacancy signals flagged
-  → 07-hiring-signals.md updated
+  → 09d-hiring-signals.md updated
 ✓ Phase 2 Social: {N} qualifying posts ({N} LinkedIn + {N} Twitter)
   → 09b-social-signals.md written
 ✓ Phase 3 News: {N} signal articles found
@@ -394,7 +432,7 @@ In `algolia-audit-research` SKILL.md, replace Step 8 (Chrome MCP hiring) with:
 
 ```
 Step 8: Run /algolia-live-signals {slug}
-  - Produces 07-hiring-signals.md (replaces Chrome MCP version)
+  - Produces 09d-hiring-signals.md (replaces Chrome MCP version)
   - Produces 09b-social-signals.md (new)
   - Produces 09c-news-signals.md (new)
   - These feed directly into JSON generation at Step 5a
