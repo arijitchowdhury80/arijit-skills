@@ -1,6 +1,9 @@
 #!/bin/bash
-# Algolia Claude Code Skills — Unified Installer v2.8
-# Installs 16 skills (13 brand + 1 search audit + 1 factcheck + 1 project-governance) to ~/.claude/skills/
+# Algolia Claude Code Skills — Unified Installer v3.0
+# 40 skills organized in three folders:
+#   skills/algolia-audit-skills/     — 24 audit pipeline skills
+#   skills/algolia-branding-skills/ — 13 brand & marketing skills
+#   skills/general-skills/           — 3 general tools
 
 set -e
 
@@ -10,7 +13,8 @@ SOURCE_DIR="$SCRIPT_DIR/skills"
 
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
-echo "║   Algolia Skills for Claude Code — Install v2.8  ║"
+echo "║   Algolia Skills for Claude Code — Install v3.0  ║"
+echo "║   40 skills · Modular pipeline architecture      ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 
@@ -21,182 +25,150 @@ if [ ! -d "$SOURCE_DIR" ]; then
   exit 1
 fi
 
-# Create ~/.claude/skills/ if it doesn't exist
-if [ ! -d "$SKILLS_DIR" ]; then
-  echo "Creating $SKILLS_DIR ..."
-  mkdir -p "$SKILLS_DIR"
-fi
+# Create ~/.claude/skills/ if needed
+mkdir -p "$SKILLS_DIR"
 
-# Copy all skill directories
 echo "Installing skills to $SKILLS_DIR ..."
 echo ""
 
-SKILL_COUNT=0
-BRAND_COUNT=0
-AUDIT_COUNT=0
-FACTCHECK_COUNT=0
-REF_COUNT=0
+TOTAL=0
 
-for skill_dir in "$SOURCE_DIR"/algolia-* "$SOURCE_DIR"/project-governance; do
-  if [ -d "$skill_dir" ]; then
-    skill_name=$(basename "$skill_dir")
-    echo "  -> $skill_name"
-    cp -R "$skill_dir" "$SKILLS_DIR/"
+install_group() {
+  local group_dir="$1"
+  local group_label="$2"
+  local count=0
 
-    if [ "$skill_name" = "algolia-shared-reference" ]; then
-      REF_COUNT=1
-    elif [ "$skill_name" = "algolia-search-audit" ]; then
-      AUDIT_COUNT=1
-    elif [ "$skill_name" = "algolia-audit-factcheck" ]; then
-      FACTCHECK_COUNT=1
-    else
-      BRAND_COUNT=$((BRAND_COUNT + 1))
-    fi
-    SKILL_COUNT=$((SKILL_COUNT + 1))
+  if [ ! -d "$group_dir" ]; then
+    echo "  ⚠  $group_label not found at $group_dir"
+    return
   fi
-done
 
-echo ""
+  echo "[$group_label]"
+  for skill_dir in "$group_dir"/*/; do
+    if [ -d "$skill_dir" ]; then
+      skill_name=$(basename "$skill_dir")
+      # Install flat to ~/.claude/skills/ (Claude Code requires flat structure)
+      rm -rf "$SKILLS_DIR/$skill_name"
+      cp -R "$skill_dir" "$SKILLS_DIR/$skill_name"
+      echo "  ✓ $skill_name"
+      count=$((count + 1))
+      TOTAL=$((TOTAL + 1))
+    fi
+  done
+  echo "  → $count skills installed"
+  echo ""
+}
+
+install_group "$SOURCE_DIR/algolia-audit-skills"     "Audit Pipeline (24 skills)"
+install_group "$SOURCE_DIR/algolia-branding-skills" "Marketing & Brand (13 skills)"
+install_group "$SOURCE_DIR/general-skills"           "General Tools (3 skills)"
+
 echo "────────────────────────────────────────────────────"
-echo "  Installed: $BRAND_COUNT brand skills"
-echo "             $AUDIT_COUNT search audit skill (v2.7)"
-echo "             $FACTCHECK_COUNT audit fact-check skill"
-echo "             $REF_COUNT shared brand reference directory"
+echo "  Total installed: $TOTAL skills"
 echo "────────────────────────────────────────────────────"
 echo ""
-echo "Brand Content Skills:"
-echo "  /algolia-brand-check   — Check content for brand compliance"
-echo "  /algolia-algolialize   — Transform any content to Algolia brand"
-echo "  /algolia-blog          — Generate a branded blog post"
-echo "  /algolia-boilerplate   — Get approved company descriptions"
-echo "  /algolia-brief         — Generate a campaign brief"
-echo "  /algolia-case-study    — Create a customer case study"
-echo "  /algolia-deck          — Create a branded presentation"
-echo "  /algolia-email         — Write branded email copy"
-echo "  /algolia-landing       — Generate landing page copy"
-echo "  /algolia-one-pager     — Create a product one-pager"
-echo "  /algolia-partner       — Create co-marketing content"
-echo "  /algolia-social        — Write social media posts"
-echo "  /algolia-ui-copy       — Write UI microcopy"
+echo "AUDIT PIPELINE  (algolia-audit/)"
+echo "  /algolia-search-audit       — Full pipeline orchestrator (v3.0)"
+echo "  /algolia-intel-company      — 1A: Company context"
+echo "  /algolia-intel-techstack    — 1B: Tech stack detection"
+echo "  /algolia-intel-traffic      — 1C: SimilarWeb traffic"
+echo "  /algolia-intel-competitors  — 1D: Competitor analysis"
+echo "  /algolia-intel-financial-*  — 1E/F: Financial intelligence"
+echo "  /algolia-intel-investor     — 1G: Investor quotes"
+echo "  /algolia-intel-hiring       — 1H: Hiring signals"
+echo "  /algolia-intel-social       — 1I: Social signals"
+echo "  /algolia-intel-news         — 1J: News signals"
+echo "  /algolia-intel-partner      — 1K: Partner intelligence"
+echo "  /algolia-intel-industry     — 1L: Industry benchmarks"
+echo "  /algolia-intel-queries      — 1M: Test query generation"
+echo "  /algolia-audit-browser      — Phase 2: Browser testing"
+echo "  /algolia-audit-report       — Phase 3-5: Scoring + deliverables"
+echo "  /algolia-synth-business-case — ROI model"
+echo "  /algolia-synth-sales-plays  — AE/BDR playbook"
+echo "  /algolia-campaign-abx       — ABX campaign package"
+echo "  /algolia-audit-factcheck    — Quality gate"
+echo "  /algolia-audit-eval         — Module quality scorer"
 echo ""
-echo "Search Audit Skills:"
-echo "  /algolia-search-audit       — Run a full search audit on a prospect website"
-echo "  /algolia-audit-factcheck    — Validate audit deliverables (run after audit)"
+echo "MARKETING & BRAND  (algolia-marketing/)"
+echo "  /algolia-blog /algolia-email /algolia-deck /algolia-brief"
+echo "  /algolia-case-study /algolia-landing /algolia-one-pager"
+echo "  /algolia-social /algolia-partner /algolia-ui-copy"
+echo "  /algolia-algolialize /algolia-brand-check"
+echo ""
+echo "GENERAL TOOLS  (general/)"
+echo "  /market-research /partnerforge /project-governance"
 echo ""
 echo "────────────────────────────────────────────────────"
 echo ""
 
-# Check for MCP servers needed by search audit
+# ── MCP server check ──────────────────────────────────
 SETTINGS_FILE="$HOME/.claude/settings.json"
 MCP_MISSING=()
 
 if [ -f "$SETTINGS_FILE" ]; then
-  # Check for Chrome MCP
-  if ! grep -q "127.0.0.1:21405" "$SETTINGS_FILE" 2>/dev/null; then
-    MCP_MISSING+=("Chrome MCP")
-  fi
-  # Check for SimilarWeb
-  if ! grep -q "similarweb" "$SETTINGS_FILE" 2>/dev/null; then
-    MCP_MISSING+=("SimilarWeb MCP")
-  fi
-  # Check for BuiltWith
-  if ! grep -q "builtwith" "$SETTINGS_FILE" 2>/dev/null; then
-    MCP_MISSING+=("BuiltWith MCP")
-  fi
+  grep -q "127.0.0.1:21405\|chrome" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("Chrome MCP")
+  grep -q "similarweb" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("SimilarWeb MCP")
+  grep -q "builtwith" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("BuiltWith MCP")
+  grep -q "apify" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("Apify MCP")
+  grep -q "yahoo" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("Yahoo Finance MCP")
 else
-  MCP_MISSING=("Chrome MCP" "SimilarWeb MCP" "BuiltWith MCP")
+  MCP_MISSING=("Chrome MCP" "SimilarWeb MCP" "BuiltWith MCP" "Apify MCP" "Yahoo Finance MCP")
 fi
 
 if [ ${#MCP_MISSING[@]} -gt 0 ]; then
-  echo "⚠  SEARCH AUDIT SETUP REQUIRED"
-  echo ""
-  echo "  The /algolia-search-audit skill needs these MCP servers:"
+  echo "⚠  AUDIT PIPELINE SETUP REQUIRED"
+  echo "   Missing MCP servers:"
   for mcp in "${MCP_MISSING[@]}"; do
-    echo "    ✗ $mcp — not detected"
+    echo "     ✗ $mcp"
   done
-  echo ""
-  echo "  See README.md for setup instructions (API keys & configuration)."
-  echo "  The 13 brand skills work immediately — no extra setup needed."
+  echo "   See skills/algolia-audit-skills/README.md for setup instructions."
   echo ""
 else
-  echo "✓ All MCP servers detected. Search audit is ready to use."
+  echo "✓ All MCP servers detected. Audit pipeline is ready."
   echo ""
 fi
 
-# Offer to copy CLAUDE.md template
-if [ -f "$SCRIPT_DIR/CLAUDE-template.md" ]; then
-  if [ ! -f "$HOME/.claude/CLAUDE.md" ]; then
-    echo "TIP: A CLAUDE.md project memory template is available."
-    echo "     Run: cp CLAUDE-template.md ~/.claude/CLAUDE.md"
-    echo "     This gives Claude Code context about the audit methodology."
-    echo ""
-  fi
-fi
-
-echo "Project Governance Skill:"
-echo "  /project-governance    — Bootstrap complete governance for any project"
-echo "    Creates: STATUS.md, CHECKPOINT.md, SESSION.md, CLAUDE.md, get-up-to-speed.md,"
-echo "             5 project commands, git hook, PRD + test plan templates."
-echo "    Run once per project. Then: /get-up-to-speed at every session start."
-echo ""
+# ── ALGOLIA_AUDIT_DIR setup ───────────────────────────
 echo "────────────────────────────────────────────────────"
+echo "SEARCH AUDIT WORKSPACE SETUP"
+echo ""
+echo "  The audit pipeline stores research, screenshots, and"
+echo "  deliverables in a directory you choose."
 echo ""
 
-# ── ALGOLIA_AUDIT_DIR setup ───────────────────────────────────────────────────
-if grep -q "algolia-search-audit" "$SKILLS_DIR" 2>/dev/null || [ -d "$SKILLS_DIR/algolia-search-audit" ]; then
-
-  echo "────────────────────────────────────────────────────"
-  echo ""
-  echo "SEARCH AUDIT WORKSPACE SETUP"
-  echo ""
-  echo "  The search audit skill needs a directory to store:"
-  echo "    • Company research files (scratchpads)"
-  echo "    • Browser screenshots"
-  echo "    • Deliverables (reports, HTML files, PDFs)"
-  echo ""
-
-  # Check if already set
-  if [ -n "$ALGOLIA_AUDIT_DIR" ]; then
-    echo "  ✓ ALGOLIA_AUDIT_DIR already set: $ALGOLIA_AUDIT_DIR"
-    AUDIT_DIR="$ALGOLIA_AUDIT_DIR"
-  else
-    DEFAULT_AUDIT_DIR="$HOME/Documents/Algolia Search Audits"
-    echo -n "  Enter audit workspace path [${DEFAULT_AUDIT_DIR}]: "
-    read -r USER_AUDIT_DIR
-    AUDIT_DIR="${USER_AUDIT_DIR:-$DEFAULT_AUDIT_DIR}"
-  fi
-
-  # Create the directory
-  mkdir -p "$AUDIT_DIR"
-  echo "  ✓ Audit workspace: $AUDIT_DIR"
-
-  # Add to shell profile if not already there
-  SHELL_RC=""
-  if [ -f "$HOME/.zshrc" ]; then
-    SHELL_RC="$HOME/.zshrc"
-  elif [ -f "$HOME/.bashrc" ]; then
-    SHELL_RC="$HOME/.bashrc"
-  elif [ -f "$HOME/.bash_profile" ]; then
-    SHELL_RC="$HOME/.bash_profile"
-  fi
-
-  if [ -n "$SHELL_RC" ]; then
-    if ! grep -q "ALGOLIA_AUDIT_DIR" "$SHELL_RC"; then
-      echo "" >> "$SHELL_RC"
-      echo "# Algolia Search Audit — workspace directory" >> "$SHELL_RC"
-      echo "export ALGOLIA_AUDIT_DIR="$AUDIT_DIR"" >> "$SHELL_RC"
-      echo "  ✓ Added to $SHELL_RC"
-      echo "  ✓ Run: source $SHELL_RC  (or restart terminal)"
-    else
-      echo "  ✓ ALGOLIA_AUDIT_DIR already in $SHELL_RC"
-    fi
-  else
-    echo "  ⚠  Could not detect shell profile. Add manually:"
-    echo "     export ALGOLIA_AUDIT_DIR=\"$AUDIT_DIR\""
-  fi
-  echo ""
+if [ -n "$ALGOLIA_AUDIT_DIR" ]; then
+  echo "  ✓ ALGOLIA_AUDIT_DIR already set: $ALGOLIA_AUDIT_DIR"
+  AUDIT_DIR="$ALGOLIA_AUDIT_DIR"
+else
+  DEFAULT_AUDIT_DIR="$HOME/Documents/Algolia Search Audits"
+  echo -n "  Enter audit workspace path [${DEFAULT_AUDIT_DIR}]: "
+  read -r USER_AUDIT_DIR
+  AUDIT_DIR="${USER_AUDIT_DIR:-$DEFAULT_AUDIT_DIR}"
 fi
 
-echo "Open any project in Claude Code and type / to see all commands."
+mkdir -p "$AUDIT_DIR"
+echo "  ✓ Audit workspace: $AUDIT_DIR"
+
+SHELL_RC=""
+[ -f "$HOME/.zshrc" ] && SHELL_RC="$HOME/.zshrc"
+[ -z "$SHELL_RC" ] && [ -f "$HOME/.bashrc" ] && SHELL_RC="$HOME/.bashrc"
+[ -z "$SHELL_RC" ] && [ -f "$HOME/.bash_profile" ] && SHELL_RC="$HOME/.bash_profile"
+
+if [ -n "$SHELL_RC" ]; then
+  if ! grep -q "ALGOLIA_AUDIT_DIR" "$SHELL_RC"; then
+    echo "" >> "$SHELL_RC"
+    echo "# Algolia Search Audit — workspace directory" >> "$SHELL_RC"
+    echo "export ALGOLIA_AUDIT_DIR=\"$AUDIT_DIR\"" >> "$SHELL_RC"
+    echo "  ✓ Added to $SHELL_RC — run: source $SHELL_RC"
+  else
+    echo "  ✓ ALGOLIA_AUDIT_DIR already in $SHELL_RC"
+  fi
+else
+  echo "  ⚠  Add manually: export ALGOLIA_AUDIT_DIR=\"$AUDIT_DIR\""
+fi
+
 echo ""
-echo "Done!"
+echo "Open any project in Claude Code and type / to see all commands."
+echo "Full documentation: skills/algolia-audit-skills/README.md"
+echo ""
+echo "Done! ✓"
