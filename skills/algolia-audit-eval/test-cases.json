@@ -1,0 +1,40 @@
+{
+  "skill": "algolia-audit-eval",
+  "version": "2.0",
+  "test_cases": [
+    {
+      "id": "T-EVAL-01",
+      "skills": ["algolia-audit-eval"],
+      "query": "/algolia-audit-eval algolia-audit-research Costco",
+      "expected_behavior": [
+        "Produces eval-report.md in $ALGOLIA_AUDIT_DIR/Costco/eval/",
+        "Report shows score as formula: (n1+n2+n3+n4+n5)/10 = X — never a bare number",
+        "All 5 dimensions evaluated with explicit pass/fail counts",
+        "Score ≥7.0 for a fully completed Costco research workspace",
+        "Writes to eval/ subdirectory only — never writes to research/ or deliverables/"
+      ]
+    },
+    {
+      "id": "T-EVAL-02",
+      "skills": ["algolia-audit-eval"],
+      "query": "/algolia-audit-eval algolia-audit-research Costco",
+      "expected_behavior": [
+        "Dimension 2 (source density) counts actual [FACT]/[ESTIMATE]/[OBSERVED] labels in files",
+        "Dimension 4 (accuracy) spot-checks 3 specific values against their source files",
+        "Dimension 5 (no fabrication) checks for impact_stat fields without source URLs",
+        "Each dimension result shown as N/M (e.g., '12/12 files pass threshold')"
+      ]
+    },
+    {
+      "id": "T-EVAL-03",
+      "skills": ["algolia-audit-eval"],
+      "query": "/algolia-audit-eval algolia-audit-research SparseCompany",
+      "expected_behavior": [
+        "Dimension 1 fails for missing/sparse files",
+        "Overall score < 7.0 (FAIL)",
+        "Failures section lists specific files below threshold",
+        "Recommended actions section lists specific steps to fix"
+      ]
+    }
+  ]
+}

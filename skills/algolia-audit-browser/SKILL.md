@@ -1,8 +1,17 @@
 ---
 name: algolia-audit-browser
-description: Run Phase 2 browser-based search audit. Tests 20 search behaviors using real Chrome. Requires Phase 1 workspace to exist. Output: $AUDIT_DIR/{CompanyName}/deliverables/screenshots/ + research/09-browser-findings.md
+description: Use when the goal is live browser-based search testing on a prospect's website: visiting the site with a real browser, typing queries to observe autocomplete/SAYT behavior, NLP/semantic understanding (e.g., 'black yoga pants under 100'), typo tolerance, zero-results handling, federated search, intent detection, personalization, and recommendations, then capturing screenshots of each finding as evidence. This is the Phase 2 hands-on browser phase of an Algolia search audit and requires Phase 1 research to be complete first. Works around WAF/bot detection (Akamai, Cloudflare, Imperva) using Playwright stealth mode. Produces a screenshots folder and browser-findings document.
 ---
 
+## MANDATORY FIRST ACTION — Platform Constitution
+
+**Before executing any step in this skill:**
+
+Read `~/.claude/skills/algolia-search-audit/AGENT-CONTEXT.md`
+
+This file defines the platform rules: JSON field names, CSS classes, T.* tokens, function names, naming conventions, sub-skill invocation pattern (Skill tool + verification gate), path convention ($ALGOLIA_AUDIT_DIR). These rules apply to every action this skill takes. No exceptions.
+
+---
 ## CANONICAL PATH DEFINITIONS
 
 The skill uses a user-configured audit directory. Set this once:
@@ -38,16 +47,16 @@ $ALGOLIA_ARIAN_DIR/{slug}/                ← mirrors $ALGOLIA_AUDIT_DIR/{Compan
 $ALGOLIA_ARIAN_DIR/{slug}-audit-data.json  ← JSON stays at root
 ```
 
-**Note:** If `ALGOLIA_AUDIT_DIR` is not set, the skill will ask you to provide the path or use the current working directory as the base.
+**If ALGOLIA_AUDIT_DIR is not set:** Use current working directory. Run: `export ALGOLIA_AUDIT_DIR="$(pwd)"`
 
 
 ## Input
 
 `$ARGUMENTS` — company slug or workspace path (e.g., `costco` or `./costco-audit-workspace`)
 
-Resolves workspace at: `$AUDIT_DIR/{CompanyName}/research/`
+Resolves workspace at: `$ALGOLIA_AUDIT_DIR/{CompanyName}/research/`
 
-`$AUDIT_DIR = $ALGOLIA_AUDIT_DIR`
+`$ALGOLIA_AUDIT_DIR = $ALGOLIA_AUDIT_DIR`
 
 If `--resume-from {step}` is passed (e.g., `--resume-from 2c`), skip all prior steps without re-running them. Jump directly to the named step and continue sequentially through 2t.
 
@@ -69,7 +78,7 @@ If any of these files are missing, stop and warn the user: "Phase 1 must be comp
 
 ## Checkpoint File
 
-Write `$AUDIT_DIR/{{CompanyName}}/research/CHECKPOINT.md` updates after EACH step. Format:
+Write `$ALGOLIA_AUDIT_DIR/{{CompanyName}}/research/CHECKPOINT.md` updates after EACH step. Format:
 
 ```
 # Browser Audit Checkpoint
@@ -108,11 +117,13 @@ Last Updated: {ISO datetime}
 
 ---
 
-## MCP Servers Required
+## Browser Automation: Playwright + Stealth (Primary)
 
-- **Chrome MCP** (REQUIRED — cannot be substituted)
+**Primary method: Playwright CLI + stealth plugin** — bypasses WAF (Akamai, Cloudflare, Imperva, PerimeterX).
 
-Verify Chrome MCP is available before starting. If not available, stop and run the Pre-Flight Checklist below.
+Why: Chrome MCP uses Chrome DevTools Protocol (CDP) which injects detectable fingerprints (`navigator.webdriver=true`, specific Chrome runtime signatures). WAFs detect this in <100ms and block with "Access Denied". Playwright + `puppeteer-extra-plugin-stealth` patches ~12 fingerprinting vectors making the browser indistinguishable from a real user. **Confirmed in B3 isolation test (2026-03-20): Chrome MCP blocked by Costco Akamai WAF after first search submit; Playwright stealth bypasses this.**
+
+**Chrome MCP is still available** as a supplementary tool for tasks that do NOT trigger WAF (reading network requests, inspecting page structure). Use it alongside Playwright where it helps.
 
 ---
 
@@ -120,65 +131,75 @@ Verify Chrome MCP is available before starting. If not available, stop and run t
 
 Before starting any browser tests, verify these prerequisites.
 
-### 1. Chrome MCP Configuration Check
+### 1. Playwright Installation Check
 
 ```bash
-grep -A3 '"chrome"' ~/.claude/mcp_settings.json
+cd ~/.claude/skills/algolia-search-audit && node -e "require('playwright-extra'); console.log('✓ Playwright ready')"
 ```
 
-Expected output:
-```json
-"chrome": {
-  "command": "npx",
-  "args": ["-y", "chrome-devtools-mcp"]
-}
+If this fails:
+```bash
+cd ~/.claude/skills/algolia-search-audit && npm install
+npx playwright install chromium
 ```
 
-If Chrome MCP is NOT configured:
-- Add the above block to `~/.claude/mcp_settings.json`
-- Inform the user they must restart Claude Code for MCP changes to take effect
-- **STOP** — do not proceed with browser testing until Chrome MCP is available
-
-### 2. Launch Chrome with Remote Debugging
-
-If Chrome MCP connection fails OR if WAF blocks the browser, instruct the user to run:
+### 2. Screenshots Directory
 
 ```bash
-# Kill any existing Chrome instances first
-pkill -f "Google Chrome" || true
-
-# Launch Chrome with remote debugging enabled
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
-  --remote-debugging-port=9222 \
-  --user-data-dir="/tmp/chrome-debug-profile" &
+mkdir -p "$ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/screenshots"
 ```
 
-Wait 3 seconds for Chrome to start, then verify:
+### 3. Node Version
+
 ```bash
-curl -s http://127.0.0.1:9222/json/version | head -1
+node --version  # Must be ≥ 18
 ```
-Expected: JSON response with Chrome version info.
 
-### 3. Puppeteer-Core Fallback Setup
+If Node is missing or old: `nvm use 18` or install from nodejs.org.
 
-If Chrome MCP is unavailable or unreliable, use puppeteer-core to connect to the running Chrome:
+---
+
+## Browser Execution: How Steps Run
+
+Each browser test step uses the `audit-browser.js` script:
+
 ```bash
-cd {company}-audit-workspace && npm install puppeteer-core
+SKILL_DIR=~/.claude/skills/algolia-search-audit
+node "$SKILL_DIR/scripts/audit-browser.js" \
+  --company "{CompanyName}" \
+  --url "{prospect-url}" \
+  --step {step-id} \
+  --audit-dir "$ALGOLIA_AUDIT_DIR" \
+  --queries-file "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/05-test-queries.md"
 ```
 
-Then use this connection pattern in browser scripts:
-```javascript
-const puppeteer = require('puppeteer-core');
-const browser = await puppeteer.connect({
-  browserURL: 'http://127.0.0.1:9222',
-  defaultViewport: { width: 1920, height: 1080 }
-});
-const pages = await browser.pages();
-const page = pages[0] || await browser.newPage();
-// Use page.goto(), page.type(), page.screenshot() etc.
+The script:
+1. Launches Playwright Chromium with stealth mode
+2. Executes the specified test step
+3. Saves screenshot directly to `$ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/screenshots/`
+4. Returns JSON with: `{ step, screenshot_path, observation, result_count, network_vendors }`
+
+**To run ALL 20 steps sequentially:**
+```bash
+node "$SKILL_DIR/scripts/audit-browser.js" \
+  --company "{CompanyName}" \
+  --url "{prospect-url}" \
+  --all-steps \
+  --audit-dir "$ALGOLIA_AUDIT_DIR"
 ```
 
-**Critical**: Connect to EXISTING Chrome — do NOT use `puppeteer.launch()` which creates a new headless instance that triggers WAF.
+**WAF Recovery (if Playwright stealth still blocked):**
+
+Some sites use extremely aggressive WAF (e.g., Ticketmaster). Escalation:
+1. First attempt: Playwright headless + stealth (default)
+2. If blocked: Playwright headed (visible browser, `--headed` flag) — slower but harder to detect
+3. If still blocked: Ask user to manually solve CAPTCHA in visible browser window, then continue
+4. Last resort: Document "WAF blocked automated testing" and use screenshots from manual navigation
+
+```bash
+# Headed mode (visible browser):
+node audit-browser.js --company {CompanyName} --step 2a --headed
+```
 
 ---
 
@@ -287,7 +308,7 @@ If all selectors fail, take a screenshot of the page and manually inspect the DO
 | 2s Banners | `19-banners.png` |
 | 2t Analytics | `20-analytics.png` |
 
-All files: `$AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png`
+All files: `$ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png`
 
 ---
 
@@ -319,15 +340,23 @@ Screenshots are the #1 audit artifact — PROOF that testing was done.
    **Method 3 — Chrome DevTools Protocol**:
    Capture viewport via canvas, convert to data URL, write base64 to disk via Bash.
 
-4. **VERIFY file exists**: `ls -la $AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png`
+4. **VERIFY file exists**: `ls -la $ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png`
 5. **Log to scratchpad** in `09-browser-findings.md`:
    ```
    ### Step 2x: {Test Name}
    - Query: "{query}"
-   - Screenshot: $AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png (VERIFIED ON DISK)
+   - Screenshot: $ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png (VERIFIED ON DISK)
    - Result count: {n}
    - Observation: {what happened}
    ```
+
+---
+
+## Execution Mode
+
+**Sequential mode (default for VS Code):** If CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 is NOT set (which is the case in VS Code extension), execute all 20 browser test steps sequentially: 2a → 2a½ → 2b → 2c → 2d → 2e → 2f → 2g → 2h → 2i → 2j → 2k → 2l → 2m → 2n → 2o → 2p → 2q → 2r → 2t. Sequential is the DEFAULT. Parallel execution via Agent Teams is an optimization, not a requirement.
+
+**Parallel mode (claudesp only):** Available only when running via `claudesp` with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. Enables concurrent browser steps where dependencies allow.
 
 ---
 
@@ -604,7 +633,7 @@ find screenshots/ -empty | wc -l
 Must return 0. Delete and re-capture any empty files.
 
 **Check 3 — Disk path verification**:
-Each entry in `09-browser-findings.md` must include `Screenshot: $AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png (VERIFIED ON DISK)`. Entries with Chrome MCP imageIds like `ss_XXXXXXX` instead of file paths indicate persistence failure — fix immediately.
+Each entry in `09-browser-findings.md` must include `Screenshot: $ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/screenshots/{nn}-{slug}.png (VERIFIED ON DISK)`. Entries with Chrome MCP imageIds like `ss_XXXXXXX` instead of file paths indicate persistence failure — fix immediately.
 
 **Check 4 — WAF/Error Page Detection**:
 ```bash
@@ -647,7 +676,7 @@ Use this format consistently for all 20 steps:
 # Browser Findings — {Company}
 Audit Date: {ISO date}
 Auditor: Algolia (Claude Code)
-Workspace: $AUDIT_DIR/{{CompanyName}}/research/
+Workspace: $ALGOLIA_AUDIT_DIR/{{CompanyName}}/research/
 
 ---
 
