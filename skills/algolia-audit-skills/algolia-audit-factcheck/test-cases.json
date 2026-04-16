@@ -1,0 +1,43 @@
+{
+  "skill": "algolia-audit-factcheck",
+  "version": "2.0",
+  "test_cases": [
+    {
+      "id": "T-FC-01",
+      "skills": ["algolia-audit-factcheck"],
+      "query": "/algolia-audit-factcheck Costco --tier quick",
+      "expected_behavior": [
+        "Produces exactly 4 output files: factcheck-report.md, correction-manifest.md, skill-feedback.md, FACTCHECK_GATE.md",
+        "FACTCHECK_GATE.md contains SCORE, CONFIDENCE, ACTION, BLOCKING_COUNT, WARNING_COUNT fields",
+        "Score is calculated with explicit formula shown (N passed / M total checked) × 10 — never estimated",
+        "ACTION is one of: PROCEED, WARN, or BLOCKED",
+        "Dims 1-3 are run (consistency, math, reference data)",
+        "Dims 4-20 are NOT run in quick tier (noted as UNVERIFIED, not FAILED)",
+        "Score is 10/10 if no failures found in dims 1-3 — not penalized for unverified dims"
+      ]
+    },
+    {
+      "id": "T-FC-02",
+      "skills": ["algolia-audit-factcheck"],
+      "query": "/algolia-audit-factcheck Costco --tier quick",
+      "files": ["inject_wrong_score.md"],
+      "expected_behavior": [
+        "calculate-score.py recalculation detects score discrepancy",
+        "Correction manifest lists the score error with correct value",
+        "FACTCHECK_GATE.md ACTION = WARN or BLOCKED (not PROCEED) when math error detected",
+        "Factcheck report shows the formula mismatch explicitly"
+      ]
+    },
+    {
+      "id": "T-FC-03",
+      "skills": ["algolia-audit-factcheck"],
+      "query": "/algolia-audit-factcheck NonExistentCompany",
+      "expected_behavior": [
+        "Skill detects missing workspace with clear error message",
+        "Does NOT create partial factcheck output files",
+        "Does NOT write FACTCHECK_GATE.md with fabricated scores",
+        "Suggests running the full audit pipeline first"
+      ]
+    }
+  ]
+}

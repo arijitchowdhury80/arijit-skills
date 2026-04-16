@@ -1,0 +1,96 @@
+{
+  "_comment": "Algolia Search Intelligence Platform — Central Configuration",
+  "_doc": "See DATA-CONTRACT.md for full schema. Edit this file to reconfigure the platform.",
+  "platform_version": "1.0",
+  "config_schema_version": "1.0",
+
+  "models": {
+    "_comment": "Model tier assignments. See DATA-CONTRACT.md Part 2.1 for tier definitions.",
+    "orchestrator":    "claude-opus-4-6",
+    "data_enrichment": "claude-haiku-4-5",
+    "analysis":        "claude-opus-4-6",
+    "synthesis":       "claude-opus-4-6",
+    "quality_gate":    "claude-opus-4-6",
+    "creative_output": "claude-opus-4-6",
+    "programmatic":    null
+  },
+
+  "mcp_available": {
+    "_comment": "Set false only if MCP is not installed/configured for this user.",
+    "similarweb":    true,
+    "builtwith":     true,
+    "yahoo_finance": true,
+    "apify":         true,
+    "crossbeam":     true
+  },
+
+  "api_keys": {
+    "_comment": "Read from environment variables. Never set values here.",
+    "BUILTWITH_API_KEY":   "${env:BUILTWITH_API_KEY}",
+    "APIFY_TOKEN":         "${env:APIFY_TOKEN}",
+    "SIMILARWEB_API_KEY":  "${env:SIMILARWEB_API_KEY}",
+    "TAVILY_API_KEY":      "${env:TAVILY_API_KEY}"
+  },
+
+  "search_layers": {
+    "_comment": "Which search API is primary for each use case. Drives collect-*.py behavior.",
+    "news":             "tavily",
+    "web_research":     "tavily",
+    "synthesis":        "llm_with_tavily_context",
+    "linkedin_jobs":    "apify",
+    "linkedin_posts":   "apify"
+  },
+
+  "feature_flags": {
+    "_comment": "Toggle capabilities without editing SKILL.md files.",
+    "browser_audit":          true,
+    "pdf_generation":         false,
+    "abx_campaign":           true,
+    "golden_angle_check":     true,
+    "crossbeam_partner_intel": true,
+    "parallel_wave_execution": true,
+    "standards_check_gate":   true,
+    "workspace_manifest":     true
+  },
+
+  "distribution_tier": {
+    "_comment": "full=all MCPs | degraded=WebSearch fallback | minimum=browser+research only",
+    "current": "full"
+  },
+
+  "output": {
+    "_comment": "Base workspace path. Override with ALGOLIA_AUDIT_DIR env var.",
+    "audit_dir": "${env:ALGOLIA_AUDIT_DIR}",
+    "audit_dir_fallback": "${HOME}/algolia-audits"
+  },
+
+  "module_tiers": {
+    "_comment": "Maps each module to its model tier. Used by platform_utils.read_model().",
+    "algolia-search-audit":          "orchestrator",
+    "algolia-audit-research":        "orchestrator",
+    "algolia-intel-company":         "data_enrichment",
+    "algolia-intel-techstack":       "programmatic",
+    "algolia-intel-traffic":         "programmatic",
+    "algolia-intel-competitors":     "data_enrichment",
+    "algolia-intel-financial-public": "data_enrichment",
+    "algolia-intel-financial-private": "data_enrichment",
+    "algolia-intel-investor":        "data_enrichment",
+    "algolia-intel-hiring":          "programmatic",
+    "algolia-intel-social":          "programmatic",
+    "algolia-intel-news":            "programmatic",
+    "algolia-intel-partner":         "data_enrichment",
+    "algolia-intel-industry":        "data_enrichment",
+    "algolia-intel-queries":         "data_enrichment",
+    "algolia-audit-browser":         "programmatic",
+    "algolia-synth-scoring":         "analysis",
+    "algolia-synth-competitive":     "analysis",
+    "algolia-synth-strategy":        "analysis",
+    "algolia-synth-business-case":   "synthesis",
+    "algolia-synth-sales-plays":     "synthesis",
+    "algolia-synth-deliverables":    "synthesis",
+    "algolia-campaign-abx":          "creative_output",
+    "algolia-meta-factcheck":        "quality_gate",
+    "algolia-meta-quality-eval":     "quality_gate",
+    "algolia-meta-brand-compliance": "quality_gate"
+  }
+}

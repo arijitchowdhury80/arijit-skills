@@ -81,6 +81,96 @@ Set `meta.skill_enrichment_completed = true` in the JSON.
 
 ---
 
+## Step 3: Portfolio / Sub-brand Detection
+
+This is an LLM-only step — no Python script. Uses Tavily search + WebFetch to identify parent entities and sibling brands.
+
+### 3a. Tavily Search
+Run a Tavily search with `search_depth="advanced"` and `include_raw_content=True`:
+- Query 1: `"{CompanyName}" brands portfolio subsidiary owned by`
+- Query 2: `"{ParentEntity}" brands` (if a parent entity was mentioned in Step 2 enrichment)
+
+### 3b. WebFetch Direct Pages
+Attempt to fetch these URLs (in order, stop on first 200):
+1. `https://{domain}/brands`
+2. `https://{domain}/about/brands`
+3. `https://{domain}/our-brands`
+
+### 3c. Extract and Classify
+
+From the Tavily results and WebFetch content, extract:
+
+**`parent_entity`** — Name of the holding company if the audit domain is owned by a larger entity.
+- Example: DSW → `"Designer Brands Inc."`. Coach → `null` (Tapestry IS the holding entity being pitched).
+- Set to `null` if no parent entity exists.
+
+**`parent_entity_source`** — URL where parent entity ownership is confirmed.
+
+**`parent_entity_label`** — `[FACT — {source_domain} via Tavily, {date}]` or `null`.
+
+**`is_conglomerate`** — Boolean:
+- `true` = the company being audited IS the holding entity (e.g., Tapestry is pitched directly as the conglomerate owning Coach/Kate Spade/Stuart Weitzman)
+- `false` = the audit domain is an operating brand, even if a parent entity exists (DSW = `false`; Designer Brands owns DSW but DSW.com is what we're pitching)
+- Single-brand independent companies = `false`
+
+**`portfolio_brands[]`** — Array of brands in the portfolio:
+- For conglomerates (`is_conglomerate: true`): list all owned operating brands
+- For operating brands with a parent (`is_conglomerate: false`): list sibling brands under the same parent entity
+- For single-brand companies with no parent: set to `[]`
+- Each entry: `{ "name": string, "domain": string, "is_audit_target": boolean, "source": "[FACT — URL via Tavily, date]" }`
+- Set `is_audit_target: true` ONLY for the brand whose domain matches the audit domain
+- Minimum domain confidence: must be a real domain (.com/.net/.co.uk etc.), not a guess
+
+**`primary_market`** — Derive from HQ location if not already present:
+- `"US"` | `"UK"` | `"EU"` | `"CA"` | `"AU"` | `null`
+
+### 3d. Write to JSON
+
+Add these fields to `01-company-context.json`:
+```json
+"primary_market": "US",
+"parent_entity": "Designer Brands Inc.",
+"parent_entity_source": "https://www.designerbrands.com/",
+"parent_entity_label": "[FACT — designerbrands.com via Tavily, 2026-03-23]",
+"is_conglomerate": false,
+"portfolio_brands": [
+  {
+    "name": "DSW",
+    "domain": "dsw.com",
+    "is_audit_target": true,
+    "source": "[FACT — designerbrands.com/brands via Tavily, 2026-03-23]"
+  },
+  {
+    "name": "Vince Camuto",
+    "domain": "vincecamuto.com",
+    "is_audit_target": false,
+    "source": "[FACT — designerbrands.com/brands via Tavily, 2026-03-23]"
+  }
+]
+```
+
+For a single-brand company with no parent:
+```json
+"primary_market": "US",
+"parent_entity": null,
+"parent_entity_source": null,
+"parent_entity_label": null,
+"is_conglomerate": false,
+"portfolio_brands": []
+```
+
+Update `01-company-context.md` with a "Parent & Portfolio" section summarising findings.
+
+### 3e. Verification Gate Addition
+
+After Step 3, re-verify `01-company-context.json` contains:
+- `portfolio_brands` key present (value may be `[]` for single-brand companies)
+- `is_conglomerate` is non-null boolean
+- `primary_market` is non-null
+- If `portfolio_brands` has entries: at least one entry has `is_audit_target: true`
+
+---
+
 ## Verification Gate
 
 ```bash

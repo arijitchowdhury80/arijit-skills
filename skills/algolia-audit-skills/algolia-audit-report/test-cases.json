@@ -1,0 +1,46 @@
+{
+  "skill": "algolia-audit-report",
+  "version": "2.0",
+  "test_cases": [
+    {
+      "id": "T-REP-01",
+      "skills": ["algolia-audit-report"],
+      "query": "/algolia-audit-report Costco --skip-pdf",
+      "expected_behavior": [
+        "STEP 0 data refresh executes before any Phase 3 work: reads 03-traffic-data.md, 04-competitors.md, 08-financial-profile.md, 10-scoring-matrix.md, 11-investor-intelligence.md",
+        "validate-workspace.sh runs and passes before rendering",
+        "preflight.sh runs and passes before rendering",
+        "validate-json-schema.py passes before renderer invocation",
+        "Renderer (render-audit.ts) is called — not manual HTML writing",
+        "All 5 HTML deliverables produced: index.html, ae-report.html, battle-card.html, leave-behind.html, costco-audit-data.json",
+        "Score in audit-data.json matches calculate-score.py output (3.52 for Costco)",
+        "No unreplaced {{TOKENS}} in index.html",
+        "All findings have screenshot_file paths that exist on disk"
+      ]
+    },
+    {
+      "id": "T-REP-02",
+      "skills": ["algolia-audit-report"],
+      "query": "/algolia-audit-report Costco --deliverable site",
+      "expected_behavior": [
+        "Only index.html is regenerated — other deliverables NOT touched",
+        "validate-json-schema.py passes before render",
+        "index.html produced in $ALGOLIA_AUDIT_DIR/Costco/deliverables/costco/index.html",
+        "index.html size ≥100KB (substantial content)",
+        "window.AUDIT_DATA present in index.html (data injected)"
+      ]
+    },
+    {
+      "id": "T-REP-03",
+      "skills": ["algolia-audit-report"],
+      "query": "/algolia-audit-report NonExistentCompany",
+      "expected_behavior": [
+        "Skill detects missing workspace files before starting",
+        "Outputs clear error: 'Phase 1 must be completed first'",
+        "Does NOT create partial deliverables",
+        "Does NOT invoke renderer on incomplete data",
+        "Suggests recovery command: /algolia-audit-research {url}"
+      ]
+    }
+  ]
+}

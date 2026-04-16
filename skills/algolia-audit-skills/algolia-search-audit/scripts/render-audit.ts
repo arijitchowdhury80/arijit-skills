@@ -317,6 +317,43 @@ interface AuditData {
   next_steps?: Array<{ step_num: number; title: string; description: string }>;
   methodology?: string;
   bibliography?: Array<{ n: number; label: string; url: string; accessed?: string }>;
+
+  partner_intel?: {
+    tech_partners?: Array<{
+      name: string;
+      co_sell_motion?: string;
+      confidence?: string;
+      label?: string;
+    }>;
+    si_partners?: Array<{
+      name: string;
+      evidence?: string;
+      c_suite_relationship?: boolean;
+      activation_strategy?: string;
+      confidence?: string;
+      label?: string;
+    }>;
+    immediate_action?: string | null;
+    co_sell_recommendation?: string | null;
+    crossbeam_data_available?: boolean | null;
+    source_label?: string | null;
+  } | null;
+
+  tab_subtitles?: {
+    summary?:  string | null;
+    account?:  string | null;
+    findings?: string | null;
+    case?:     string | null;
+    playbook?: string | null;
+  } | null;
+
+  recommended_first_play?: {
+    type?:     "partner_warm_intro" | "strategic_angle" | "competitive" | "timing" | null;
+    headline?: string | null;
+    detail?:   string | null;
+    urgency?:  "high" | "medium" | "low" | null;
+    source?:   string | null;
+  } | null;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -328,6 +365,14 @@ function esc(s: unknown): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function fmtDate(d: unknown): string {
+  if (!d) return "";
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const m = String(d).match(/^(\d{4})-(\d{2})/);
+  if (m) return months[parseInt(m[2], 10) - 1] + " " + m[1];
+  return String(d);
 }
 
 function s(val: unknown, fallback = "—"): string {
@@ -644,7 +689,7 @@ function buildLeadershipQuotes(data: AuditData): string {
       <blockquote class="callout__quote" style="font-style:italic;font-size:1.1rem;line-height:1.6;">"${esc(e.quote)}"</blockquote>
       <div class="callout__attr" style="margin-top:12px;font-weight:700;">— ${esc(e.name)}, ${esc(e.title)}</div>
       <div style="margin-top:6px;font-size:0.8rem;color:var(--dark-gray);">
-        ${e.quote_date ? esc(e.quote_date) : ""}
+        ${e.quote_date ? esc(fmtDate(e.quote_date)) : ""}
         ${e.quote_source ? ` · <a href="${esc(e.quote_source)}" target="_blank" class="cite">[source]</a>` : ""}
       </div>
     </div>`).join("\n");
@@ -1121,7 +1166,7 @@ function buildTokenMap(data: AuditData): Record<string, string> {
     EXEC_QUOTE_CARD:    data.executives?.[0]
       ? `<div class="exec-quote__text">"${esc(data.executives[0].quote)}"</div>
          <div class="exec-quote__attr">${esc(data.executives[0].name)}, ${esc(data.executives[0].title)}</div>
-         <div class="exec-quote__source"><a href="${esc(data.executives[0].quote_source)}" target="_blank">${esc(data.executives[0].quote_source_label || "Source")}</a> · ${esc(data.executives[0].quote_date)}</div>`
+         <div class="exec-quote__source"><a href="${esc(data.executives[0].quote_source)}" target="_blank">${esc(data.executives[0].quote_source_label || "Source")}</a>${data.executives[0].quote_date ? " · " + esc(fmtDate(data.executives[0].quote_date)) : ""}</div>`
       : "",
 
     // First finding (ae-report inline finding slots outside FINDING_CARDS block)
@@ -1292,7 +1337,7 @@ function checkUnreplacedTokens(html: string, slug: string, mode: string): boolea
 
 // ─── Site mode (SPA) ─────────────────────────────────────────────────────────
 
-async function renderSite(data: AuditData, slug: string, cwd: string): Promise<void> {
+async function renderSite(data: AuditData, _slug: string, cwd: string): Promise<void> {
   const templatePath = join(TEMPLATES_DIR, "index-template.html");
   let html: string;
   try {
@@ -1327,7 +1372,7 @@ async function renderSite(data: AuditData, slug: string, cwd: string): Promise<v
       : BRAND_CSS_BLOCK + html;
   }
 
-  const outDir = join(cwd, slug);
+  const outDir = cwd;
   await ensureDir(outDir);
   const outPath = join(outDir, "index.html");
   await Deno.writeTextFile(outPath, html);
@@ -1427,11 +1472,18 @@ async function main(): Promise<void> {
       data.cover.company_logo_url = fetched;
       console.log("✓ Company logo embedded as data URI");
     } else {
-      // Network unavailable — keep the URL as-is so the browser loads it directly at runtime.
-      // clearbit.com URLs work in browsers even when Deno can't reach them during build.
-      // The topbar <img onerror> will hide it gracefully if clearbit fails for any reason.
-      data.cover.company_logo_url = rawLogoUrl;
-      console.log(`✓ Company logo: URL kept for browser-side loading (${rawLogoUrl})`);
+      // Clearbit failed at build time — use DuckDuckGo favicon as fallback (returns 200 PNG,
+      // works in all browsers without DNS issues).
+      const domain = data.meta?.domain || rawLogoUrl.replace("https://logo.clearbit.com/", "");
+      const ddgUrl = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+      const ddgFetched = await fetchAsDataUri(ddgUrl);
+      if (ddgFetched.startsWith("data:")) {
+        data.cover.company_logo_url = ddgFetched;
+        console.log(`✓ Company logo embedded via DuckDuckGo fallback`);
+      } else {
+        data.cover.company_logo_url = ddgUrl;
+        console.log(`⚠  Company logo: using DuckDuckGo URL (${ddgUrl})`);
+      }
     }
   }
 

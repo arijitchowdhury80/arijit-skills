@@ -15,7 +15,7 @@ Reads ALL of:
 - `$AUDIT_DIR/{Company}/research/11-investor-intelligence.md` (exec language — quotes to mirror)
 - `$AUDIT_DIR/{Company}/research/10-scoring-matrix.md` (what gaps exist — what to pitch)
 - `$AUDIT_DIR/{Company}/research/04-competitors.md` (Golden Angle evidence)
-- `$AUDIT_DIR/{Company}/research/07-hiring-signals.md` (buying committee)
+- `$AUDIT_DIR/{Company}/research/09d-hiring-signals.md` (buying committee)
 - `$AUDIT_DIR/{Company}/research/08-financial-profile.md` (financial context)
 - `$AUDIT_DIR/{Company}/deliverables/{slug}-business-case.md` (if exists — ROI inputs)
 
@@ -48,7 +48,8 @@ Workspace declaration: "This writes to PRODUCTION: [{Company}] — generating pl
 ```
 BOTTOM LINE: [Company] is [signal tier: HOT/WARM/COLD]. Lead with [specific angle].
 Top angle: [Challenger insight in 1 sentence — what they don't know about their own search]
-Key exec: [Name, Title] — contact via [route: LinkedIn / warm intro / partner channel]
+Key exec: [Name, Title] — contact via [route: see Partner Play below if available, else LinkedIn]
+Partner Play: [If partner-intel.md exists and has HIGH-confidence SI partner: "Warm intro via [SI name] — [activation_strategy in 1 line]". Else: "No confirmed partner relationship — cold outbound with audit finding as hook"]
 Signal: [Most urgent trigger signal with date — earnings call quote, hiring surge, replatform, etc.]
 ```
 
@@ -108,12 +109,12 @@ Minimum 6 questions across: Implication (3), Need-Payoff (2), Problem confirmati
 | Component | Status | Evidence | AE Action |
 |-----------|--------|----------|-----------|
 | Metrics (M) | [POPULATED / PARTIAL / UNKNOWN] | ROI: $[X]M from {slug}-business-case.md or estimated from audit scoring | — |
-| Economic Buyer (E) | [POPULATED / PARTIAL / UNKNOWN] | [Name, Title from 07-hiring-signals.md or 01-company-context.md] | — |
+| Economic Buyer (E) | [POPULATED / PARTIAL / UNKNOWN] | [Name, Title from 09d-hiring-signals.md or 01-company-context.md] | — |
 | Decision Criteria (D) | [POPULATED / PARTIAL / UNKNOWN] | [From tech stack + competitor intel — what they optimize for] | — |
 | Decision Process (D) | [UNKNOWN] | — | Ask in discovery: "Walk me through how a decision like this typically moves forward at [Company]." |
 | Paper Process (P) | [UNKNOWN] | — | Ask: "What does your procurement cycle look like for a platform investment?" |
 | Implication of Pain (I) | [POPULATED] | Audit findings: [top 3 gaps by severity from 10-scoring-matrix.md] | Lead with this in every conversation |
-| Champion (C) | [PARTIAL / UNKNOWN] | [From 07-hiring-signals.md buying committee — most search-adjacent role] | Identify in first call — look for VP Search / Director of eComm / Head of Product |
+| Champion (C) | [PARTIAL / UNKNOWN] | [From 09d-hiring-signals.md buying committee — most search-adjacent role] | Identify in first call — look for VP Search / Director of eComm / Head of Product |
 | Competition (C) | [POPULATED] | [From 04-competitors.md — current vendor + Golden Angle status] | [Golden Angle: lead with competitor proof] or [Defensive: protect against displacement] |
 ```
 
@@ -151,7 +152,7 @@ Add additional objections based on exec language from `11-investor-intelligence.
 |------|-------|-------------|-------------|----------|
 ```
 
-Sources: `07-hiring-signals.md` (buying committee), `research/01-company-context.md` (C-suite executives).
+Sources: `09d-hiring-signals.md` (buying committee), `research/01-company-context.md` (C-suite executives).
 
 Tier designations:
 - **Tier 1 Champion**: Economic buyer — most senior exec with search/digital/revenue ownership. Approach first.
@@ -165,7 +166,17 @@ Approach column: LinkedIn connection + content engagement / warm intro via [part
 
 ### SECTION 6: Partner Angles
 
-Sources: `research/12-partner-intel.md` if exists; otherwise infer from `03-tech-stack.md` and `04-competitors.md`.
+PRIORITY ORDER:
+1. HIGH-confidence SI partner (Crossbeam-confirmed) → warm intro is ALWAYS first play, listed before any cold outreach
+2. Algolia tech partner co-sell (SFCC, Adobe, etc.) → joint solution pitch
+3. Competitor-based (Golden Angle) → "Your competitors chose Algolia"
+4. Cold outbound with audit finding as hook → last resort only
+
+If a HIGH-confidence SI partner exists in `partner-intel.md`, this MUST be listed as the #1 recommended
+action in the BLUF, overriding any other approach. An AE who cold outbounds when a warm intro is
+available is leaving significant deal velocity on the table.
+
+Sources: `research/partner-intel.md` if exists; otherwise infer from `03-tech-stack.md` and `04-competitors.md`.
 
 ```
 Tech partner: [partner name] — co-sell angle: [what joint story to tell]
@@ -173,7 +184,7 @@ SI partner: [partner name] — warm intro route: [how to activate the relationsh
 GSI angle: [if enterprise deal — which GSI touches this account]
 ```
 
-If `12-partner-intel.md` does not exist, note "No partner intel file found — infer from tech stack" and extract relevant partner relationships from `03-tech-stack.md`.
+If `partner-intel.md` does not exist, note "No partner intel file found — infer from tech stack" and extract relevant partner relationships from `03-tech-stack.md`.
 
 ---
 

@@ -20,7 +20,21 @@ if (!slug) {
   process.exit(1);
 }
 
-const htmlPath = path.join(process.env.HOME, 'algolia-arian-v2', slug, 'index.html');
+// Support both published path and local deliverables path
+const auditDir = process.env.ALGOLIA_AUDIT_DIR;
+let htmlPath;
+if (process.argv[3]) {
+  // Explicit path provided as third argument
+  htmlPath = process.argv[3];
+} else if (auditDir) {
+  // Try local deliverables first, then fall back to hub
+  const localPath = path.join(auditDir, slug.charAt(0).toUpperCase() + slug.slice(1), 'deliverables', slug, 'index.html');
+  const hubPath = path.join(process.env.HOME, 'algolia-arian-v2', slug, 'index.html');
+  const fs2 = require('fs');
+  htmlPath = fs2.existsSync(localPath) ? localPath : hubPath;
+} else {
+  htmlPath = path.join(process.env.HOME, 'algolia-arian-v2', slug, 'index.html');
+}
 if (!fs.existsSync(htmlPath)) {
   console.error(`File not found: ${htmlPath}`);
   process.exit(1);
@@ -95,6 +109,7 @@ try {
 const sections = [
   'sectionExecSummary', 'sectionCompanySnapshot', 'sectionFinancials',
   'sectionTechStack', 'sectionTraffic', 'sectionHiring', 'sectionSignals',
+  'sectionPartnerIntel',
   'sectionScoreHeatmap', 'sectionBusinessCaseHook', 'sectionCompetitiveSynthesis',
   'sectionRevenueAtRisk', 'sectionCaseStudies', 'sectionWhyNow',
   'sectionStrategicAngles', 'sectionPreCallBrief', 'sectionBuyingCommittee',

@@ -1,0 +1,48 @@
+{
+  "skill": "algolia-audit-research",
+  "version": "2.0",
+  "test_cases": [
+    {
+      "id": "T-RES-01",
+      "skills": ["algolia-audit-research"],
+      "query": "/algolia-audit-research dsw.com",
+      "expected_behavior": [
+        "Creates directory $ALGOLIA_AUDIT_DIR/DSW/research/ if it doesn't exist",
+        "Writes 12 scratchpad files: 01-company-context.md through 12-icp-priority-mapping.md",
+        "Each file is above minimum size threshold (01: ≥5KB, 02: ≥5KB, 03: ≥3KB)",
+        "All data points have [FACT], [ESTIMATE], or [OBSERVED] labels",
+        "All data points have source URLs (grep -c 'https://' ≥15 per file)",
+        "Calls collect-traffic.py for Step 3 — does NOT manually enumerate SimilarWeb endpoints",
+        "CHECKPOINT.md shows all 14 steps as DONE",
+        "validate-workspace.sh exits 0 when run against the research directory",
+        "Note: DSW Shoes — public company (Designer Brands Inc, ticker DBI), $3.5B revenue. Doubles as Phase 1 research for full end-to-end DSW audit."
+      ]
+    },
+    {
+      "id": "T-RES-02",
+      "skills": ["algolia-audit-research"],
+      "query": "/algolia-audit-research brooksrunning.com --no-browser",
+      "expected_behavior": [
+        "Correctly identifies Brooks Running as private company (no SEC filings)",
+        "Uses private company methodology for 08-financial-profile.md (6-source waterfall)",
+        "All revenue figures labeled [ESTIMATE] with confidence level (HIGH/MEDIUM/LOW)",
+        "Does NOT attempt Yahoo Finance MCP calls (no public ticker)",
+        "Completes all 14 steps without blocking on missing SEC data",
+        "11-investor-intelligence.md contains CEO/founder quotes from WebFetch sources"
+      ]
+    },
+    {
+      "id": "T-RES-03",
+      "skills": ["algolia-audit-research"],
+      "query": "/algolia-audit-research costco.com --refresh 3",
+      "expected_behavior": [
+        "Only re-runs Step 3 (Traffic & Engagement) — does NOT re-run all 14 steps",
+        "Overwrites only 03-traffic-data.md",
+        "All other scratchpad files remain unchanged (timestamps unchanged)",
+        "New 03-traffic-data.md has API parameters header section",
+        "New 03-traffic-data.md was produced by collect-traffic.py (not manual MCP calls)",
+        "CHECKPOINT.md updated to show Step 3 refreshed with new timestamp"
+      ]
+    }
+  ]
+}

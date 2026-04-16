@@ -49,12 +49,16 @@
           "type": "object",
           "description": "Sub-scores 0-10 for each dimension",
           "properties": {
-            "query_understanding":  { "type": "number", "minimum": 0, "maximum": 10 },
-            "results_quality":      { "type": "number", "minimum": 0, "maximum": 10 },
-            "no_results_handling":  { "type": "number", "minimum": 0, "maximum": 10 },
-            "facets_and_filtering": { "type": "number", "minimum": 0, "maximum": 10 },
-            "personalization":      { "type": "number", "minimum": 0, "maximum": 10 },
-            "performance":          { "type": "number", "minimum": 0, "maximum": 10 }
+            "latency":                          { "type": "number", "minimum": 0, "maximum": 10 },
+            "typo_tolerance":                   { "type": "number", "minimum": 0, "maximum": 10 },
+            "query_suggestions_empty_state":    { "type": "number", "minimum": 0, "maximum": 10 },
+            "intent_detection":                 { "type": "number", "minimum": 0, "maximum": 10 },
+            "merchandising_consistency":        { "type": "number", "minimum": 0, "maximum": 10 },
+            "content_commerce_ux":              { "type": "number", "minimum": 0, "maximum": 10 },
+            "semantic_nlp_search":              { "type": "number", "minimum": 0, "maximum": 10 },
+            "dynamic_facets_personalization":   { "type": "number", "minimum": 0, "maximum": 10 },
+            "recommendations_merchandising":    { "type": "number", "minimum": 0, "maximum": 10 },
+            "search_intelligence":              { "type": "number", "minimum": 0, "maximum": 10 }
           }
         },
         "critical_count":  { "type": "number" },
@@ -251,6 +255,69 @@
             }
           }
         },
+        "search_abandonment": {
+          "type": "object",
+          "description": "Outbound traffic to google.com — quantified proof users give up on on-site search",
+          "properties": {
+            "google_outbound_pct":       { "type": ["string", "null"], "description": "e.g. '9.27%'" },
+            "google_outbound_mom_change":{ "type": ["string", "null"], "description": "e.g. '+117.81%'" },
+            "narrative":                 { "type": ["string", "null"], "description": "1-sentence AE talking point" }
+          }
+        },
+        "ai_referral": {
+          "type": "object",
+          "description": "AI chatbot referral traffic — signals how the prospect's audience discovers products via AI",
+          "properties": {
+            "chatgpt_pct":     { "type": ["string", "null"], "description": "ChatGPT share of referral traffic e.g. '16.55%'" },
+            "chatgpt_mom":     { "type": ["string", "null"], "description": "MoM change e.g. '+49.74%'" },
+            "gemini_pct":      { "type": ["string", "null"], "description": "Gemini share if present" },
+            "total_ai_pct":    { "type": ["string", "null"], "description": "Total AI chatbot share of referring industry traffic e.g. '55.52%'" },
+            "narrative":       { "type": ["string", "null"], "description": "1-sentence AE talking point" }
+          }
+        },
+        "top_referrers": {
+          "type": "array",
+          "description": "Top referring websites by share",
+          "items": {
+            "type": "object",
+            "properties": {
+              "domain":     { "type": "string" },
+              "share_pct":  { "type": "string" },
+              "mom_change": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "paid_search": {
+          "type": "object",
+          "description": "Paid search channel intelligence — keywords reveal competitive intent and seasonal patterns",
+          "properties": {
+            "share_of_total_pct": { "type": ["string", "null"], "description": "e.g. '10.05%'" },
+            "top_keywords": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "keyword":    { "type": "string" },
+                  "share_pct":  { "type": "string" },
+                  "mom_change": { "type": ["string", "null"] }
+                }
+              }
+            },
+            "competitor_bidding": { "type": ["string", "null"], "description": "Competitor brand name if prospect is bidding on it e.g. 'party city'" },
+            "narrative":          { "type": ["string", "null"], "description": "1-sentence AE talking point on paid search behavior" }
+          }
+        },
+        "competitor_traffic": {
+          "type": "array",
+          "description": "Competitor traffic comparison from SimilarWeb",
+          "items": {
+            "type": "object",
+            "properties": {
+              "domain":      { "type": "string" },
+              "visits_3mo":  { "type": "string" }
+            }
+          }
+        },
         "source_url": { "type": ["string", "null"], "format": "uri" }
       }
     },
@@ -314,6 +381,43 @@
           "url":      { "type": "string", "format": "uri" },
           "accessed": { "type": ["string", "null"] }
         }
+      }
+    },
+
+    "partner_intel": {
+      "type": ["object", "null"],
+      "description": "Partner intelligence — tech partners (co-sell) and SI partners (warm intro). Optional module.",
+      "properties": {
+        "tech_partners": { "type": "array" },
+        "si_partners":   { "type": "array" },
+        "immediate_action": { "type": ["string", "null"] },
+        "co_sell_recommendation": { "type": ["string", "null"] },
+        "crossbeam_data_available": { "type": ["boolean", "null"] },
+        "source_label": { "type": ["string", "null"] }
+      }
+    },
+
+    "tab_subtitles": {
+      "type": ["object", "null"],
+      "description": "Personalized subtitle line shown under each active SPA tab. Generated by algolia-audit-report.",
+      "properties": {
+        "summary":  { "type": ["string", "null"] },
+        "account":  { "type": ["string", "null"] },
+        "findings": { "type": ["string", "null"] },
+        "case":     { "type": ["string", "null"] },
+        "playbook": { "type": ["string", "null"] }
+      }
+    },
+
+    "recommended_first_play": {
+      "type": ["object", "null"],
+      "description": "Single strongest recommended first action. Drives Summary tab highlights card.",
+      "properties": {
+        "type":     { "type": ["string", "null"], "enum": ["partner_warm_intro","strategic_angle","competitive","timing",null] },
+        "headline": { "type": ["string", "null"] },
+        "detail":   { "type": ["string", "null"] },
+        "urgency":  { "type": ["string", "null"], "enum": ["high","medium","low",null] },
+        "source":   { "type": ["string", "null"] }
       }
     }
   }

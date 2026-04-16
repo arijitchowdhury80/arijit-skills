@@ -47,10 +47,30 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-competitors.py \
 2. WebSearch: `"{competitor}" search OR "search experience" OR Algolia OR Elasticsearch 2025`
 3. If any competitor uses Algolia → **GOLDEN ANGLE**: WebFetch algolia.com/customers/{slug} for exact metrics
 
+### Step 2b: Algolia customer portfolio — vertical-wide lookup (MANDATORY)
+
+This is separate from competitor scanning. Even if NO direct competitor uses Algolia, search the full Algolia customer base for companies in the same vertical.
+
+```
+WebSearch: "algolia.com/customers {vertical}" — e.g. "algolia.com/customers footwear"
+WebSearch: "algolia.com/customers {adjacent_vertical}" — e.g. "algolia.com/customers retail apparel"
+WebFetch: https://www.algolia.com/customers/ — scan full list for same-industry companies
+```
+
+For each Algolia customer in the same vertical:
+- WebFetch their customer page: `https://www.algolia.com/customers/{slug}/`
+- Extract verbatim metric: exact number, exact quote, exact outcome
+- Note: are they a direct competitor, a non-competing peer, or an adjacent vertical?
+- Label: `[FACT — algolia.com/customers/{slug} WebFetch, {date}]`
+
+Add ALL verified Algolia customers in the vertical to `golden_angle.competitors_using_algolia[]` — not just direct competitors. The AE needs the full Algolia proof set for their vertical, not one example.
+
+**This list must have at least 3 entries when Algolia has customers in this vertical.** If only 1 direct competitor uses Algolia, look wider: adjacent verticals, similar business models, same audience.
+
 ### Case study verification:
-- WebFetch: `https://www.algolia.com/customers/` — find same-vertical case studies
 - Extract verbatim metric (never paraphrase): "search conversion increased 6.2% to 10%+"
 - Verify URL is live: `[FACT — algolia.com/customers/{slug} WebFetch, {date}]`
+- Match case study to finding type: NLP gap → find NLP case study; personalization gap → find personalization case study; federated search gap → find federated search case study
 
 ### Competitive scenario classification:
 - GOLDEN: ≥1 competitor uses Algolia with public proof
