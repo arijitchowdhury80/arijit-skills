@@ -42,36 +42,74 @@ Do NOT use WebSearch as a substitute for financial data.
 
 ---
 
-## Step 2: Skill Enrichment — Earnings Call Transcripts
+## Step 2: Skill Enrichment — SEC 10-K Digital Revenue + Earnings Transcripts
 
-Source B (complementary, not fallback):
+**Source B — SEC EDGAR 10-K (digital/ecommerce financial signals):**
+
+Yahoo Finance API only provides total revenue. Digital/ecommerce revenue breakdowns, technology investment figures, and digital channel percentages live in the 10-K filing (MD&A section). These are REQUIRED for the financial profile.
+
+```
+WebFetch: https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}&type=10-K&count=3
+→ Find the last 3 annual filings → WebFetch each filing document
+```
+
+From the 10-K MD&A, extract for EACH year reported:
+- Digital/ecommerce revenue (absolute $ AND % of total) — search for "digital", "ecommerce", "e-commerce", "online", "digital sales", "digital channel"
+- Technology investment mentions — search for "technology", "platform investment", "digital transformation", "IT spend"
+- Search/discovery platform mentions — search for "search", "personalization", "product discovery"
+- Any forward guidance on digital growth targets
+
+Write these to the financial profile with year labels:
+```
+Digital Revenue FY2025: ${X}M ({Y}% of total) [FACT — SEC EDGAR 10-K FY2025, {URL}]
+Digital Revenue FY2024: ${X}M ({Y}% of total) [FACT — SEC EDGAR 10-K FY2024, {URL}]
+Digital Revenue FY2023: ${X}M ({Y}% of total) [FACT — SEC EDGAR 10-K FY2023, {URL}]
+```
+
+If the 10-K does NOT break out digital revenue separately: state this explicitly and note which segment reporting they use. Do NOT leave this field blank or assume $0.
+
+Label: `[FACT — SEC EDGAR 10-K WebFetch, {date}, {URL}]`
+
+**Source C — Earnings call transcripts (exec language on tech investment):**
 - WebSearch: `"{Company}" Q4 2025 earnings call transcript` — try last 3 quarters
 - WebFetch: Motley Fool / Seeking Alpha / company IR
-- Extract verbatim quotes from ANY named speaker
+- Look specifically for: exec comments on search/digital/platform investments, technology spend, digital revenue guidance
+- Extract verbatim quotes from ANY named speaker about these topics
 - Label: `[FACT — {source} transcript WebFetch, {date}]`
 
-Both Yahoo Finance MCP AND transcripts are required. Neither substitutes for the other.
+All three sources (Yahoo Finance MCP, SEC EDGAR 10-K, earnings transcripts) are required. None substitutes for another.
 
 ---
 
-## Step 3: Finalize JSON with meta and flat key fields
+## Step 3: Write 08-financial-profile.json
 
-After enrichment, ensure `08-financial-profile.json` has these fields at the **TOP LEVEL** (not nested under `financials.*` or `margins.*`):
+Write `08-financial-profile.json` with this EXACT top-level structure. **No deviations — do not nest these fields inside `financials`, `margins`, or any other object.**
 
 ```json
 {
   "meta": {
     "skill_enrichment_completed": true,
-    "collection_date": "YYYY-MM-DD"
+    "collection_date": "YYYY-MM-DD",
+    "ticker": "{TICKER}",
+    "company_type": "public"
   },
-  "revenue_fy2025": <number>,
-  "revenue_fy2024": <number>,
+  "revenue_fy2025": 3009000000,
+  "revenue_fy2024": 3075000000,
+  "revenue_fy2023": 3315000000,
   "margin_zone": "RED|YELLOW|GREEN",
-  "roi_formula_shown": true
+  "roi_formula_shown": true,
+  "financials": {
+    "...all other financial fields (revenue trend, margins, EBITDA, etc.)..."
+  },
+  "executive_quotes": ["..."],
+  "analyst_consensus": "..."
 }
 ```
 
-**IMPORTANT:** Use `meta` (not `_meta`). The `revenue_fy2025`, `margin_zone`, and `roi_formula_shown` fields MUST be at the top level. These are validated by the eval assertions. The script may produce nested JSON — flatten these 4 keys to top level during skill enrichment.
+**CRITICAL:**
+- `revenue_fy2025`, `revenue_fy2024`, `revenue_fy2023`, `margin_zone`, and `roi_formula_shown` are **TOP-LEVEL keys** — NEVER nest them inside `financials.*` or `margins.*`
+- `roi_formula_shown` MUST always be present. Set to `true` if gross margin % calculation appears in the MD file, `false` otherwise. Never omit this field.
+- Use `meta` NOT `_meta`
 
 `roi_formula_shown` = `true` whenever a Gross Margin % calculation is shown in the MD file.
 

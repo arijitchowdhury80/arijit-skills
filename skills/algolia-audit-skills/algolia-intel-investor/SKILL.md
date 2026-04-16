@@ -67,11 +67,84 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-investor.py \
 
 ---
 
-## Verification Gate
+---
 
-Ensure `11-investor-intelligence.json` has `meta` block (use `meta`, NOT `meta`):
-```json
-{"meta": {"skill_enrichment_completed": true}, "executive_quotes": [...]}
+## Step 3: Media Quote Extraction (Tavily Signals)
+
+### 3a. Run the script
+
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/collect-exec-media.py \
+  {domain} \
+  "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/" \
+  [--company-name "{CompanyName}"]
 ```
 
-Pass: Both files exist, `11-investor-intelligence.md` ≥3000 bytes, at least 3 executive quotes each with `speaker`, `title`, `source_url` fields, no anonymous sources, `meta.skill_enrichment_completed = true`.
+### 3b. Capture stdout and check status
+
+Parse the JSON printed to stdout:
+- `status: "success"` with `media_quotes_collected > 0` → proceed to Step 3c
+- `status: "partial"` with `"media_quotes"` in `skill_enrichment_required` → TAVILY_API_KEY not set or no results → go to Step 3e (WebSearch fallback)
+- `media_quotes_collected: 0` → go to Step 3e (WebSearch fallback)
+
+### 3c. LLM enrichment — context and algolia_relevance
+
+For each entry in `media_quotes[]` where `context` is null:
+- Write a one-sentence Algolia pitch context explaining why this quote matters in a sales context
+  (e.g., "Signals that {exec_name} is actively investing in digital CX, opening the door for a search conversation.")
+- Format: plain sentence, present tense, no quotes around it
+
+For each entry where `algolia_relevance` is null:
+- Write pipe-separated relevance tags from this set:
+  `personalization | search | digital | technology | cx | commerce | platform | ai | data | performance`
+- Include 1-3 most applicable tags only
+
+### 3d. Write enriched fields back to JSON and MD
+
+Update `11-investor-intelligence.json`:
+- For each entry in `media_quotes[]`, set `context` and `algolia_relevance` to the enriched values
+- Do NOT modify any other keys (executive_quotes, _meta, etc.)
+- Write the file (overwrite)
+
+Update `11-investor-intelligence.md`:
+- In the `## Media Quotes (Trade Press)` section, replace each `[COLLECT_VIA_SKILL]` placeholder:
+  - Under **Context (Algolia pitch):** → insert the enriched context sentence
+  - Under **Algolia Relevance:** → insert the pipe-separated tags
+
+### 3e. WebSearch fallback (when Tavily unavailable or zero results)
+
+Run the following WebSearch for each top executive (max 3, prioritize CEO/CMO/CTO):
+
+```
+WebSearch: "{exec_name}" "{company_name}" 2024 OR 2025 interview digital commerce personalization
+```
+
+For each result:
+- Confirm the URL is trade press (NOT sec.gov, fool.com, seekingalpha.com)
+- **HARD RULE: Reject any quote dated before January 2025. No exceptions.** Quotes older than 12 months are stale — executives change roles, strategies change, the quote becomes a liability not an asset. If no quotes ≥ Jan 2025 exist, leave the section empty rather than use old quotes.
+- Extract the most relevant verbatim sentence containing the exec's name
+  - If verbatim not possible: use *said that* notation, set `confidence: "ESTIMATE"`
+- Build a `media_quote` entry with all fields populated (including `context` and `algolia_relevance` — LLM fills these directly, not deferred)
+- Append to `media_quotes[]` in `11-investor-intelligence.json`
+- Append formatted quote block to `## Media Quotes (Trade Press)` section in `11-investor-intelligence.md`
+
+**Label format for WebSearch fallback:**
+`[ESTIMATE — {Publication} via WebSearch, {date}, {URL}]`
+
+---
+
+## Verification Gate
+
+Ensure `11-investor-intelligence.json` has `_meta` block (use `_meta` with underscore):
+```json
+{"_meta": {"skill_enrichment_completed": true}, "executive_quotes": [...], "media_quotes": [...]}
+```
+
+Pass conditions — ALL must be true:
+- `[ ]` Both files exist: `11-investor-intelligence.md` and `11-investor-intelligence.json`
+- `[ ]` `11-investor-intelligence.md` ≥ 3000 bytes
+- `[ ]` At least 3 executive quotes each with `speaker`, `title`, `source_url` fields
+- `[ ]` No anonymous sources
+- `[ ]` `_meta.skill_enrichment_completed = true`
+- `[ ]` `11-investor-intelligence.json` contains `media_quotes` key (array, may be empty)
+- `[ ]` Any entries in `media_quotes[]` have non-null `source_url`

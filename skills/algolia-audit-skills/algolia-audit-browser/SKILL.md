@@ -386,7 +386,11 @@ Foundation of every search audit. Execute in full.
 
 ---
 
-#### Step 2a½: Search Vendor Network Verification (if vendor tag detected in Phase 1)
+#### Step 2a½: Search Vendor Network Verification — PROSPECT + TOP COMPETITORS
+
+This step has TWO parts. Both are required.
+
+**Part A: Prospect search vendor verification**
 
 If `02-tech-stack.md` contains any `Status: TAG DETECTED (unverified)` entries:
 
@@ -398,13 +402,33 @@ If `02-tech-stack.md` contains any `Status: TAG DETECTED (unverified)` entries:
    - BloomReach → `brsrvr.com` or `bloomreach.com`
    - Coveo → `coveo.com` or `platform.cloud.coveo.com`
    - Klevu → `klevu.com`
+   - Searchspring → `searchspring.net`
+   - Bazaarvoice → `bazaarvoice.com`
 4. Also check which domain IS handling autocomplete/search (this reveals the ACTUAL provider)
 5. Update `02-tech-stack.md`:
    - Vendor with API calls → `Status: ACTIVE (confirmed via network requests to {domain})`
    - Vendor with NO API calls → `Status: TAG ONLY (not powering search — evaluation/POC)`
-   - Add actual provider if different: `Active Search Provider: {vendor} (via {api-domain})`
 
-**Why**: SimilarWeb detects JavaScript tags, not active API usage. Uncommon Goods had Constructor.io tag since July 2025, but BloomReach (`brsrvr.com`) was actually powering all search. This step prevents false competitive intelligence.
+**Part B: Competitor search vendor detection (from 04-competitors.md)**
+
+Read `04-competitors.md`. For each competitor marked "search vendor: Unknown / Phase 2 needed":
+
+1. Navigate to competitor's site
+2. Perform a search query on their site
+3. Monitor network requests for known search vendor API domains (same list as above)
+4. Record the actual search provider for each competitor:
+   ```
+   Competitor: {name} ({domain})
+   Search vendor: {vendor name} via {api-domain}
+   Evidence: API calls to {specific-domain} observed during search
+   Label: [FACT — Phase 2 network inspection, {date}]
+   ```
+5. Append to `04-competitors.md` under each competitor's entry
+6. Update the competitor table: `Search Provider: {vendor} (confirmed Phase 2)`
+
+This is the ONLY reliable way to detect search vendors. BuiltWith tag detection alone is insufficient — it misses headless implementations, CDN-cached tags, and multi-vendor setups.
+
+**Why**: Competitor search vendor data drives the capability matrix in the business case. "Unknown" vendors make the entire competitive analysis section useless. This step turns unknowns into facts.
 
 > After completing: update CHECKPOINT.md, mark `[x] 2a½: Search vendor verification — {result} ✅`
 

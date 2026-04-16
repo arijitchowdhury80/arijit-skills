@@ -329,9 +329,79 @@ If `algolia-brand-check` is not installed, note in the output: "Brand check skip
 
 ---
 
+## Update audit-data.json abx_sequence (MANDATORY after writing files)
+
+After writing all 10 campaign files, update `deliverables/{slug}-audit-data.json` to populate `abx_sequence.touches[]` with the **full content** of each touch — not a one-line summary. The SPA renders directly from this JSON; the markdown files are NOT read by the SPA.
+
+Read each campaign file and write its full body into the JSON:
+
+```python
+# Pseudocode — execute this via Bash/Python
+import json, os
+
+data_path = f"{AUDIT_DIR}/{CompanyName}/deliverables/{slug}-audit-data.json"
+with open(data_path) as f:
+    data = json.load(f)
+
+# Map each file to the corresponding touch entry
+touch_map = {
+    1: ("email-1-hook.md", "email", "Day 1"),
+    2: ("linkedin-connect.md", "linkedin", "Day 1-2"),
+    3: ("email-2-competitor.md", "email", "Day 3-4"),
+    4: ("linkedin-followup-1.md", "linkedin", "Day 4-6"),
+    5: ("email-3-business-case.md", "email", "Day 7"),
+    6: ("loom-script.md", "video", "Day 7-14"),
+    7: ("linkedin-followup-2.md", "linkedin", "Day 10-12"),
+    8: ("email-4-social-proof.md", "email", "Day 14"),
+    9: ("email-5-breakup.md", "email", "Day 21"),
+}
+
+abx_dir = f"{AUDIT_DIR}/{CompanyName}/deliverables/abx-campaign/"
+touches = []
+for touch_num, (filename, channel, week) in touch_map.items():
+    file_path = os.path.join(abx_dir, filename)
+    if os.path.exists(file_path):
+        with open(file_path) as f:
+            body = f.read()
+        # Extract subject line from first H2 or first line
+        lines = body.strip().split('\n')
+        subject = next((l.lstrip('#').strip() for l in lines if l.strip()), filename)
+        touches.append({
+            "touch": touch_num,
+            "day": week,          # template renders: T{touch} · Day {day}
+            "channel": channel,
+            "target": "all",      # template: contactMap[t.target] || 'All contacts'
+            "subject": subject,
+            "body": body,
+            "message": body[:120].strip()
+        })
+
+# Ensure contacts have id field for contactMap lookup
+contacts = data.get("abx_sequence", {}).get("contacts", [])
+for c in contacts:
+    if not c.get("id"):
+        c["id"] = c.get("name","").lower().replace(" ","_").replace("'","")
+
+if not data.get("abx_sequence"):
+    data["abx_sequence"] = {}
+data["abx_sequence"]["contacts"] = contacts
+data["abx_sequence"]["touches"] = touches
+data["abx_sequence"]["total_touches"] = 9
+data["abx_sequence"]["duration_days"] = 90
+data["abx_sequence"]["channels"] = ["Email", "LinkedIn", "Video"]
+
+with open(data_path, 'w') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+print(f"✅ abx_sequence updated with {len(touches)} full-body touches")
+```
+
+**Why this matters:** The SPA renders `abx_sequence.touches[N].body` — not the markdown files. If `body` is empty, the SPA shows a blank or one-line summary. The full email content must be in the JSON.
+
+---
+
 ## Verification Gate
 
-After writing all files:
+After writing all files AND updating the JSON:
 
 ```bash
 # Verify all 10 files exist and are non-trivial
@@ -344,6 +414,7 @@ Pass conditions:
 - `loom-script.md` references at least 2 actual screenshot filenames from `deliverables/screenshots/`
 - `collateral-schedule.md` contains Signal Tier declaration
 - Every email file contains a `Source notes:` section with at least one citation
+- `{slug}-audit-data.json` `abx_sequence.touches[]` has `body` field populated (not empty)
 
 If any check fails: halt and report which file and which condition failed. Do not silently deliver incomplete output.
 
