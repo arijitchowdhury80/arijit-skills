@@ -4,8 +4,29 @@ JSON Schema Validator — checks audit-data.json keys match exactly what the tem
 Blocks render if critical fields are missing or use wrong key names.
 Run before render-audit.ts. Exits 1 if violations found.
 Usage: python3 validate-json-schema.py {slug}
+
+Now runs Pydantic schema validation FIRST (strict structural checks),
+then legacy manual checks for template-specific field name requirements.
+Pydantic catches: wrong field names, missing required fields, placeholder text in body,
+missing video_script on video touches, missing citations, invalid score keys.
 """
 import json, sys, os
+
+# ── Pydantic validation (structural layer) ────────────────────────────────────
+from typing import Callable, Optional
+_pydantic_validate: Optional[Callable[..., tuple[bool, list[str]]]] = None
+_pydantic_available: bool = False
+try:
+    import sys as _sys
+    import os as _os
+    _schema_dir = _os.path.dirname(_os.path.abspath(__file__))
+    if _schema_dir not in _sys.path:
+        _sys.path.insert(0, _schema_dir)
+    from audit_data_schema import validate_audit_data as _pydantic_validate
+    _pydantic_available = True
+except ImportError:
+    print("⚠️  audit_data_schema.py not found — Pydantic validation skipped. "
+          "Run: python3 audit_data_schema.py to validate schema.")
 
 slug = sys.argv[1] if len(sys.argv) > 1 else None
 if not slug:
@@ -22,8 +43,24 @@ with open(data_path) as f:
 
 violations = []
 
-def fail(msg): violations.append(f'  ❌ {msg}')
-def warn(msg): violations.append(f'  ⚠️  {msg}')
+def fail(msg: str) -> None: violations.append(f'  ❌ {msg}')
+def warn(msg: str) -> None: violations.append(f'  ⚠️  {msg}')
+
+# ── Run Pydantic structural validation FIRST ──────────────────────────────────
+# This catches field name mismatches, missing required fields, placeholder text,
+# missing video_script on video touches, source notes in email bodies, etc.
+# Pydantic errors are BLOCKING — they exit before any legacy checks run.
+if _pydantic_available and _pydantic_validate is not None:
+    _pydantic_ok, _pydantic_errors = _pydantic_validate(d)
+    if not _pydantic_ok:
+        print(f'\n🚫 PYDANTIC SCHEMA VIOLATIONS ({len(_pydantic_errors)}) — RENDER BLOCKED\n')
+        print('These are structural errors caught before template rendering.')
+        print('Fix them first — legacy checks not run until schema is clean.\n')
+        for e in _pydantic_errors:
+            print(f'  ❌ {e}')
+        sys.exit(1)
+    else:
+        print(f'✅ Pydantic schema validation passed ({slug})')
 
 # ── gap_pairs — template reads these EXACT keys ────────────────────────────────
 REQUIRED_GAP_KEYS = ['said_quote','said_attr','found_title','found_evidence','finding_id','algolia_angle']
@@ -361,6 +398,49 @@ if _cs_portfolio is not None and len(_cs_portfolio) > 0:
                 f'company_snapshot.portfolio_brands[{_i}] ({_brand.get("name","?")}) '
                 f'missing "source" field — citation not verifiable'
             )
+
+# ── CITATION BASELINE RULE (applies across all sections) ─────────────────────
+# Every claim, quote, stat, and case study reference MUST have a verifiable source URL.
+# Rule: No citation = no data. This is a WARN (not block) to allow partial audits,
+# but ALL warns must be resolved before AE handoff or GitHub push.
+
+# executives — every quote needs quote_source
+for _i, _exec in enumerate(d.get('executives') or []):
+    if _exec.get('quote') and not _exec.get('quote_source'):
+        warn(f'executives[{_i}] ({_exec.get("name","?")}) has quote but no quote_source URL — citation required')
+
+# intelligence_signals — every signal needs source_url
+for _i, _sig in enumerate(d.get('intelligence_signals') or []):
+    if (_sig.get('detail') or _sig.get('quote') or _sig.get('body')) and not _sig.get('source_url'):
+        warn(f'intelligence_signals[{_i}] ("{(_sig.get("title") or _sig.get("badge_label","?"))[:40]}") has content but no source_url')
+
+# strategic_angles — every angle needs source
+for _i, _ang in enumerate(d.get('strategic_angles') or []):
+    if not _ang.get('source'):
+        warn(f'strategic_angles[{_i}] ("{_ang.get("label","?")[:40]}") missing source — citation required for every angle')
+    if not _ang.get('algolia_proof'):
+        warn(f'strategic_angles[{_i}] ("{_ang.get("label","?")[:40]}") missing algolia_proof — proof required for every angle')
+
+# icp_mapping.priority_to_product — every Q needs proof_url when proof_company is set
+for _i, _p in enumerate((d.get('icp_mapping') or {}).get('priority_to_product') or []):
+    if _p.get('proof_company') and not _p.get('proof_url'):
+        warn(f'icp_mapping.priority_to_product[{_i}] has proof_company="{_p.get("proof_company")}" but no proof_url — link required')
+    if not _p.get('evidence') and not _p.get('exact_quote'):
+        warn(f'icp_mapping.priority_to_product[{_i}] missing evidence/exact_quote — BDR needs citation to ask question confidently')
+
+# findings — every finding with algolia_case_study_company needs algolia_case_study_url
+for _i, _f in enumerate(d.get('findings') or []):
+    if _f.get('algolia_case_study_company') and not _f.get('algolia_case_study_url'):
+        warn(f'findings[{_i}] ("{_f.get("title","?")[:40]}") has case_study_company but no case_study_url — link required')
+    if _f.get('impact_stat') and not _f.get('impact_stat_source'):
+        warn(f'findings[{_i}] ("{_f.get("title","?")[:40]}") has impact_stat but no impact_stat_source — stat must be verifiable')
+
+# case_studies — every case study needs url and result
+for _i, _cs in enumerate(d.get('case_studies') or []):
+    if not _cs.get('url'):
+        warn(f'case_studies[{_i}] ({_cs.get("company","?")}) missing url — case study must link to source')
+    if not _cs.get('result'):
+        warn(f'case_studies[{_i}] ({_cs.get("company","?")}) missing result metric — case study must have measurable proof')
 
 errors = [v for v in violations if v.startswith("  ❌")]
 warnings = [v for v in violations if v.startswith("  ⚠️")]

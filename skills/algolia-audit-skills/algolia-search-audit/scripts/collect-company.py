@@ -18,6 +18,7 @@ Sources (ALL attempted — not fallback):
   1. BuiltWith keywords-api — SEO meta, company description (requires BUILTWITH_API_KEY)
   2. Company website WebFetch: /about, /company, /about-us (direct HTTP)
   3. LinkedIn company page WebFetch (best-effort — may require auth)
+  4. Scout enrichment — linkedin_url, twitter_handle, careers_url, website (fills nulls only)
 
 Note: Fields requiring WebSearch/MCP (executives, HQ, founded, vertical classification)
 are marked as null in JSON output and populated by the algolia-intel-company SKILL.
@@ -27,6 +28,8 @@ Usage:
 
 Environment:
   BUILTWITH_API_KEY — BuiltWith API key (optional, improves meta extraction)
+  SCOUT_URL — Scout server URL (default: http://localhost:8421)
+  SCOUT_API_KEY — Scout API key (default: dev-key)
 """
 
 import sys, os, json, requests, re
@@ -34,6 +37,16 @@ from datetime import date
 
 TODAY = date.today().isoformat()
 BUILTWITH_API_KEY = os.environ.get('BUILTWITH_API_KEY', '')
+
+# ── Scout Integration ─────────────────────────────────────────────────────────
+
+def merge_scout_fields(existing: dict, scout: dict) -> dict:
+	"""Merge Scout-extracted fields into existing dict. Scout fills nulls; never overwrites non-null."""
+	scout_fields = ["linkedin_url", "twitter_handle", "careers_url", "website"]
+	for field in scout_fields:
+		if existing.get(field) is None and scout.get(field) is not None:
+			existing[field] = scout[field]
+	return existing
 
 # ── HTTP ──────────────────────────────────────────────────────────────────────
 
@@ -180,6 +193,7 @@ def build_json_record(domain, company_name_override, ticker, results):
         'linkedin_url': results['linkedin']['url'],
         'linkedin_accessible': results['linkedin']['accessible'],
         'careers_url': f'https://www.{domain}/careers',  # verify manually
+        'website': None,  # populated by Scout in Step 4
         'ir_url': None,  # populated by SKILL if public company
 
         # ── Fields requiring WebSearch/MCP — set null, populated by SKILL ──
@@ -313,22 +327,38 @@ def main():
 
     print(f'Collecting company context for {domain}...', file=sys.stderr)
     results = collect(domain, company_name_override, ticker)
-    rec = build_json_record(domain, company_name_override, ticker, results)
+    output_data = build_json_record(domain, company_name_override, ticker, results)
+    errors = {}
 
-    md_path = write_md(rec, output_dir)
-    json_path = write_json(rec, output_dir)
+    # Step 4: Scout enrichment (fills linkedin_url, twitter_handle, careers_url, website if null)
+    try:
+        import scout_company
+        scout_data = scout_company.run(domain, output_dir)
+        if scout_data.get("scout_available"):
+            output_data = merge_scout_fields(output_data, scout_data)
+            errors["scout"] = None
+            print(f"  ✓ Scout enrichment: linkedin={scout_data.get('linkedin_url')}, twitter={scout_data.get('twitter_handle')}", file=sys.stderr)
+        else:
+            errors["scout"] = scout_data.get("error", "Scout unavailable")
+            print(f"  ⚠ Scout unavailable: {errors['scout']}", file=sys.stderr)
+    except Exception as e:
+        errors["scout"] = str(e)
+        print(f"  ⚠ Scout enrichment failed: {e}", file=sys.stderr)
+
+    md_path = write_md(output_data, output_dir)
+    json_path = write_json(output_data, output_dir)
 
     print(json.dumps({
-        'status': 'success' if rec['sources_succeeded'] else 'partial',
+        'status': 'success' if output_data['sources_succeeded'] else 'partial',
         'domain': domain,
-        'company_name': rec['company_name'],
+        'company_name': output_data['company_name'],
         'output_md': md_path,
         'output_json': json_path,
         'size_md_bytes': os.path.getsize(md_path),
         'size_json_bytes': os.path.getsize(json_path),
-        'sources_succeeded': rec['sources_succeeded'],
-        'errors': rec['errors'],
-        'skill_enrichment_required': rec['skill_enrichment_required'],
+        'sources_succeeded': output_data['sources_succeeded'],
+        'errors': {**output_data['errors'], **errors},
+        'skill_enrichment_required': output_data['skill_enrichment_required'],
     }, indent=2))
 
 if __name__ == '__main__':

@@ -16,6 +16,24 @@ Copy-paste mandate: Never reconstruct financial figures, quotes, or competitor d
 ## ⚠️ MANDATORY PRE-WRITE RULE
 If you cannot cite a source URL for a data point RIGHT NOW — do not write it. Not flagged. Not hedged. Simply: do not write it.
 
+## ⚠️ CITATION BASELINE RULE — APPLIES TO EVERY SECTION WITHOUT EXCEPTION
+
+Every claim, quote, stat, case study reference, and discovery question evidence written into audit-data.json MUST have:
+1. **source_url** — a URL that was WebFetched and returned HTTP 200 with the claimed content
+2. **label** — either `[FACT]` (WebFetch-verified) or `[ESTIMATE]` (derived/modeled) — never unlabeled
+3. **proof attached** — discovery questions must show the exec quote + source link inline; findings must link to case study; signals must cite the original publication
+
+This rule applies to ALL sections:
+- `executives[].quote` → requires `quote_source` URL
+- `intelligence_signals[].detail` → requires `source_url`
+- `strategic_angles[].hook` → requires `source` with URL
+- `icp_mapping.priority_to_product[].evidence` → requires the exact quote + `proof_url`
+- `findings[].algolia_case_study_company` → requires `algolia_case_study_url`
+- `case_studies[].result` → requires `url` linking to the Algolia customer page
+- `gap_pairs[].said_quote` → requires `said_source_url`
+
+**Enforcement:** `validate-json-schema.py` now checks all citation fields and warns on missing links. All warnings must be resolved before factcheck gate. All factcheck-flagged citation issues are BLOCKING for AE handoff.
+
 ---
 
 ## Input
@@ -26,7 +44,20 @@ Optional: --deliverable {name} | --skip-pdf
 All 12 scratchpad files (01-12) + screenshots/ (≥10 PNG) must exist before starting.
 Run validate-workspace.sh first: `bash ~/.claude/skills/algolia-search-audit/scripts/validate-workspace.sh "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/"`
 
-## Output (8 deliverables → $ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/)
+## ⚠️ PRE-START COMPLETENESS GATE — Check BEFORE running any phase
+
+Do NOT run this skill until all of the following are true. If any fail, stop and tell the user what needs to be completed first.
+
+| Check | How to verify | Required state |
+|-------|--------------|----------------|
+| Scoring done | `research/10-scoring-matrix.md` ≥ 30 lines, contains numeric scores | MUST have actual scores — not "Phase 3 — not yet run" |
+| Browser testing done | `research/09-browser-findings.md` ≥ 50 lines | MUST have real findings — not a stub |
+| Screenshots exist | `deliverables/screenshots/*.png` count ≥ 8 | MUST have real screenshots |
+| All research files populated | Files 01–12 each ≥ 30 lines | MUST not be stubs |
+
+If any check fails → **STOP. Tell the user: "Cannot run audit-report. [X] is incomplete. Complete [X] first."**
+
+## Required Outputs (9 deliverables)
 | File | Audience | How generated |
 |------|----------|--------------|
 | {slug}-audit-data.json | Internal | Claude writes from scratchpad |
@@ -37,6 +68,7 @@ Run validate-workspace.sh first: `bash ~/.claude/skills/algolia-search-audit/scr
 | {slug}-leave-behind.pdf | Prospect | generate-pdf.sh leave-behind |
 | {slug}-playbook.md | AE/BDR/Partner | Claude writes (merged AE brief + sales plays) |
 | {slug}-strategic-signal-brief.md | LLM/CRM | Claude writes |
+| abx-campaign/ | AE/BDR | algolia-campaign-abx skill (Phase 5f) |
 
 ## Execution Phases
 Phase 3: Score 10 areas → 10-scoring-matrix.md (see REFERENCE.md for scoring criteria)
@@ -45,6 +77,20 @@ Phase 5a: Write audit-data.json (validate with validate-json-schema.py before re
 Phase 5b: Run renderer → deno run --allow-read --allow-write --allow-net scripts/render-audit.ts {slug} all
 Phase 5c: Generate PDF (skip if --skip-pdf) → bash scripts/generate-pdf.sh {slug} leave-behind
 Phase 5d+e: Write playbook.md + signal-brief.md
+Phase 5f: Generate ABX campaign → invoke `algolia-campaign-abx` skill. **This is NOT optional.** Update `abx_sequence` in audit-data.json with real email bodies + contacts before declaring report complete.
+
+## ⚠️ COMPLETION GATE — Do NOT declare the report "complete" unless ALL are true
+
+Before telling the user the report is done, verify:
+1. `audit-data.json → score.overall` is non-zero
+2. `audit-data.json → strategic_angles` is non-empty array with ≥ 3 angles
+3. `audit-data.json → abx_sequence.touches` — every body has ≥ 100 chars of real content (no "Pending" text)
+4. `audit-data.json → icp_mapping.priority_to_product` — every Q has `evidence` and `proof_url`
+5. `audit-data.json → findings` is non-empty if browser testing was run
+6. `deliverables/abx-campaign/` folder exists with ≥ 5 files
+7. All citation warnings from validate-json-schema.py are resolved
+
+If any fail → tell the user exactly which item is incomplete. Do NOT say "complete" or "ready to share".
 
 ## ⚠️ CAPABILITY MATRIX — MANDATORY RULES (Phase 5a, before writing audit-data.json)
 
@@ -81,34 +127,6 @@ If `matrix_col_labels` is null or missing → the SPA renders **Nike / Asics / O
 python3 ~/.claude/skills/algolia-search-audit/scripts/validate-json-schema.py {slug} "$ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/"
 ```
 The schema validator will flag a missing `matrix_col_labels` as a blocking error.
-
----
-
-## Phase 5a-ANGLES: Extract strategic_angles (MANDATORY — run BEFORE generate-audit-data.py patch)
-
-`strategic_angles` has been empty or wrong on every audit because these instructions were missing. Fix this now.
-
-**EXTRACT — do not synthesize.** Open `research/06-strategic-context.md`. All angles must come from that file. Do not invent angles not in it.
-
-1. Read section **"1. Algolia-Specific Strategic Angles"** in `06-strategic-context.md`
-2. Read section **"7. Objection Pre-Emption"** in the same file — this is where `objection` + `objection_counter` come from
-3. For each angle heading (e.g. "Angle 1 — The NikeAI Gap"), write one JSON object:
-
-```json
-{
-  "label":             "The angle heading — verbatim or lightly trimmed",
-  "hook":              "Copy the 'Pitch angle:' sentence verbatim — do not paraphrase",
-  "pain_points":       ["each bullet evidence item under the angle body"],
-  "discovery_question":"One question derived from this angle's evidence — stated or brief synthesis",
-  "algolia_proof":     "The Algolia case study metric cited in the body (e.g. '+35% conversion — Under Armour')",
-  "objection":         "From section 7 Objection Pre-Emption table — the row matching this angle's theme",
-  "objection_counter": "The evidence response from that same row",
-  "source":            "The [FACT — ...] citation from the markdown body (REQUIRED)"
-}
-```
-
-4. Write all extracted angles into `strategic_angles[]` in `{slug}-audit-data.json`
-5. All 8 fields are required. Missing any field will fail schema validation and block the render.
 
 ---
 

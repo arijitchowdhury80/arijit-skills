@@ -20,11 +20,48 @@ Optional: --tier quick|standard|full (default: full) | --dim {1,4} to run specif
 | WEBSEARCH | Found via search — URL not WebFetch verified | Keep — amber ⚠️ warning label |
 | NO_SOURCE | No verifiable source exists | **DROP — remove entirely. No hedging.** |
 
+## ⚠️ COMPLETENESS GATE — BLOCKING CHECKS (run BEFORE all other dimensions)
+
+These are BLOCKED (not WARN) if any of the following are true. Do not proceed to scoring dimensions until all pass.
+
+### BLOCKED — ABX Campaign Incomplete
+Check `audit-data.json → abx_sequence.touches`. Every touch must have a `body` field that is NOT:
+- Empty string `""`
+- `null`
+- Any string containing "Pending" or "pending" or "TBD"
+- Fewer than 100 characters
+
+If ANY touch body is a placeholder → **BLOCKED: ABX campaign not generated. Run `algolia-campaign-abx` before factcheck.**
+
+### BLOCKED — Scoring Not Run
+Check `research/10-scoring-matrix.md`. File must:
+- Exist
+- Be ≥ 30 lines
+- Contain actual numeric scores (e.g., `2/10`, `4/10`) — not just "Phase 3 — not yet run"
+
+If scoring file is a stub → **BLOCKED: Scoring not complete. Run Phase 3 (10-area scoring) before factcheck.**
+
+### BLOCKED — Discovery Questions Have No Citations
+Check `audit-data.json → icp_mapping.priority_to_product`. Every item must have:
+- `evidence` or `exact_quote` (non-empty) — the exec quote that justifies the question
+- `proof_url` when `proof_company` is set
+
+If Q cards have no evidence → **BLOCKED: Discovery questions unverifiable. Add exec quote + source URL to each.**
+
+### BLOCKED — Strategic Angles Unpopulated
+Check `audit-data.json → strategic_angles`. Must be a non-empty array. Each angle must have `hook`, `discovery_question`, `source`, and `algolia_proof`. If empty array or any required field missing → **BLOCKED: Run audit-report Phase 5a to generate strategic angles.**
+
+### BLOCKED — Findings Unpopulated (if browser testing was done)
+If `research/09-browser-findings.md` exists with ≥ 50 lines, then `audit-data.json → findings` must be a non-empty array. If findings is `[]` despite browser testing having been done → **BLOCKED: Browser findings not loaded into audit-data.json.**
+
+---
+
 ## 20 Verification Dimensions
 **Group A (Intelligence modules 1-11):** Company context, tech stack, traffic params, competitor claims, financial integrity, investor quote verification, hiring URL validity, social currency, news freshness, industry benchmarks, partner data
 **Group B (Browser — Dim 12):** Screenshots on disk, file sizes >50KB, queries match claims
 **Group C (Synthesis — Dims 13-17):** Scoring justification, competitive claims, ROI math, sales play specificity, case study vertical relevance
 **Group D (Deliverables — Dims 18-20):** Source coverage, cross-deliverable consistency, arithmetic
+**Group E (Completeness + Citations — Dims 21-23):** ABX campaign populated, citation baseline (all source_url fields present), discovery question evidence attached
 
 ## Execution Tiers
 | Tier | Time | External calls | What runs |
@@ -79,6 +116,19 @@ See `~/.claude/skills/algolia-audit-factcheck/REFERENCE.md` for:
 - FACTCHECK_GATE.md examples (passing + blocked)
 
 ---
+
+## Dim 21 — ABX Campaign Completeness
+For each touch in `abx_sequence.touches`: verify body is real content (≥100 chars, no "Pending" placeholder). Verify contacts list has at least 2 people with `id` and `title`. Verify Loom script exists if a Loom touch is present.
+PASS = all touches have real bodies + contacts mapped. FAIL = any placeholder body.
+
+## Dim 22 — Citation Baseline (applies across all sections)
+Spot-check 5 random items from each of: `executives`, `intelligence_signals`, `strategic_angles`, `icp_mapping.priority_to_product`, `findings`, `case_studies`.
+For each: verify `source_url` (or equivalent) exists and is a real URL. WebFetch 3 of them to confirm HTTP 200 and content matches claim.
+PASS = all checked items have URLs, checked URLs return content. FAIL = any missing URL on a factual claim.
+
+## Dim 23 — Scoring Matrix Completeness
+Read `research/10-scoring-matrix.md`. Verify it contains scores for all 10 areas (latency, typo_tolerance, query_suggestions_empty_state, intent_detection, merchandising_consistency, content_commerce_ux, semantic_nlp_search, dynamic_facets_personalization, recommendations_merchandising, search_intelligence). Verify `audit-data.json → score.overall` is non-zero and matches the matrix.
+PASS = all 10 scores present + overall calculated correctly. FAIL = stub file or missing scores.
 
 ## Scoring Rules — Non-Negotiable
 

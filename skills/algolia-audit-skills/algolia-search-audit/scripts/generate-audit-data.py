@@ -62,11 +62,25 @@ WHAT IT PRESERVES (LLM synthesis — not touched):
   (intelligence_signals[] is preserved AND augmented with media_quotes from 11-investor-intelligence.json)
 """
 
+from __future__ import annotations
 import json
 import re
 import sys
 import os
 from datetime import date
+
+# ── Pydantic validation (runs BEFORE writing — catches field errors at write time) ──
+from typing import Callable, Optional
+_pydantic_validate: Optional[Callable[..., tuple[bool, list[str]]]] = None
+_pydantic_available: bool = False
+try:
+    _script_dir = os.path.dirname(os.path.abspath(__file__))
+    if _script_dir not in sys.path:
+        sys.path.insert(0, _script_dir)
+    from audit_data_schema import validate_audit_data as _pydantic_validate
+    _pydantic_available = True
+except ImportError:
+    pass
 
 # ── Canonical score area keys (SPA hardcodes these — NEVER change) ───────────
 SCORE_AREAS = [
@@ -1454,6 +1468,18 @@ def main():
     meta['generated_by'] = 'generate-audit-data.py + LLM synthesis'
     meta['patch_date'] = date.today().isoformat()
     data['meta'] = meta
+
+    # ── Pydantic pre-write validation (catches errors BEFORE touching disk) ──
+    if _pydantic_available and _pydantic_validate is not None:
+        _ok, _errs = _pydantic_validate(data)
+        if not _ok:
+            print(f'\n🚫 PYDANTIC PRE-WRITE VIOLATIONS ({len(_errs)}) — JSON NOT WRITTEN\n')
+            print('Fix these before generate-audit-data.py will write the file:\n')
+            for _e in _errs:
+                print(f'  ❌ {_e}')
+            sys.exit(1)
+        else:
+            print('  [pydantic] Pre-write validation passed ✅')
 
     # ── Write patched JSON ───────────────────────────────────────────────────
     os.makedirs(deliverables_dir, exist_ok=True)
