@@ -23,6 +23,42 @@ CUTOFF = (date.today() - timedelta(days=30)).isoformat()
 APIFY_TOKEN = os.environ.get('APIFY_TOKEN', '')
 APIFY_BASE = 'https://api.apify.com/v2'
 
+CACHE_TTL_DAYS = 30  # Re-run Apify after this many days
+
+def should_run_actor(field_value, actor_type):
+    """Guard 1: only run actor if the required field is populated."""
+    return bool(field_value and field_value.strip())
+
+def load_cache(output_dir, domain):
+    """Guard 3: return cached result if fresh (< CACHE_TTL_DAYS), else None."""
+    cache_path = os.path.join(output_dir, ".social-cache.json")
+    if not os.path.exists(cache_path):
+        return None
+    try:
+        cache = json.load(open(cache_path))
+        entry = cache.get(domain)
+        if not entry:
+            return None
+        cached_date = date.fromisoformat(entry["date"])
+        if (date.today() - cached_date).days < CACHE_TTL_DAYS:
+            return entry
+    except Exception:
+        pass
+    return None
+
+def write_cache(output_dir, domain, li_count, tw_count):
+    """Guard 3: write result to cache after any Apify run."""
+    cache_path = os.path.join(output_dir, ".social-cache.json")
+    cache = {}
+    if os.path.exists(cache_path):
+        try:
+            cache = json.load(open(cache_path))
+        except Exception:
+            pass
+    cache[domain] = {"date": date.today().isoformat(), "li_count": li_count, "tw_count": tw_count}
+    with open(cache_path, "w") as f:
+        json.dump(cache, f, indent=2)
+
 SIGNAL_CATEGORIES = {
     'SEARCH_PAIN': ['search','product discovery','findability','find product','search result'],
     'TECH_INVESTMENT': ['AI','machine learning','platform','modernization','tech','digital transformation','migration'],
@@ -145,14 +181,41 @@ def main():
 
     errors = []
 
-    # Source 1: LinkedIn posts
-    li_posts, li_err = apify_run('harvestapi~linkedin-company-posts', {'url':linkedin_url,'maxPosts':30,'includeComments':False,'includeReactions':False})
-    if li_err: errors.append(f'LinkedIn posts (Apify): {li_err}')
-    li_posts = li_posts or []
+    # Guard 3: check cache first
+    cached = load_cache(output_dir, domain)
+    if cached:
+        print(f"  ✓ Cache hit for {domain} ({cached['date']}) — skipping Apify actors")
+        li_posts, tw_posts = [], []
+        li_err = tw_err = "cache hit"
+    else:
+        # Guard 1: only run actors for populated fields
+        if should_run_actor(linkedin_url, "linkedin"):
+            li_posts, li_err = apify_run(
+                'harvestapi~linkedin-company-posts',
+                {'url': f'https://www.linkedin.com/company/{linkedin_url.rstrip("/").split("/")[-1]}',
+                 'maxPosts': 30, 'includeComments': False, 'includeReactions': False}
+            )
+        else:
+            li_posts, li_err = [], f"skipped — linkedin_url not set for {domain}"
+            print(f"  ⚠ LinkedIn actor skipped: linkedin_url empty for {domain}")
 
-    # Source 2: Twitter/X
-    tw_posts, tw_err = apify_run('apidojo~tweet-scraper', {'searchTerms':[f'from:{twitter_handle}'],'maxTweets':30,'since':CUTOFF})
+        if should_run_actor(twitter_handle, "twitter"):
+            tw_posts, tw_err = apify_run(
+                'apidojo~tweet-scraper',
+                {'searchTerms': [f'from:{twitter_handle}'], 'maxTweets': 30, 'since': CUTOFF}
+            )
+        else:
+            tw_posts, tw_err = [], f"skipped — twitter_handle not set for {domain}"
+            print(f"  ⚠ Twitter actor skipped: twitter_handle empty for {domain}")
+
+        # Guard 3: write cache after run
+        li_count = len(li_posts) if li_posts else 0
+        tw_count = len(tw_posts) if tw_posts else 0
+        write_cache(output_dir, domain, li_count, tw_count)
+
+    if li_err: errors.append(f'LinkedIn posts (Apify): {li_err}')
     if tw_err: errors.append(f'Twitter/X (Apify): {tw_err}')
+    li_posts = li_posts or []
     tw_posts = tw_posts or []
 
     signals = []

@@ -10663,11 +10663,16 @@ function sectionDiscoveryObjections(D) {
 
         ${ptops.map((p,i)=>`<div class="card" style="margin-bottom:10px;border-left:3px solid var(--blue);padding:14px 16px;">
 
-          <div style="${T.labelMid};margin-bottom:6px;">Q${i+1} · ${escHtml(p.their_priority?.slice(0,50)||'')}</div>
+          <div style="${T.labelMid};margin-bottom:6px;">Q${i+1} · ${escHtml((p.their_priority||p.pain||'').slice(0,60))}</div>
 
           <div style="${T.body};font-style:italic;line-height:1.5;">"${escHtml(p.discovery_question||'')}"</div>
 
-          <div style="${T.bodySm};color:var(--blue);margin-top:8px;">→ ${escHtml((p.algolia_solution||'').split('—')[0].trim())}</div>
+          <div style="${T.bodySm};color:var(--blue);margin-top:8px;">→ ${escHtml((p.product||p.algolia_solution||'').split('—')[0].trim())}</div>
+
+          ${(p.evidence||p.exact_quote) ? `<div style="margin-top:8px;padding:6px 10px;background:var(--blue-tint);border-radius:4px;border-left:2px solid var(--blue-border);">
+            <div style="${T.compact};color:var(--gray);font-style:italic;">"${escHtml((p.evidence||p.exact_quote||'').slice(0,140))}${(p.evidence||p.exact_quote||'').length>140?'…':''}"</div>
+            ${(p.proof_url||p.source_url) ? `<a href="${escHtml(p.proof_url||p.source_url||'')}" target="_blank" rel="noopener" style="${T.compact};color:var(--blue);font-weight:600;display:block;margin-top:3px;">↗ ${escHtml(p.proof_company||'Source')}</a>` : (p.proof_company ? `<div style="${T.compact};color:var(--mid);margin-top:2px;">Source: ${escHtml(p.proof_company)}</div>` : '')}
+          </div>` : ''}
 
         </div>`).join('')}
 
@@ -10921,9 +10926,9 @@ function sectionOutreachPlan(D) {
 
 
 
-          ${!isLinkedIn && !isVideo && t.message ? `
+          ${!isLinkedIn && !isVideo && !t.body && t.message ? `
 
-          <!-- LinkedIn message -->
+          <!-- Fallback message (only renders when no full body is set) -->
 
           <div style="background:var(--blue-tint);border:1px solid var(--blue-border);border-radius:6px;padding:12px 14px;">
 
