@@ -683,7 +683,7 @@ def lift_media_quotes(research_dir):
             'type': 'media_quote',
             # Canonical fields the template reads (badge_label→title, signal→body, algolia_angle→Algolia angle)
             'badge_label': f"{speaker}, {speaker_title}".strip(', ') if speaker else speaker_title,
-            'signal': quote[:120],
+            'text': quote[:120],
             'algolia_angle': mq.get('context', '') or mq.get('algolia_relevance', ''),
             # Preserved originals for source attribution
             'source_url': source_url,
@@ -1195,12 +1195,43 @@ TOPIC_TO_PITCH = {
 }
 
 
+_BADGE_LABEL_BY_TYPE = {
+    'exec':                  'Executive Signal',
+    'media_quote':           'Executive Quote',
+    'competitor':            'Competitor Signal',
+    'partner':               'Partnership',
+    'funding':               'Funding',
+    'hiring':                'Hiring Signal',
+    'industry-risk':         'Industry Risk',
+    'industry-opp':          'Industry Opportunity',
+    'digital_transformation':'Digital Transformation',
+    'news_signal':           'News',
+    'earnings_quote':        'Earnings',
+    'leadership_change':     'Leadership Change',
+    'cost_pressure':         'Cost Pressure',
+    'ai_disruption':         'AI Disruption',
+    'tech_investment':       'Tech Investment',
+}
+
+
 def enrich_signals(signals):
-    """Add urgency_score, category_tag to each signal. Non-destructive — preserves existing fields."""
+    """Normalize field names and add urgency_score, category_tag to each signal."""
     if not signals:
         return signals
     for sig in signals:
         sig_type = (sig.get('type') or '').lower()
+
+        # Normalize: 'signal' → 'text' (renderer reads sig.text)
+        if not sig.get('text') and sig.get('signal'):
+            sig['text'] = sig['signal']
+
+        # Auto-generate badge_label if missing
+        if not sig.get('badge_label'):
+            sig['badge_label'] = (
+                _BADGE_LABEL_BY_TYPE.get(sig_type)
+                or sig_type.replace('_', ' ').replace('-', ' ').title()
+            )
+
         text = ' '.join(filter(None, [
             sig.get('text', ''), sig.get('body', ''), sig.get('signal', ''),
             sig.get('relevance', ''), sig.get('badge_label', ''),
@@ -1463,6 +1494,46 @@ def main():
     else:
         log('company_snapshot (portfolio): 01-company-context.json not found — skipping portfolio patch')
 
+    # ── Patch: ae_fields — map LLM field names to renderer field names ────────
+    ae = data.get('ae_fields') or {}
+    if ae:
+        # next_step_action: renderer reads ae.next_step_action; LLM outputs ae.cta
+        if not ae.get('next_step_action') and ae.get('cta'):
+            ae['next_step_action'] = ae['cta']
+        # next_step_owner: renderer reads ae.next_step_owner; LLM outputs ae.champion or ae.economic_buyer
+        if not ae.get('next_step_owner'):
+            ae['next_step_owner'] = ae.get('champion') or ae.get('economic_buyer') or ''
+        # next_step_date: default if missing
+        if not ae.get('next_step_date'):
+            ae['next_step_date'] = 'Within 30 days'
+        # opportunity_headline: derive from company name + industry if missing
+        if not ae.get('opportunity_headline'):
+            cs = data.get('company_snapshot') or {}
+            company_name = (data.get('meta') or {}).get('company', '')
+            industry = cs.get('industry', '')
+            if company_name and industry:
+                ae['opportunity_headline'] = f'The {industry} Search Opportunity for {company_name}'
+            elif company_name:
+                ae['opportunity_headline'] = f'The Search Opportunity for {company_name}'
+        # benchmark_proof: derive from best case study if missing
+        if not ae.get('benchmark_proof'):
+            studies = data.get('case_studies') or []
+            if studies:
+                best = studies[0]
+                result = best.get('result', '')
+                company = best.get('company', '')
+                product = best.get('product', '')
+                url = best.get('url', '')
+                if result and company:
+                    proof = f'{company}: {result}'
+                    if product:
+                        proof += f' after deploying Algolia {product}'
+                    if url:
+                        proof += f' — {url}'
+                    ae['benchmark_proof'] = proof
+        data['ae_fields'] = ae
+        log('ae_fields: mapped cta→next_step_action, champion→next_step_owner, derived opportunity_headline/benchmark_proof where missing')
+
     # ── Ensure meta.generated_by ─────────────────────────────────────────────
     meta = data.get('meta', {}) or {}
     meta['generated_by'] = 'generate-audit-data.py + LLM synthesis'
@@ -1470,7 +1541,7 @@ def main():
     data['meta'] = meta
 
     # ── Pydantic pre-write validation (catches errors BEFORE touching disk) ──
-a    if _pydantic_available and _pydantic_validate is not None:
+    if _pydantic_available and _pydantic_validate is not None:
         _ok, _errs = _pydantic_validate(data)
         if not _ok:
             print(f'\n🚫 PYDANTIC PRE-WRITE VIOLATIONS ({len(_errs)}) — JSON NOT WRITTEN\n')
