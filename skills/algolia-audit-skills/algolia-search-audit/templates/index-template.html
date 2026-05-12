@@ -5439,9 +5439,10 @@ function sectionOverviewGrid(D) {
   const sColor = overall >= 7 ? 'var(--green)' : overall >= 5 ? 'var(--amber)' : 'var(--red)';
   const sBg    = overall >= 7 ? 'rgba(5,150,105,0.10)' : overall >= 5 ? 'rgba(217,119,6,0.10)' : 'rgba(220,38,38,0.10)';
 
-  // Urgency
-  const urgMap = { high:'var(--red)', medium:'var(--amber)', low:'var(--green)' };
-  const urgC   = urgMap[ae.urgency_level] || urgMap.medium;
+  // Urgency — ae_fields uses inconsistent keys: urgency_level (LBP), urgency (BA), urgency_label (old)
+  const urgMap = { high:'var(--red)', medium:'var(--amber)', low:'var(--green)', critical:'var(--red)' };
+  const urgRaw = (ae.urgency_level || ae.urgency || ae.urgency_label || '').toLowerCase().split(/[\s—–\-]/)[0];
+  const urgC   = urgMap[urgRaw] || urgMap.medium;
 
   // ── Tile 1: HOW BAD IS THEIR SEARCH? (wide, row 1 left) ──
   const gapPills = criticals.length
@@ -5472,9 +5473,9 @@ function sectionOverviewGrid(D) {
     <div class="ov-q">WHAT DO I DO NEXT?</div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
       <div style="width:10px;height:10px;border-radius:50%;background:${urgC};box-shadow:0 0 0 3px ${urgC}30;flex-shrink:0;"></div>
-      <div style="${T.urgLabel(urgC)}">${escHtml(ae.urgency_label||'')}</div>
+      <div style="${T.urgLabel(urgC)}">${escHtml(ae.urgency_label || ae.urgency || (ae.urgency_level||'').split('—')[0].trim() || '')}</div>
     </div>
-    <div style="${T.body};color:var(--gray);line-height:1.6;margin-bottom:16px;">${escHtml(ae.next_step_action||'—')}</div>
+    <div style="${T.body};color:var(--gray);line-height:1.6;margin-bottom:16px;">${escHtml(ae.next_step_action || ae.cta || ae.urgency_reason || '—')}</div>
     <div style="margin-top:auto;border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;display:flex;flex-direction:column;gap:4px;">
       <div style="display:flex;align-items:center;gap:8px;">
         <span style="${T.eyebrow};">Owner</span>
@@ -5551,7 +5552,7 @@ function sectionOverviewGrid(D) {
     const color = WHY_NOW_COLOR[tier] || 'var(--mid)';
     const icon  = WHY_NOW_ICON[s.type] || '🔔';
     const label = escHtml(s.badge_label || s.title || s.type);
-    const detail = escHtml((s.body || s.text || s.quote || '').slice(0, 90));
+    const detail = escHtml((s.body || s.text || s.quote || s.signal || '').slice(0, 90));
     const clickable = !!s.source_url;
     return `<div class="why-now-row${clickable?' why-now-row--link':''}"
         style="display:flex;align-items:flex-start;gap:10px;padding:9px 4px;border-bottom:1px solid rgba(0,0,0,0.05);border-radius:6px;"

@@ -1,0 +1,13 @@
+{
+  "include": ["scripts"],
+  "exclude": ["scripts/__pycache__"],
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Darwin",
+  "typeCheckingMode": "strict",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportUnknownMemberType": false,
+  "reportUnknownArgumentType": false,
+  "reportUnknownVariableType": false,
+  "useLibraryCodeForTypes": true
+}
