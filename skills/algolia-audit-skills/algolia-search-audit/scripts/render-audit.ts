@@ -1215,8 +1215,8 @@ function buildTokenMap(data: AuditData): Record<string, string> {
     THE_ASK_DESC:       s(ae.the_ask_desc, "4-week search experience pilot with A/B measurement"),
 
     // ── Opportunity / pilot page tokens ──
-    OPPORTUNITY_HEADLINE: s(ae.opportunity_headline, `The ${s(cs.industry)} Search Opportunity`),
-    BENCHMARK_PROOF:      s(ae.benchmark_proof, "Algolia customers see avg. +12% conversion uplift within 90 days."),
+    OPPORTUNITY_HEADLINE: s(ae.opportunity_headline),  // no fabricated fallback — must come from audit data
+    BENCHMARK_PROOF:      s(ae.benchmark_proof),         // no fabricated fallback — must be prospect-specific evidence
     PILOT_HEADLINE:       s(ae.pilot_headline, "Pilot Roadmap"),
     PILOT_TAKEAWAY:       s(ae.pilot_takeaway, "4-week proof of value — measurable results before full commitment."),
     PILOT_DETAIL_HEADLINE: s(ae.pilot_detail_headline, ae.pilot_headline ?? "Pilot Roadmap"),

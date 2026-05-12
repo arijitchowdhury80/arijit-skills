@@ -244,7 +244,7 @@ def parse_traffic(md_text):
                 share_raw = cols[1].strip()
                 share_match = re.search(r'([\d.]+%)', share_raw)
                 if share_match and ch_name and ch_name.lower() not in ('channel', 'source', 'total'):
-                    channels.append({'source': ch_name, 'share': share_match.group(1)})
+                    channels.append({'channel': ch_name, 'share': share_match.group(1)})
 
     if channels:
         result['top_channels'] = channels
@@ -257,8 +257,8 @@ def parse_traffic(md_text):
     desk_match = re.search(r'Desktop\s*[\|:]\s*([\d.]+%)', md_text, re.IGNORECASE)
     if mob_match:
         result['device_share'] = {
-            'mobile': mob_match.group(1).replace('%', ''),
-            'desktop': desk_match.group(1).replace('%', '') if desk_match else None,
+            'mobile': mob_match.group(1),  # keep % e.g. "54%"
+            'desktop': desk_match.group(1) if desk_match else None,  # e.g. "46%"
         }
         log(f"traffic.device_share: mobile={result['device_share']['mobile']}")
     else:
@@ -1470,7 +1470,7 @@ def main():
     data['meta'] = meta
 
     # ── Pydantic pre-write validation (catches errors BEFORE touching disk) ──
-    if _pydantic_available and _pydantic_validate is not None:
+a    if _pydantic_available and _pydantic_validate is not None:
         _ok, _errs = _pydantic_validate(data)
         if not _ok:
             print(f'\n🚫 PYDANTIC PRE-WRITE VIOLATIONS ({len(_errs)}) — JSON NOT WRITTEN\n')
