@@ -1,0 +1,115 @@
+{
+  "meta": {"company": "TestCo", "domain": "testco.com", "audit_date": "2026-01-01", "audited_by": "Algolia"},
+  "score": {
+    "overall": 2.75,
+    "verdict": "Critical Gaps Found",
+    "verdict_class": "critical",
+    "breakdown": {
+      "latency": 5, "typo_tolerance": 2, "query_suggestions_empty_state": 1,
+      "intent_detection": 3, "merchandising_consistency": 4, "content_commerce_ux": 5,
+      "semantic_nlp_search": 2, "dynamic_facets_personalization": 3,
+      "recommendations_merchandising": 4, "search_intelligence": 2
+    },
+    "breakdown_severity": {
+      "latency": "MEDIUM", "typo_tolerance": "HIGH", "query_suggestions_empty_state": "HIGH",
+      "intent_detection": "HIGH", "merchandising_consistency": "MEDIUM", "content_commerce_ux": "MEDIUM",
+      "semantic_nlp_search": "HIGH", "dynamic_facets_personalization": "HIGH",
+      "recommendations_merchandising": "MEDIUM", "search_intelligence": "HIGH"
+    },
+    "critical_count": 6, "moderate_count": 10, "low_count": 0
+  },
+  "executives": [
+    {"name": "Jane CEO", "title": "CEO", "quote": "We must modernize our search.", "quote_source": "https://example.com/earnings"}
+  ],
+  "intelligence_signals": [
+    {"type": "earnings_quote", "title": "CEO admits search gap", "detail": "We must modernize our search.", "source_url": "https://example.com/earnings"}
+  ],
+  "findings": [
+    {
+      "id": "F1", "title": "Zero typo tolerance", "severity": "critical",
+      "category": "typo_tolerance", "tested_query": "niike shoes",
+      "actual_behavior": "Returns 0 results for misspelled query",
+      "algolia_case_study_company": "Lacoste",
+      "algolia_case_study_url": "https://www.algolia.com/customers/lacoste/",
+      "algolia_case_study_result": "+37% conversion rate"
+    }
+  ],
+  "strategic_angles": [
+    {
+      "label": "Zero Typo Tolerance", "hook": "Your search fails on the first keystroke mistake.",
+      "pain_points": ["niike returns 0 results", "users bounce immediately"],
+      "discovery_question": "What is your current zero-results rate?",
+      "algolia_proof": "Lacoste: +37% conversion — https://www.algolia.com/customers/lacoste/",
+      "objection": "We have in-house search",
+      "objection_counter": "In-house search cannot match Algolia NLP at this scale",
+      "source": "https://example.com/browser-findings"
+    }
+  ],
+  "gap_pairs": [
+    {
+      "said_quote": "We prioritize digital CX",
+      "said_attr": "Jane CEO, Q3 2025 Earnings",
+      "found_title": "Zero Typo Tolerance",
+      "found_evidence": "niike → 0 results confirmed in browser testing",
+      "finding_id": "F1",
+      "algolia_angle": "Algolia typo tolerance would have returned 42 results for this query"
+    }
+  ],
+  "golden_angle": {"talk_track": "No competitor uses Algolia — first-mover advantage", "competitors_using_algolia": []},
+  "competitive_synthesis": {
+    "matrix_col_labels": {"nike_has": "Competitor A", "asics_has": "Competitor B", "on_running_has": "Competitor C", "new_balance_has": "Competitor D"},
+    "competitor_tiers": [{"name": "Competitor A", "tier": "Direct"}],
+    "positioning_matrix": [
+      {"capability": "NLP Search", "prospect_today": "1/10", "prospect_with_algolia": "9/10",
+       "nike_has": "Basic", "asics_has": "None", "on_running_has": "Basic", "new_balance_has": "None",
+       "algolia_delta": "Critical gap"}
+    ]
+  },
+  "financials": {
+    "total_digital_revenue": "$500M",
+    "roi_scenarios": [{"label": "Conservative", "value": "$5M/year"}]
+  },
+  "traffic": {
+    "top_channels": [{"channel": "Direct", "share": "45%"}, {"channel": "Organic", "share": "32%"}],
+    "device_share": {"mobile": "54%", "desktop": "46%"},
+    "demographics": [{"age_group": "25-34", "pct": 35, "color": "#003DFF"}]
+  },
+  "tech_stack": {"primary_platform": "Shopify Plus", "full_list": ["Shopify Plus", "Klaviyo"]},
+  "hiring": {"buying_committee": [{"name": "Jane CEO", "title": "CEO", "is_target": true}]},
+  "case_studies": [
+    {"vertical": "Fashion", "company": "Lacoste", "result": "+37% conversion",
+     "product": "NeuralSearch", "why": "Same fashion vertical",
+     "url": "https://www.algolia.com/customers/lacoste/"}
+  ],
+  "company_snapshot": {"industry": "Fashion Retail"},
+  "cover": {},
+  "abx_sequence": {
+    "touches": [
+      {"touch": 1, "day": "Day 1", "channel": "email", "target": "champion",
+       "subject": "TestCo search: what we found when we tested it",
+       "body": "Hi Jane,\n\nWe ran a search audit on testco.com and found that 'niike shoes' returns zero results — typo tolerance is completely absent.\n\nLacoste fixed the same problem with Algolia and saw +37% conversion rate.\n\nWorth 15 minutes to walk through what we found?\n\nBest,\nThe Algolia Team"},
+      {"touch": 2, "day": "Day 4", "channel": "linkedin",
+       "body": "Hi Jane — following up on the search audit we ran on testco.com. Found some significant gaps that are likely costing conversions. Happy to share the findings if useful."},
+      {"touch": 3, "day": "Day 8", "channel": "email", "target": "champion",
+       "subject": "Quick question about TestCo search",
+       "body": "Hi Jane,\n\nOne question: what is TestCo's current zero-results rate?\n\nWe found that 'niike shoes' returns nothing — if that's representative, even a 1% improvement in zero-results recovery could mean significant revenue.\n\nBest,\nThe Algolia Team"}
+    ],
+    "contacts": [
+      {"name": "Jane Digital", "id": "jane_digital", "title": "Head of Digital", "role": "champion"}
+    ],
+    "total_touches": 3,
+    "duration_days": 8,
+    "channels": ["Email", "LinkedIn"]
+  },
+  "ae_fields": {
+    "opportunity_headline": "The Fashion Search Opportunity for TestCo",
+    "benchmark_proof": "Lacoste achieved +37% conversion rate after deploying Algolia NeuralSearch — https://www.algolia.com/customers/lacoste/"
+  },
+  "tab_subtitles": {
+    "summary": "What you need before the TestCo call",
+    "account": "TestCo at a glance — Fashion Retail, testco.com",
+    "findings": "What we found when we tested TestCo search",
+    "case": "Why TestCo should act now",
+    "playbook": "How to win the TestCo deal"
+  }
+}

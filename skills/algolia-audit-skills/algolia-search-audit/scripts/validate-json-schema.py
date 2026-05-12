@@ -203,9 +203,9 @@ if breakdown and severity and overall is not None:
                  f'(weighted sum {total_weighted:.1f} / weight total {total_weight:.1f}) — '
                  f'check scoring matrix denominator')
 
-# ── new fields — warn if missing (not block — graceful degradation) ────────
+# ── new fields — tab_subtitles is BLOCKING (blank tabs = broken UX) ───────
 if not d.get('tab_subtitles'):
-    warn('tab_subtitles missing — SPA will show no tab subtitles (graceful degradation OK)')
+    fail('tab_subtitles missing — SPA shows generic tab names. Every audit MUST set custom subtitles (BLOCKING)')
 if not d.get('recommended_first_play'):
     warn('recommended_first_play missing — Summary highlights grid will show 3 cards instead of 4')
 if d.get('partner_intel') is None:
@@ -399,48 +399,47 @@ if _cs_portfolio is not None and len(_cs_portfolio) > 0:
                 f'missing "source" field — citation not verifiable'
             )
 
-# ── CITATION BASELINE RULE (applies across all sections) ─────────────────────
-# Every claim, quote, stat, and case study reference MUST have a verifiable source URL.
-# Rule: No citation = no data. This is a WARN (not block) to allow partial audits,
-# but ALL warns must be resolved before AE handoff or GitHub push.
+# ── CITATION BASELINE RULE (applies across all sections) — ALL BLOCKING ────────
+# No citation = no data. These are BLOCKING failures, not warnings.
+# An uncited claim in a client report is a liability, not an inconvenience.
 
 # executives — every quote needs quote_source
 for _i, _exec in enumerate(d.get('executives') or []):
     if _exec.get('quote') and not _exec.get('quote_source'):
-        warn(f'executives[{_i}] ({_exec.get("name","?")}) has quote but no quote_source URL — citation required')
+        fail(f'executives[{_i}] ({_exec.get("name","?")}) has quote but no quote_source URL — citation required (BLOCKING)')
 
 # intelligence_signals — every signal needs source_url
 for _i, _sig in enumerate(d.get('intelligence_signals') or []):
     if (_sig.get('detail') or _sig.get('quote') or _sig.get('body')) and not _sig.get('source_url'):
-        warn(f'intelligence_signals[{_i}] ("{(_sig.get("title") or _sig.get("badge_label","?"))[:40]}") has content but no source_url')
+        fail(f'intelligence_signals[{_i}] ("{(_sig.get("title") or _sig.get("badge_label","?"))[:40]}") has content but no source_url (BLOCKING)')
 
 # strategic_angles — every angle needs source
 for _i, _ang in enumerate(d.get('strategic_angles') or []):
     if not _ang.get('source'):
-        warn(f'strategic_angles[{_i}] ("{_ang.get("label","?")[:40]}") missing source — citation required for every angle')
+        fail(f'strategic_angles[{_i}] ("{_ang.get("label","?")[:40]}") missing source — citation required (BLOCKING)')
     if not _ang.get('algolia_proof'):
-        warn(f'strategic_angles[{_i}] ("{_ang.get("label","?")[:40]}") missing algolia_proof — proof required for every angle')
+        fail(f'strategic_angles[{_i}] ("{_ang.get("label","?")[:40]}") missing algolia_proof — proof required (BLOCKING)')
 
-# icp_mapping.priority_to_product — every Q needs proof_url when proof_company is set
+# icp_mapping.priority_to_product — proof_url required when proof_company named
 for _i, _p in enumerate((d.get('icp_mapping') or {}).get('priority_to_product') or []):
     if _p.get('proof_company') and not _p.get('proof_url'):
-        warn(f'icp_mapping.priority_to_product[{_i}] has proof_company="{_p.get("proof_company")}" but no proof_url — link required')
+        fail(f'icp_mapping.priority_to_product[{_i}] has proof_company="{_p.get("proof_company")}" but no proof_url (BLOCKING)')
     if not _p.get('evidence') and not _p.get('exact_quote'):
-        warn(f'icp_mapping.priority_to_product[{_i}] missing evidence/exact_quote — BDR needs citation to ask question confidently')
+        fail(f'icp_mapping.priority_to_product[{_i}] missing evidence/exact_quote — BDR cannot ask question without supporting citation (BLOCKING)')
 
-# findings — every finding with algolia_case_study_company needs algolia_case_study_url
+# findings — case_study_url required when company named; impact_stat_source required
 for _i, _f in enumerate(d.get('findings') or []):
     if _f.get('algolia_case_study_company') and not _f.get('algolia_case_study_url'):
-        warn(f'findings[{_i}] ("{_f.get("title","?")[:40]}") has case_study_company but no case_study_url — link required')
+        fail(f'findings[{_i}] ("{_f.get("title","?")[:40]}") has case_study_company but no case_study_url (BLOCKING)')
     if _f.get('impact_stat') and not _f.get('impact_stat_source'):
-        warn(f'findings[{_i}] ("{_f.get("title","?")[:40]}") has impact_stat but no impact_stat_source — stat must be verifiable')
+        fail(f'findings[{_i}] ("{_f.get("title","?")[:40]}") has impact_stat but no impact_stat_source — remove stat or cite it (BLOCKING)')
 
-# case_studies — every case study needs url and result
+# case_studies — url and result required
 for _i, _cs in enumerate(d.get('case_studies') or []):
     if not _cs.get('url'):
-        warn(f'case_studies[{_i}] ({_cs.get("company","?")}) missing url — case study must link to source')
+        fail(f'case_studies[{_i}] ({_cs.get("company","?")}) missing url — every case study must link to source (BLOCKING)')
     if not _cs.get('result'):
-        warn(f'case_studies[{_i}] ({_cs.get("company","?")}) missing result metric — case study must have measurable proof')
+        fail(f'case_studies[{_i}] ({_cs.get("company","?")}) missing result metric — every case study must have measurable proof (BLOCKING)')
 
 errors = [v for v in violations if v.startswith("  ❌")]
 warnings = [v for v in violations if v.startswith("  ⚠️")]
