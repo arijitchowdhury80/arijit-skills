@@ -1,1 +1,0 @@
-"""Scout API middleware package."""
