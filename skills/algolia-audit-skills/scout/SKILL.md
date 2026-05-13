@@ -1,18 +1,18 @@
 ---
 name: scout
-description: Use Scout to gather company intelligence from real websites. Scout is a self-hosted web intelligence platform at http://localhost:8421. It is NOT a general-purpose scraper — it is optimised for specific company intelligence use cases: About page, executive team, hiring openings, investor relations, and PDF reports/presentations. Always invoke Scout instead of WebFetch or raw curl when the goal is any of these five intelligence types, even when the user just says "find the leadership team" or "get their investor deck" without mentioning Scout explicitly. Scout handles JS-rendered pages, stealth mode, PDF extraction, and sitemap discovery that basic fetch tools cannot.
+description: Use Scout to scrape and crawl any public website and return clean markdown content. Scout is a self-hosted web scraping platform at http://localhost:8421. Use it instead of WebFetch or raw curl whenever you need to: scrape a page that requires JavaScript rendering, crawl multiple pages of a site section, extract structured fields (product names, prices, descriptions) via CSS selectors or LLM, discover all URLs on a domain before scraping, bypass bot detection on pages that block basic fetch, or extract text from a PDF URL. Invoke Scout for any web content task — product catalog extraction, company research, documentation scraping, demo data preparation, or any situation where WebFetch returns empty or broken content.
 layer: 0-infrastructure
 type: server-backed
 server_port: 8421
 health_check: "curl -s http://localhost:8421/health"
 start_command: "scout serve"
 requires_install: true
-version: 1.1
+version: 1.2
 ---
 
-# Scout — Company Intelligence Platform
+# Scout — Web Scraper and Crawler
 
-Scout is a self-hosted web intelligence platform that gives Claude the ability to crawl real company websites with stealth mode, JS rendering, and PDF extraction. It runs locally at `http://localhost:8421` and wraps Crawl4AI with Playwright.
+Scout is a self-hosted web scraping platform that turns any public website into clean, structured content. It runs locally at `http://localhost:8421` and wraps Crawl4AI with Playwright.
 
 **Always check health first:**
 ```bash
@@ -20,184 +20,151 @@ curl -s http://localhost:8421/health
 ```
 If not running: `scout serve` (see [README.md](README.md) for install steps)
 
-**Auth:** Every endpoint except `/health` requires `X-API-Key: $SCOUT_API_KEY`.
-
-> Local dev default: `SCOUT_API_KEY=dev-key`. Set a real key in `.env` before sharing or deploying.
+**Auth:** Every endpoint except `/health` requires `X-API-Key: dev-key` (the default — no setup needed for local use).
 
 ---
 
-## Full Company Intelligence Profile
+## When to Use Scout
 
-When asked to research a company, gather all five intelligence types in one run. **Map once, then scrape everything from that map.**
+Use Scout instead of WebFetch or raw curl when:
+- The page requires JavaScript to render content (SPAs, lazy-loaded products, dynamic tables)
+- You need to crawl multiple pages of a section in one call
+- You need to extract structured fields (name, price, SKU) from a page
+- You need to discover all URLs on a domain before deciding what to scrape
+- The page blocks basic fetch requests (bot detection)
+- The URL points to a PDF and you need the text content
+
+---
+
+## Core Pattern: Map → Filter → Scrape
 
 ```bash
 # Step 1: discover the site structure
 curl -s --max-time 60 -X POST http://localhost:8421/map \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com", "max_pages": 300}'
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{"url": "https://example.com", "max_pages": 200}'
 
-# Step 2: from the urls[] list, identify pages for each section:
-#   About:      /about, /about-us, /company, /who-we-are
-#   Leadership: /team, /leadership, /management, /about/team, /about/leadership
-#   Careers:    /careers, /jobs, /join-us
-#   Investors:  /investors, /investor-relations, /ir
-#   PDFs:       any urls ending in .pdf or /reports/, /presentations/
+# Step 2: from the urls[] list, identify the section you need
 
-# Step 3: scrape each identified section
+# Step 3: scrape it
+curl -s -X POST http://localhost:8421/scrape \
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{"url": "https://example.com/products", "use_js": true}'
 ```
 
-**Output structure:**
-```markdown
-## Company Intelligence — [Company] ([date])
+Don't guess URLs — sites vary wildly. Map first, then scrape what you need.
 
-### About
-[mission, HQ, founding, size]
+---
 
-### Executive Team
-| Name | Title |
-|---|---|
+## Playbooks
 
-### Open Roles
-[department: role — location]
+### Scrape a single page
 
-### Investor Relations
-[IR page URL, stock ticker, earnings dates, SEC filings link]
+```bash
+curl -s -X POST http://localhost:8421/scrape \
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{"url": "https://example.com/page", "use_js": true}'
+```
 
-### Reports & Documents
-| Document | Type | URL |
-|---|---|---|
+If the page content is not fully loaded, wait for a DOM element:
+```bash
+curl -s -X POST http://localhost:8421/scrape \
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{"url": "https://example.com/page", "use_js": true, "wait_for": ".product-grid"}'
+```
+
+If markdown conversion loses structure (e.g. product cards, team member grids), request raw HTML and parse it directly:
+```bash
+curl -s -X POST http://localhost:8421/scrape \
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{"url": "https://example.com/page", "use_js": true, "formats": ["raw_html"]}'
 ```
 
 ---
 
-## The Core Pattern: Map → Filter → Scrape
-
-For a single intelligence type:
-1. **Map** the domain to discover the URL structure
-2. **Filter** the returned `urls[]` to the section you need
-3. **Scrape** the relevant pages
-
-Don't guess URLs. Map first — company sites vary wildly (`/team` vs `/about/leadership` vs `/company/management`).
-
-```bash
-# Step 1: discover the site
-curl -s --max-time 60 -X POST http://localhost:8421/map \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com", "max_pages": 200}'
-
-# Step 2: scrape the relevant section
-curl -s -X POST http://localhost:8421/scrape \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com/about/team", "use_js": true}'
-```
-
----
-
-## Intelligence Playbooks
-
-### 1. About / Company Overview
-
-**What you're looking for:** founding story, mission, product description, headquarters, company size.
-
-**Common URL patterns:** `/about`, `/about-us`, `/company`, `/who-we-are`, `/our-story`
-
-```bash
-curl -s --max-time 60 -X POST http://localhost:8421/map \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com", "max_pages": 100, "url_pattern": "/about"}'
-
-curl -s -X POST http://localhost:8421/scrape \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com/about", "use_js": true}'
-```
-
----
-
-### 2. Executive / Leadership Team
-
-**What you're looking for:** C-suite names + titles, board members, VP-level leadership.
-
-**Common URL patterns:** `/team`, `/leadership`, `/management`, `/about/team`, `/about/leadership`
-
-```bash
-curl -s -X POST http://localhost:8421/scrape \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com/about/leadership", "use_js": true}'
-```
-
-Team pages often lose structure when converted to markdown. If content is sparse, request raw HTML and parse name/title card patterns directly:
-
-```bash
-curl -s -X POST http://localhost:8421/scrape \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com/about/leadership", "use_js": true, "formats": ["raw_html"]}'
-```
-
----
-
-### 3. Hiring / Open Roles
-
-**What you're looking for:** open positions, departments, locations, job descriptions.
-
-**Common URL patterns:** `/careers`, `/jobs`, `/work-with-us`, `/join-us`, `/join`
+### Crawl a site section (multiple pages)
 
 ```bash
 curl -s --max-time 120 -X POST http://localhost:8421/crawl \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com/careers", "max_depth": 2, "max_pages": 30, "url_pattern": "/careers"}'
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{
+    "url": "https://example.com/products",
+    "max_depth": 2,
+    "max_pages": 50,
+    "url_pattern": "/products"
+  }'
 ```
 
-Many companies redirect careers to third-party ATS platforms (Greenhouse, Lever, Workday). If the page redirects externally, scrape the landing page only — external job boards are not Scout's scope.
+Returns all pages as `{ pages: [{ url, markdown, metadata }] }`.
 
 ---
 
-### 4. Investor Relations
+### Extract structured fields (product catalog, demo data)
 
-**What you're looking for:** IR landing page, investor contact, financial calendar, press releases.
-
-**Common URL patterns:** `/investors`, `/investor-relations`, `/ir`, `/financials`
-
+**CSS extraction** — fast, no LLM needed, requires you know the DOM structure:
 ```bash
-curl -s -X POST http://localhost:8421/scrape \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com/investors", "use_js": true}'
+curl -s -X POST http://localhost:8421/extract \
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{
+    "url": "https://example.com/product/123",
+    "css_schema": {
+      "name": "product",
+      "baseSelector": ".product-card",
+      "fields": [
+        {"name": "title",       "selector": "h1",         "type": "text"},
+        {"name": "price",       "selector": ".price",     "type": "text"},
+        {"name": "description", "selector": ".desc",      "type": "text"},
+        {"name": "sku",         "selector": "[data-sku]", "type": "attribute", "attribute": "data-sku"}
+      ]
+    }
+  }'
+```
+
+**LLM extraction** — works on any page without knowing the DOM (requires `LLM_API_KEY` in `.env`):
+```bash
+curl -s -X POST http://localhost:8421/extract \
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{
+    "url": "https://example.com/product/123",
+    "schema": {"type": "object", "properties": {"title": {"type": "string"}, "price": {"type": "string"}}},
+    "instruction": "Extract the product title and price"
+  }'
 ```
 
 ---
 
-### 5. Reports and PDF Documents
-
-**What you're looking for:** annual reports, quarterly results, investor presentations, whitepapers.
-
-Map the IR section first to surface PDF URLs, then scrape each one directly:
+### Discover all URLs on a domain
 
 ```bash
-# Find PDFs
 curl -s --max-time 60 -X POST http://localhost:8421/map \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com/investors", "max_pages": 200}'
-# Filter urls[] for entries ending in .pdf
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{"url": "https://example.com", "max_pages": 300, "url_pattern": "/products"}'
+```
 
-# Scrape a PDF — returns extracted text as markdown
+Returns `{ urls: [...], total }`. Use `url_pattern` to filter to a specific section.
+
+---
+
+### Scrape a PDF
+
+Pass the direct PDF URL to `/scrape` — returns the extracted text as markdown:
+```bash
 curl -s -X POST http://localhost:8421/scrape \
-  -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-  -d '{"url": "https://company.com/reports/annual-2024.pdf"}'
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{"url": "https://example.com/report.pdf"}'
 ```
 
 ---
 
-## Multi-Company Batch
-
-Run companies sequentially — Scout is single-instance and not designed for parallel crawls:
+### Screenshot a page
 
 ```bash
-for company in company-a.com company-b.com company-c.com; do
-  echo "=== $company ==="
-  curl -s --max-time 60 -X POST http://localhost:8421/map \
-    -H "Content-Type: application/json" -H "X-API-Key: $SCOUT_API_KEY" \
-    -d "{\"url\": \"https://$company\", \"max_pages\": 100}" | jq '.urls[] | select(test("team|leadership|about"))'
-done
+curl -s -X POST http://localhost:8421/screenshot \
+  -H "Content-Type: application/json" -H "X-API-Key: dev-key" \
+  -d '{"url": "https://example.com"}'
 ```
+
+Returns `{ screenshot_base64: "..." }` — a base64 PNG of the full page.
 
 ---
 
@@ -206,32 +173,35 @@ done
 | Endpoint | Use case | Timeout |
 |---|---|---|
 | `GET /health` | Liveness check (no auth) | instant |
-| `POST /scrape` | One page — markdown + links + metadata | 45s |
+| `POST /scrape` | One page → markdown + links + metadata | 45s |
 | `POST /map` | Discover all URLs on a domain | 60s |
 | `POST /crawl` | BFS multi-page crawl of a section | 120s |
-| `POST /extract` | Structured fields via LLM or CSS selectors | 60s |
+| `POST /extract` | Structured fields via CSS selectors or LLM | 60s |
 | `POST /screenshot` | Full-page PNG (base64) | 30s |
 
 **Error reference:**
 
 | Error | Fix |
 |---|---|
-| `"Crawl failed"` / timeout | Add `"use_js": true`, increase `"timeout_ms"` |
-| `"No LLM API key"` on `/extract` | Use `css_schema` instead, or set `LLM_API_KEY` in `.env` |
-| HTTP 403 | Wrong or missing `X-API-Key` — check `SCOUT_API_KEY` in `.env` |
+| `Connection refused` | Run `scout serve` |
+| HTTP 403 | Add `-H "X-API-Key: dev-key"` |
 | HTTP 422 | Malformed JSON body |
-| Sparse/empty markdown | Page is JS-rendered — retry with `"use_js": true` |
+| Sparse/empty markdown | Add `"use_js": true` |
+| Content not fully loaded | Add `"wait_for": ".selector"` |
+| `"No LLM API key"` on `/extract` | Use `css_schema` instead, or set `LLM_API_KEY` in `.env` |
 
 ---
 
 ## CLI
 
 ```bash
-scout serve                           # start the server (default port 8421)
-scout serve --port 9000               # custom port
-scout scrape https://company.com/about
-scout map https://company.com --pages 200
-scout crawl https://company.com/careers --depth 2 --pages 30
-scout extract https://company.com/team --llm-key $LLM_API_KEY
-scout screenshot https://company.com
+scout serve                                         # start the server
+scout serve --port 9000                             # custom port
+scout scrape https://example.com/page               # single page
+scout map https://example.com --pages 200           # URL discovery
+scout crawl https://example.com/products \          # multi-page
+  --depth 2 --pages 50
+scout extract https://example.com/product/123 \     # structured extraction
+  --llm-key $LLM_API_KEY
+scout screenshot https://example.com                # visual capture
 ```
