@@ -32,20 +32,14 @@ Unlike WebFetch or raw curl, Scout handles:
 
 ## Install
 
-Scout has two components to install: the **server** (the FastAPI app that does the crawling) and the **skill** (the markdown file that teaches Claude to use it).
+Everything — server code, skill file, and config — is in this directory. One clone, four steps.
 
-### Step 1 — Get the Scout server
-
-> **Note:** The Scout server repository URL will be provided by the maintainer. Replace `[SCOUT_SERVER_REPO_URL]` with the actual repo URL.
+### Step 1 — Clone and install
 
 ```bash
-git clone [SCOUT_SERVER_REPO_URL]
-cd Scout
+git clone https://github.com/arijitchowdhury80/algolia-claude-skills.git
+cd algolia-claude-skills/skills/algolia-audit-skills/scout
 pip install -e .
-```
-
-Install Playwright's browser (one-time):
-```bash
 playwright install chromium
 ```
 
@@ -55,23 +49,22 @@ playwright install chromium
 cp .env.example .env
 ```
 
-Edit `.env` and set your API key:
+Edit `.env`:
 ```
 SCOUT_API_KEY=your-secret-key
 LLM_API_KEY=                    # optional — only needed for /extract with LLM mode
 PORT=8421
 ```
 
-> For local single-user development, the default `SCOUT_API_KEY=dev-key` works fine. Use a real secret before sharing the server over any network.
+> For local single-user development, the default `SCOUT_API_KEY=dev-key` works fine. Set a real key before sharing the server over any network.
 
 ### Step 3 — Install the Claude skill
 
-From the root of this skills repository:
 ```bash
-cp skills/algolia-audit-skills/scout/SKILL.md ~/.claude/commands/scout.md
+bash install-skill.sh
 ```
 
-Restart Claude Code (or open a new session) to load the skill.
+This copies `SKILL.md` → `~/.claude/commands/scout.md`. Restart Claude Code (or open a new session) to load it.
 
 ### Step 4 — Start the server
 
@@ -79,7 +72,7 @@ Restart Claude Code (or open a new session) to load the skill.
 scout serve
 ```
 
-Verify it's running:
+Verify:
 ```bash
 curl -s http://localhost:8421/health
 # → {"status":"ok"}
