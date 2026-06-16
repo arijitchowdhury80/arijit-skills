@@ -1,4 +1,4 @@
-# Video Methodology Builder
+# Learn From YT
 
 Portable AI skill for turning long videos, podcasts, calls, courses, or lectures into structured knowledge bases, business methodologies, SOP libraries, execution checklists, and downstream software or research requirements.
 
@@ -16,7 +16,7 @@ This is the first WorkOS knowledge-extraction skill. It is optimized for busines
 ## Skill Layout
 
 ```text
-video-methodology-builder/
+learn-from-yt/
 ├── SKILL.md
 ├── README.md
 ├── install-skill.sh
@@ -39,7 +39,7 @@ From a fresh checkout:
 
 ```bash
 git clone https://github.com/arijitchowdhury80/arijit-skills.git
-cd arijit-skills/skills/general-skills/video-methodology-builder
+cd arijit-skills/skills/general-skills/learn-from-yt
 chmod +x install-skill.sh
 ```
 
@@ -73,9 +73,9 @@ For Hermes/chowmes, run the install as the runtime user or fix ownership after i
 
 | Runtime | Location |
 |---------|----------|
-| Codex | `$CODEX_HOME/skills/video-methodology-builder` or `~/.codex/skills/video-methodology-builder` |
-| Claude Code | `$CLAUDE_HOME/skills/video-methodology-builder` or `~/.claude/skills/video-methodology-builder` |
-| Hermes | Path passed with `--hermes-dir`, usually `/opt/data/skills/video-methodology-builder` on the server |
+| Codex | `$CODEX_HOME/skills/learn-from-yt` or `~/.codex/skills/learn-from-yt` |
+| Claude Code | `$CLAUDE_HOME/skills/learn-from-yt` or `~/.claude/skills/learn-from-yt` |
+| Hermes | Path passed with `--hermes-dir`, usually `/opt/data/skills/learn-from-yt` on the server |
 
 ## Dependencies
 
@@ -93,13 +93,13 @@ The helper scripts fail with clear messages when optional media dependencies are
 Ask the agent to use the skill on a video or transcript:
 
 ```text
-Use video-methodology-builder on this YouTube video and build the knowledge base, SOPs, execution checklist, and downstream software requirements.
+Use learn-from-yt on this YouTube video and build the knowledge base, SOPs, execution checklist, and downstream software requirements.
 ```
 
 Claude Code users can invoke it from the slash command list after installation:
 
 ```text
-/video-methodology-builder
+/learn-from-yt
 ```
 
 Codex and Hermes should load the skill by name when the task involves video ingestion, methodology extraction, business-building knowledge capture, or chapter-by-chapter synthesis.
@@ -123,7 +123,7 @@ Do not jump straight to summary. The skill is designed around a durable pipeline
 Other Codex, Claude Code, or Hermes agents can pull the skill from:
 
 ```text
-https://github.com/arijitchowdhury80/arijit-skills/tree/main/skills/general-skills/video-methodology-builder
+https://github.com/arijitchowdhury80/arijit-skills/tree/main/skills/general-skills/learn-from-yt
 ```
 
 For automated setup, clone the repo and run `install-skill.sh` with the appropriate target flags.

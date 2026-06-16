@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SKILL_NAME="video-methodology-builder"
+SKILL_NAME="learn-from-yt"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 INSTALL_CODEX=0
@@ -10,7 +10,7 @@ HERMES_SKILLS_DIR=""
 
 usage() {
   cat <<'EOF'
-Install video-methodology-builder for Codex, Claude Code, and/or Hermes.
+Install learn-from-yt for Codex, Claude Code, and/or Hermes.
 
 Usage:
   ./install-skill.sh --all
@@ -22,7 +22,7 @@ Flags:
   --all                 Install to Codex and Claude Code on this machine.
   --codex               Install to $CODEX_HOME/skills or ~/.codex/skills.
   --claude              Install to $CLAUDE_HOME/skills or ~/.claude/skills.
-  --hermes-dir PATH     Install under PATH/video-methodology-builder.
+  --hermes-dir PATH     Install under PATH/learn-from-yt.
   -h, --help            Show this help.
 EOF
 }

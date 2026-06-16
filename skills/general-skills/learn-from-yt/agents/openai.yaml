@@ -1,0 +1,4 @@
+interface:
+  display_name: "Learn From YT"
+  short_description: "Extract business methods from long videos"
+  default_prompt: "Use $learn-from-yt to turn this video into a structured methodology and execution plan."

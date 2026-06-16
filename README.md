@@ -16,10 +16,10 @@ chmod +x install.sh && ./install.sh
 
 The installer copies all skills to `~/.claude/skills/` and sets up your audit workspace.
 
-To install only the video methodology skill for Codex, Claude Code, or Hermes:
+To install only the learn-from-yt skill for Codex, Claude Code, or Hermes:
 
 ```bash
-cd skills/general-skills/video-methodology-builder
+cd skills/general-skills/learn-from-yt
 chmod +x install-skill.sh
 ./install-skill.sh --all
 ```
@@ -182,7 +182,7 @@ Standalone skills that support project work, research, sales workflows, and dura
 | `market-research` | Produces competitive intelligence briefs using SimilarWeb, BuiltWith, and web search. Covers market sizing, competitor positioning, and technology landscape. |
 | `partnerforge` | Partner Intelligence Platform for Algolia Sales. Finds companies using partner technologies (Adobe AEM, Amplience, Spryker, etc.) who are NOT using Algolia — displacement opportunities for co-sell motions. |
 | `project-governance` | Bootstraps complete governance for any project: STATUS.md, CHECKPOINT.md, SESSION.md, CLAUDE.md, git hooks, PRD and test plan templates. Run once per project. |
-| `video-methodology-builder` | Turns long videos, podcasts, courses, calls, or lectures into knowledge bases, business methodologies, SOPs, execution checklists, and downstream software/research requirements. Portable across Codex, Claude Code, and Hermes. |
+| `learn-from-yt` | Turns long videos, podcasts, courses, calls, or lectures into knowledge bases, business methodologies, SOPs, execution checklists, and downstream software/research requirements. Portable across Codex, Claude Code, and Hermes. |
 
 ---
 
@@ -231,7 +231,7 @@ npm install -g vercel
 npm install -g @apify/actors-mcp-server
 ```
 
-For `video-methodology-builder`, use Python 3 plus optional media tools: `yt-dlp`, `ffmpeg`, and `youtube-transcript-api`.
+For `learn-from-yt`, use Python 3 plus optional media tools: `yt-dlp`, `ffmpeg`, and `youtube-transcript-api`.
 
 ---
 
