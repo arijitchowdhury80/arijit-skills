@@ -1,20 +1,28 @@
-# Algolia Claude Skills · v3.0
+# Arijit Skills · v3.1
 
-**40 skills · 3 folders · Modular pipeline architecture**
+**41 skills · 3 folders · Modular pipeline architecture**
 
-A suite of Claude Code skills for Algolia Account Executives, Sales Engineers, and Marketing teams. Automates prospect research, search audits, sales intelligence, and brand content.
+A suite of portable AI skills for Claude Code, Codex, Hermes, and related agent runtimes. Includes Algolia account and audit workflows plus general WorkOS skills for project governance, market research, and video-to-methodology knowledge extraction.
 
 ---
 
 ## Quick Install
 
 ```bash
-git clone https://github.com/arijitchowdhury80/algolia-claude-skills.git
-cd algolia-claude-skills
+git clone https://github.com/arijitchowdhury80/arijit-skills.git
+cd arijit-skills
 chmod +x install.sh && ./install.sh
 ```
 
 The installer copies all skills to `~/.claude/skills/` and sets up your audit workspace.
+
+To install only the video methodology skill for Codex, Claude Code, or Hermes:
+
+```bash
+cd skills/general-skills/video-methodology-builder
+chmod +x install-skill.sh
+./install-skill.sh --all
+```
 
 ---
 
@@ -24,7 +32,7 @@ The installer copies all skills to `~/.claude/skills/` and sets up your audit wo
 skills/
 ├── algolia-audit-skills/     ← 24 skills — full audit pipeline + intelligence modules
 ├── algolia-branding-skills/  ← 13 skills — brand content & marketing collateral
-└── general-skills/           ←  3 skills — general sales & project tools
+└── general-skills/           ←  4 skills — general sales, WorkOS, and project tools
 ```
 
 > **Note for developers:** The installer flattens this into `~/.claude/skills/` — the subfolders are for organization only. Claude Code behavior is unchanged.
@@ -165,15 +173,16 @@ Skills for creating Algolia-branded content across all formats. All skills use t
 
 ---
 
-## `general-skills/` — General Sales & Project Tools
+## `general-skills/` — General WorkOS, Sales & Project Tools
 
-Standalone skills that support Algolia sales and project work but are not audit-specific.
+Standalone skills that support project work, research, sales workflows, and durable knowledge extraction.
 
 | Skill | Purpose |
 |-------|---------|
 | `market-research` | Produces competitive intelligence briefs using SimilarWeb, BuiltWith, and web search. Covers market sizing, competitor positioning, and technology landscape. |
 | `partnerforge` | Partner Intelligence Platform for Algolia Sales. Finds companies using partner technologies (Adobe AEM, Amplience, Spryker, etc.) who are NOT using Algolia — displacement opportunities for co-sell motions. |
 | `project-governance` | Bootstraps complete governance for any project: STATUS.md, CHECKPOINT.md, SESSION.md, CLAUDE.md, git hooks, PRD and test plan templates. Run once per project. |
+| `video-methodology-builder` | Turns long videos, podcasts, courses, calls, or lectures into knowledge bases, business methodologies, SOPs, execution checklists, and downstream software/research requirements. Portable across Codex, Claude Code, and Hermes. |
 
 ---
 
@@ -222,9 +231,11 @@ npm install -g vercel
 npm install -g @apify/actors-mcp-server
 ```
 
+For `video-methodology-builder`, use Python 3 plus optional media tools: `yt-dlp`, `ffmpeg`, and `youtube-transcript-api`.
+
 ---
 
 ## License
 
-Internal Algolia tool. Not for external distribution.
+Personal and internal agent skills. Review each skill's README and dependencies before external use.
 Built with Claude Code (claude-sonnet-4-6) · v3.0 · 2026-03-23
