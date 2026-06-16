@@ -1,4 +1,0 @@
-interface:
-  display_name: "Video Methodology Builder"
-  short_description: "Extract business methods from long videos"
-  default_prompt: "Use $video-methodology-builder to turn this video into a structured methodology and execution plan."

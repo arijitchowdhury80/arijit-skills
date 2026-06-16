@@ -19,7 +19,7 @@ def write_if_missing(path: Path, text: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Create a video methodology knowledge-base scaffold.")
+    parser = argparse.ArgumentParser(description="Create a YouTube learning knowledge-base scaffold.")
     parser.add_argument("--root", default="./Knowledge")
     parser.add_argument("--title", required=True)
     parser.add_argument("--domain", default="business-building")

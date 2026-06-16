@@ -1,9 +1,9 @@
 ---
-name: video-methodology-builder
+name: learn-from-yt
 description: Turn long videos, podcasts, courses, talks, calls, or lectures into structured knowledge bases, business methodologies, SOPs, execution plans, and downstream software or research requirements. Use when Codex is asked to transcribe, ingest, learn from, summarize deeply, process chapter-by-chapter, extract a business method from, or build an LLM/wiki knowledge base from video or audio content, especially business-building content such as POD, SaaS, marketing, sales, operations, product, strategy, or founder education.
 ---
 
-# Video Methodology Builder
+# Learn From YT
 
 Use this skill to convert long-form media into reusable operating knowledge. This skill is a layer above `youtube-knowledge`: use `youtube-knowledge` for capture/transcripts, then use this skill for segmentation, extraction, screenshots, methodology, SOPs, execution checklists, and downstream build requirements.
 
