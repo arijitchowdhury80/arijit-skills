@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Knowledge Capture"
+  short_description: "Record agent work into durable knowledge"
+  default_prompt: "Capture this session into durable knowledge: preserve useful raw evidence, distill decisions and reusable lessons, update the right project or vault notes, and return a compact receipt."
