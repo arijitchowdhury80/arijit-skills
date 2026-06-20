@@ -1,9 +1,9 @@
 #!/bin/bash
 # Arijit Skills — Unified Claude Code Installer v3.1
-# 41 skills organized in three folders:
-#   skills/algolia-audit-skills/     — 24 audit pipeline skills
+# 42 skills organized in three folders:
+#   skills/algolia-audit-skills/     — 23 audit pipeline skills
 #   skills/algolia-branding-skills/ — 13 brand & marketing skills
-#   skills/general-skills/           — 4 general tools
+#   skills/general-skills/           — 6 general tools
 
 set -e
 
@@ -14,7 +14,7 @@ SOURCE_DIR="$SCRIPT_DIR/skills"
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
 echo "║   Arijit Skills for Claude Code — Install v3.1   ║"
-echo "║   41 skills · Modular pipeline architecture      ║"
+echo "║   42 skills · Modular pipeline architecture      ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 
@@ -59,9 +59,9 @@ install_group() {
   echo ""
 }
 
-install_group "$SOURCE_DIR/algolia-audit-skills"     "Audit Pipeline (24 skills)"
+install_group "$SOURCE_DIR/algolia-audit-skills"     "Audit Pipeline (23 skills)"
 install_group "$SOURCE_DIR/algolia-branding-skills" "Marketing & Brand (13 skills)"
-install_group "$SOURCE_DIR/general-skills"           "General Tools (4 skills)"
+install_group "$SOURCE_DIR/general-skills"           "General Tools (6 skills)"
 
 echo "────────────────────────────────────────────────────"
 echo "  Total installed: $TOTAL skills"
@@ -97,7 +97,7 @@ echo "  /algolia-algolialize /algolia-brand-check"
 echo ""
 echo "GENERAL TOOLS  (general/)"
 echo "  /market-research /partnerforge /project-governance"
-echo "  /learn-from-yt"
+echo "  /learn-from-yt /sketch-explainer /agent-knowledge-capture"
 echo ""
 echo "────────────────────────────────────────────────────"
 echo ""
