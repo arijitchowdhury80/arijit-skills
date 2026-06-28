@@ -42,10 +42,13 @@ BUILTWITH_API_KEY = os.environ.get('BUILTWITH_API_KEY', '')
 
 def merge_scout_fields(existing: dict, scout: dict) -> dict:
 	"""Merge Scout-extracted fields into existing dict. Scout fills nulls; never overwrites non-null."""
-	scout_fields = ["linkedin_url", "twitter_handle", "careers_url", "website"]
-	for field in scout_fields:
+	scalar_fields = ["description", "linkedin_url", "twitter_handle", "careers_url", "website", "ir_url"]
+	for field in scalar_fields:
 		if existing.get(field) is None and scout.get(field) is not None:
 			existing[field] = scout[field]
+	# Merge executives: append Scout-found execs only if list is currently empty
+	if not existing.get("executives") and scout.get("executives"):
+		existing["executives"] = scout["executives"]
 	return existing
 
 # ── HTTP ──────────────────────────────────────────────────────────────────────
@@ -127,7 +130,7 @@ def fetch_company_website(domain):
 
 # ── Data collection ───────────────────────────────────────────────────────────
 
-def collect(domain, company_name_override=None, ticker=None):
+def collect(domain):
     """Run all sources. Returns structured results dict."""
     results = {
         'builtwith': {'data': None, 'error': None},
@@ -326,7 +329,7 @@ def main():
             i += 1
 
     print(f'Collecting company context for {domain}...', file=sys.stderr)
-    results = collect(domain, company_name_override, ticker)
+    results = collect(domain)
     output_data = build_json_record(domain, company_name_override, ticker, results)
     errors = {}
 

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COMPANY_NAME — Deliverables | Algolia Search Audit</title>
+  <!-- BRAND_CSS -->
+  <style>
+    /* ONLY var(--*) tokens — NO raw hex colors or font-size values */
+    body { font-family: 'Sora', sans-serif; color: var(--gray); background: var(--light); margin: 0; }
+    #topbar { position: fixed; top: 0; left: 0; right: 0; height: var(--topbar-h);
+      background: var(--gray); display: flex; align-items: center; padding: 0 20px;
+      gap: 16px; z-index: 200; }
+    #breadcrumb { position: fixed; top: var(--topbar-h); left: 0; right: 0;
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 10px 24px; font-size: 13px; z-index: 100; }
+    #content { max-width: 900px; margin: 0 auto;
+      padding: calc(var(--topbar-h) + 48px + 16px) 24px 80px; }
+    .del-card { background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      margin-bottom: 24px; overflow: hidden; }
+    .del-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
+    .del-header h2 { font-size: 18px; margin: 0 0 4px; }
+    .del-meta { font-size: 13px; color: var(--mid); margin: 0 0 4px; }
+    .del-sources { font-size: 12px; color: var(--mid); margin: 0; }
+    .del-preview { padding: 0 24px; max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease; }
+    .del-preview.open { max-height: 2000px; padding: 16px 24px; }
+    .del-preview-inner { font-size: 14px; line-height: 1.6; }
+    .del-actions { padding: 12px 24px; display: flex; gap: 10px;
+      border-top: 1px solid var(--border); background: var(--light); }
+    .btn { padding: 8px 16px; border-radius: var(--radius); font-size: 13px;
+      font-family: 'Sora', sans-serif; cursor: pointer; border: 1px solid var(--border);
+      background: var(--white); color: var(--gray); }
+    .btn:hover { background: var(--blue); color: var(--white); border-color: var(--blue); }
+    .btn-primary { background: var(--blue); color: var(--white); border-color: var(--blue); }
+    .spin-q { margin: 8px 0; padding: 10px 14px; background: var(--blue-tint);
+      border-left: 3px solid var(--blue); border-radius: 0 var(--radius) var(--radius) 0; }
+    .spin-label { font-size: 11px; font-weight: 600; color: var(--blue);
+      text-transform: uppercase; letter-spacing: 0.08em; }
+    .objection { background: var(--red-tint); border-left: 3px solid var(--red);
+      padding: 10px 14px; border-radius: 0 var(--radius) var(--radius) 0; margin: 8px 0; }
+    .counter { background: var(--green-tint); border-left: 3px solid var(--green);
+      padding: 10px 14px; border-radius: 0 var(--radius) var(--radius) 0; margin: 4px 0 8px 0; }
+  </style>
+</head>
+<body>
+  <header id="topbar">
+    <img src="ALGOLIA_LOGO_WHITE" alt="Algolia" height="22" style="filter: brightness(0) invert(1);">
+    <span style="color: #fff; font-size: 14px; font-weight: 600;">COMPANY_NAME — Deliverables</span>
+  </header>
+
+  <nav id="breadcrumb">
+    <a href="index.html" style="color: var(--blue);">← Command Center</a>
+    &nbsp;/&nbsp; Deliverables
+    <span style="float: right; color: var(--mid); font-size: 12px;">AUDIT_DATE · Confidential · Internal Use Only</span>
+  </nav>
+
+  <main id="content">
+    <p style="color: var(--mid); font-size: 14px; margin-bottom: 24px;">
+      All content assembled from audit findings. Nothing generic — specific to this prospect.
+    </p>
+
+    <!-- AE CALL BRIEF -->
+    <div class="del-card" id="del-ae-brief">
+      <div class="del-header">
+        <h2>AE Call Brief</h2>
+        <p class="del-meta">For: Account Executive &nbsp;·&nbsp; Use: 30 min before discovery call</p>
+        <p class="del-sources" id="ae-sources"></p>
+      </div>
+      <div class="del-preview" id="preview-ae-brief">
+        <div class="del-preview-inner" id="content-ae-brief"></div>
+      </div>
+      <div class="del-actions">
+        <button class="btn" onclick="togglePreview('ae-brief')">▼ Show preview</button>
+        <button class="btn btn-primary" onclick="copySection('content-ae-brief')">📋 Copy</button>
+        <button class="btn" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+
+    <!-- BDR OUTREACH PACK -->
+    <div class="del-card" id="del-bdr-outreach">
+      <div class="del-header">
+        <h2>BDR Outreach Pack</h2>
+        <p class="del-meta">For: Business Development Rep &nbsp;·&nbsp; Use: cold + warm outreach</p>
+        <p class="del-sources">Sources: News Signals · Hiring Signals · Investor Intelligence</p>
+      </div>
+      <div class="del-preview" id="preview-bdr-outreach">
+        <div class="del-preview-inner" id="content-bdr-outreach"></div>
+      </div>
+      <div class="del-actions">
+        <button class="btn" onclick="togglePreview('bdr-outreach')">▼ Show preview</button>
+        <button class="btn btn-primary" onclick="copySection('content-bdr-outreach')">📋 Copy</button>
+        <button class="btn" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+
+    <!-- BATTLE CARD -->
+    <div class="del-card" id="del-battle-card">
+      <div class="del-header">
+        <h2>Battle Card</h2>
+        <p class="del-meta">For: AE / BDR &nbsp;·&nbsp; Use: competitive objection handling in-call</p>
+        <p class="del-sources">Sources: All finding objection handlers · Competitor Analysis</p>
+      </div>
+      <div class="del-preview" id="preview-battle-card">
+        <div class="del-preview-inner" id="content-battle-card"></div>
+      </div>
+      <div class="del-actions">
+        <button class="btn" onclick="togglePreview('battle-card')">▼ Show preview</button>
+        <button class="btn btn-primary" onclick="copySection('content-battle-card')">📋 Copy</button>
+        <button class="btn" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+
+    <!-- LEAVE-BEHIND -->
+    <div class="del-card" id="del-leave-behind">
+      <div class="del-header">
+        <h2>Leave-Behind</h2>
+        <p class="del-meta">For: Prospect &nbsp;·&nbsp; Use: share after discovery call</p>
+        <p class="del-sources">Note: internal sales data removed &nbsp;·&nbsp; prospect-safe</p>
+      </div>
+      <div class="del-preview" id="preview-leave-behind">
+        <div class="del-preview-inner" id="content-leave-behind"></div>
+      </div>
+      <div class="del-actions">
+        <button class="btn" onclick="togglePreview('leave-behind')">▼ Show preview</button>
+        <button class="btn btn-primary" onclick="copySection('content-leave-behind')">📋 Copy</button>
+        <button class="btn" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+
+    <!-- BUSINESS CASE -->
+    <div class="del-card" id="del-business-case">
+      <div class="del-header">
+        <h2>Business Case One-Pager</h2>
+        <p class="del-meta">For: AE + Economic Buyer &nbsp;·&nbsp; Use: CFO / CTO conversation</p>
+        <p class="del-sources">Sources: Financial Profile · Traffic Data · All 10 Value Maps</p>
+      </div>
+      <div class="del-preview" id="preview-business-case">
+        <div class="del-preview-inner" id="content-business-case"></div>
+      </div>
+      <div class="del-actions">
+        <button class="btn" onclick="togglePreview('business-case')">▼ Show preview</button>
+        <button class="btn btn-primary" onclick="copySection('content-business-case')">📋 Copy</button>
+        <button class="btn" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- AUDIT_DATA_SCRIPT -->
+
+  <script>
+  const D = window.AUDIT_DATA || {};
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function togglePreview(id) {
+    const el = document.getElementById('preview-' + id);
+    const btn = el.previousElementSibling.previousElementSibling.querySelector('.btn');
+    el.classList.toggle('open');
+    btn.textContent = el.classList.contains('open') ? '▲ Hide preview' : '▼ Show preview';
+  }
+
+  function copySection(id) {
+    const el = document.getElementById(id);
+    const text = el ? el.innerText : '';
+    navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard.'));
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── AE CALL BRIEF ────────────────────────────────────────────────────────────
+  function buildAEBrief() {
+    const findings = (D.findings || []).filter(f => f.severity === 'critical');
+    const company = (D.meta || {}).company || 'the prospect';
+    let html = `<h3 style="font-size:15px;margin:0 0 12px;">Top ${Math.min(3, findings.length)} Commercial Hooks</h3>`;
+
+    findings.slice(0, 3).forEach((f, i) => {
+      html += `<div style="margin-bottom:16px;padding:12px;background:var(--red-tint);border-radius:var(--radius);border:1px solid var(--red-border);">
+        <strong>${i+1}. ${esc(f.title)}</strong><br>
+        <span style="font-size:13px;color:var(--mid);">Tested: "${esc(f.tested_query)}" → ${esc(f.actual_behavior)}</span>
+        ${f.pain_frame ? `<p style="margin:8px 0 0;font-size:14px;">${esc(f.pain_frame)}</p>` : ''}
+      </div>`;
+    });
+
+    // Discovery questions from top finding
+    const topF = findings[0];
+    if (topF && topF.discovery_questions) {
+      const dq = topF.discovery_questions;
+      html += `<h3 style="font-size:15px;margin:16px 0 8px;">Discovery Questions (from Finding ${esc(topF.id)})</h3>`;
+      [['S','situation'],['P','problem'],['I','implication'],['N','need_payoff']].forEach(([label, key]) => {
+        if (dq[key]) html += `<div class="spin-q"><span class="spin-label">${label}</span><br>${esc(dq[key])}</div>`;
+      });
+    }
+
+    // Source refs
+    const ids = findings.slice(0,3).map(f => f.id).join(', ');
+    document.getElementById('ae-sources').textContent = `Sources: Findings ${ids} · Investor Intel · Competitor Data`;
+
+    document.getElementById('content-ae-brief').innerHTML = html;
+  }
+
+  // ── BDR OUTREACH PACK ────────────────────────────────────────────────────────
+  function buildBDRPack() {
+    const signals = (D.intelligence_signals || []).slice(0, 3);
+    const committee = ((D.hiring || {}).buying_committee || []);
+    let html = '<h3 style="font-size:15px;margin:0 0 12px;">Outreach Angles</h3>';
+
+    signals.forEach((s, i) => {
+      html += `<div style="margin-bottom:12px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);">
+        <span style="font-size:11px;font-weight:600;color:var(--blue);text-transform:uppercase;">${esc(s.badge_label || s.type)}</span>
+        <p style="margin:6px 0 0;font-size:14px;">${esc(s.text)}</p>
+      </div>`;
+    });
+
+    if (committee.length) {
+      html += '<h3 style="font-size:15px;margin:16px 0 8px;">Who To Reach</h3>';
+      committee.forEach(c => {
+        html += `<div style="display:flex;gap:12px;margin-bottom:8px;padding:8px 12px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);">
+          <strong style="min-width:90px;font-size:13px;">${esc(c.role || 'Contact')}</strong>
+          <span style="font-size:13px;">${esc(c.name)} · ${esc(c.title)}</span>
+        </div>`;
+      });
+    }
+
+    document.getElementById('content-bdr-outreach').innerHTML = html;
+  }
+
+  // ── BATTLE CARD ──────────────────────────────────────────────────────────────
+  function buildBattleCard() {
+    const findings = D.findings || [];
+    let html = '<h3 style="font-size:15px;margin:0 0 12px;">Objection Handling by Finding</h3>';
+
+    findings.forEach(f => {
+      const objections = f.objection_handling || [];
+      if (!objections.length) return;
+      html += `<div style="margin-bottom:16px;"><strong style="font-size:13px;">${esc(f.id)}: ${esc(f.title)}</strong>`;
+      objections.forEach(o => {
+        html += `<div class="objection"><strong>❝</strong> ${esc(o.objection)}</div>
+                 <div class="counter">↳ ${esc(o.counter)}${o.evidence_ref ? ` <span style="color:var(--mid);font-size:12px;">[${esc(o.evidence_ref)}]</span>` : ''}</div>`;
+      });
+      html += '</div>';
+    });
+
+    document.getElementById('content-battle-card').innerHTML = html;
+  }
+
+  // ── LEAVE-BEHIND ─────────────────────────────────────────────────────────────
+  function buildLeaveBehind() {
+    const findings = (D.findings || []).filter(f => f.severity === 'critical' && f.pain_frame);
+    const company = (D.meta || {}).company || 'Your site';
+    let html = `<p style="font-size:14px;color:var(--mid);margin:0 0 16px;">
+      Search audit findings for ${esc(company)} — prepared by Algolia
+    </p>`;
+
+    findings.slice(0, 5).forEach(f => {
+      if (!f.value_map) return;
+      const vm = f.value_map;
+      html += `<div style="margin-bottom:16px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);">
+        <strong style="font-size:14px;">${esc(f.title)}</strong>
+        <p style="font-size:13px;color:var(--mid);margin:6px 0;">${esc(f.pain_frame)}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:10px;font-size:12px;">
+          <div><span style="color:var(--mid);display:block;">Gap</span>${esc(vm.gap)}</div>
+          <div><span style="color:var(--mid);display:block;">Capability</span>${esc(vm.capability)}</div>
+          <div><span style="color:var(--mid);display:block;">Outcome</span>${esc(vm.outcome)}</div>
+          <div><span style="color:var(--mid);display:block;">Metric</span><strong style="color:var(--blue);">${esc(vm.metric)}</strong></div>
+        </div>
+      </div>`;
+    });
+
+    document.getElementById('content-leave-behind').innerHTML = html;
+  }
+
+  // ── BUSINESS CASE ────────────────────────────────────────────────────────────
+  function buildBusinessCase() {
+    const fin = D.financials || {};
+    const findings = D.findings || [];
+    const company = (D.meta || {}).company || 'the prospect';
+    let html = `<h3 style="font-size:15px;margin:0 0 12px;">Search Revenue Opportunity — ${esc(company)}</h3>`;
+
+    if (fin.total_digital_revenue || fin.ecommerce_revenue_est) {
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+        ${fin.total_digital_revenue ? `<div style="text-align:center;padding:14px;background:var(--blue-tint);border-radius:var(--radius);"><span style="font-size:20px;font-weight:700;color:var(--blue);">${esc(fin.total_digital_revenue)}</span><br><span style="font-size:12px;color:var(--mid);">Digital Revenue</span></div>` : ''}
+        ${fin.search_addressable ? `<div style="text-align:center;padding:14px;background:var(--amber-tint);border-radius:var(--radius);"><span style="font-size:20px;font-weight:700;color:var(--amber);">${esc(fin.search_addressable)}</span><br><span style="font-size:12px;color:var(--mid);">Search Addressable</span></div>` : ''}
+        ${fin.search_roi_est ? `<div style="text-align:center;padding:14px;background:var(--green-tint);border-radius:var(--radius);"><span style="font-size:20px;font-weight:700;color:var(--green);">${esc(fin.search_roi_est)}</span><br><span style="font-size:12px;color:var(--mid);">Estimated ROI/yr</span></div>` : ''}
+      </div>`;
+    }
+
+    // Value maps table
+    const withMaps = findings.filter(f => f.value_map);
+    if (withMaps.length) {
+      html += `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:var(--gray);color:var(--white);">
+          <th style="padding:8px 10px;text-align:left;">Gap</th>
+          <th style="padding:8px 10px;text-align:left;">Algolia Capability</th>
+          <th style="padding:8px 10px;text-align:left;">Outcome</th>
+          <th style="padding:8px 10px;text-align:left;">Metric</th>
+        </tr></thead><tbody>`;
+      withMaps.forEach((f, i) => {
+        const vm = f.value_map;
+        html += `<tr style="background:${i%2===0?'var(--white)':'var(--near-white)'}">
+          <td style="padding:8px 10px;border-bottom:1px solid var(--border);">${esc(vm.gap)}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid var(--border);">${esc(vm.capability)}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid var(--border);">${esc(vm.outcome)}</td>
+          <td style="padding:8px 10px;border-bottom:1px solid var(--border);color:var(--blue);font-weight:600;">${esc(vm.metric)}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+    }
+
+    document.getElementById('content-business-case').innerHTML = html;
+  }
+
+  // ── INIT ─────────────────────────────────────────────────────────────────────
+  buildAEBrief();
+  buildBDRPack();
+  buildBattleCard();
+  buildLeaveBehind();
+  buildBusinessCase();
+  </script>
+</body>
+</html>

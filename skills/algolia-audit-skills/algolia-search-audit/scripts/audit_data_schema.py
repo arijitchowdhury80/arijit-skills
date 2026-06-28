@@ -255,6 +255,57 @@ class IntelligenceSignal(BaseModel):
         return self
 
 
+# ── Finding Card Enrichment Models ────────────────────────────────────────────
+
+class AnxietyDriver(BaseModel):
+    calculation: str
+    competitor_comparison: str
+    quantified_impact: str
+
+    @field_validator('quantified_impact')
+    @classmethod
+    def impact_not_empty(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("quantified_impact cannot be empty")
+        return v
+
+class IndustryBenchmark(BaseModel):
+    metric_name: str
+    best_in_class: str
+    current_score: str
+    gap: str
+    source: str
+
+    @field_validator('source')
+    @classmethod
+    def source_not_empty(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("source is required for IndustryBenchmark")
+        return v
+
+class DiscoveryQuestions(BaseModel):
+    situation: str
+    problem: str
+    implication: str
+    need_payoff: str
+
+class AlgoliaAngle(BaseModel):
+    capability: str
+    specifics: str
+    time_to_value: Optional[str] = None
+
+class ValueMap(BaseModel):
+    gap: str
+    capability: str
+    outcome: str
+    metric: str
+
+class ObjectionHandler(BaseModel):
+    objection: str
+    counter: str
+    evidence_ref: Optional[str] = None
+
+
 # ── Findings (Browser Audit) ──────────────────────────────────────────────────
 
 class Finding(BaseModel):
@@ -272,6 +323,16 @@ class Finding(BaseModel):
     expected_behavior: Optional[str] = None
     impact_stat: Optional[str] = None
     impact_stat_source: Optional[str] = None
+
+    # Enrichment fields (optional — existing findings without them still valid)
+    pain_frame: Optional[str] = None
+    anxiety_driver: Optional[AnxietyDriver] = None
+    industry_benchmark: Optional[IndustryBenchmark] = None
+    discovery_questions: Optional[DiscoveryQuestions] = None
+    algolia_angle: Optional[AlgoliaAngle] = None
+    value_map: Optional[ValueMap] = None
+    objection_handling: list[ObjectionHandler] = Field(default_factory=list)
+    model_config = {"extra": "allow"}
 
     @model_validator(mode='after')
     def validate_finding(self) -> Finding:
@@ -382,6 +443,42 @@ class Meta(BaseModel):
     patch_date: Optional[str] = None
 
 
+class SearchAnalyticsMetric(BaseModel):
+    key: Optional[str] = None
+    label: Optional[str] = None
+    value: Optional[str] = None
+    detail: Optional[str] = None
+    read: Optional[str] = None
+    severity: Optional[str] = None  # high | medium | low — drives the metric-tile color
+    model_config = {"extra": "allow"}
+
+
+class SearchAnalyticsQuery(BaseModel):
+    query: Optional[str] = None
+    volume_30d: Optional[int] = None
+    results: Optional[int] = None
+    clicks: Optional[int] = None
+    type: Optional[str] = None
+    note: Optional[str] = None
+    model_config = {"extra": "allow"}
+
+
+class SearchAnalytics(BaseModel):
+    """
+    First-party Algolia telemetry for EXISTING-customer (expansion) audits.
+    Powers the "Your Search, By the Numbers" SPA section. Optional — absent on
+    displacement/greenfield audits, where the SPA section stays hidden.
+    """
+    window: Optional[str] = None
+    source_label: Optional[str] = None
+    index: Optional[str] = None
+    metrics: list[SearchAnalyticsMetric] = Field(default_factory=list)
+    volume: Optional[dict[str, Any]] = None
+    zero_result_queries: list[SearchAnalyticsQuery] = Field(default_factory=list)
+    no_click_queries: list[SearchAnalyticsQuery] = Field(default_factory=list)
+    model_config = {"extra": "allow"}
+
+
 class AuditData(BaseModel):
     """
     Full schema for {slug}-audit-data.json.
@@ -404,6 +501,7 @@ class AuditData(BaseModel):
     icp_mapping: Optional[ICPMapping] = None
     abx_sequence: Optional[ABXSequence] = None
     case_studies: list[CaseStudy] = Field(default_factory=list)
+    search_analytics: Optional[SearchAnalytics] = None  # expansion audits: first-party telemetry
 
     # Allow extra fields (the schema has many more fields not modeled here yet)
     model_config = {"extra": "allow"}

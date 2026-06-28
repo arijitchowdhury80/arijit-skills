@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Algolia Search Audit — Skill Suite Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #003DFF;
+  --dark: #21243D;
+  --purple: #5468FF;
+  --bg: #FAFAFA;
+  --sidebar-bg: #21243D;
+  --sidebar-text: #C8D0E0;
+  --sidebar-active: #003DFF;
+  --code-bg: #F4F6FA;
+  --border: #E8EAEF;
+  --text: #21243D;
+  --text-secondary: #5C6080;
+  --white: #FFFFFF;
+  --sidebar-width: 260px;
+  --green: #00875A;
+  --orange: #FF6900;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+.sidebar-logo {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.sidebar-logo-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--white);
+  line-height: 1.3;
+}
+.sidebar-logo-sub {
+  font-size: 11px;
+  color: rgba(200,208,224,0.6);
+  margin-top: 3px;
+}
+.sidebar-badge {
+  display: inline-block;
+  background: var(--blue);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+}
+nav { flex: 1; padding: 12px 0; }
+.nav-group { margin-bottom: 4px; }
+.nav-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(200,208,224,0.45);
+  padding: 10px 20px 4px;
+  display: block;
+}
+.nav-link {
+  display: block;
+  padding: 6px 20px;
+  font-size: 13px;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-link:hover { color: white; background: rgba(255,255,255,0.06); }
+.nav-link.active { color: white; border-left-color: var(--blue); background: rgba(0,61,255,0.12); font-weight: 500; }
+.nav-link.sub {
+  padding-left: 32px;
+  font-size: 12.5px;
+  color: rgba(200,208,224,0.75);
+}
+.nav-link.sub:hover { color: white; }
+.nav-link.sub.active { color: white; border-left-color: var(--purple); background: rgba(84,104,255,0.1); }
+
+/* ── HAMBURGER ── */
+#menu-toggle {
+  display: none;
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 200;
+  background: var(--dark);
+  border: none;
+  border-radius: 6px;
+  width: 40px; height: 40px;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px;
+}
+#menu-toggle span {
+  display: block;
+  width: 20px; height: 2px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+/* ── MAIN ── */
+#main {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  min-width: 0;
+}
+.content {
+  max-width: 820px;
+  padding: 48px 56px 80px;
+}
+
+/* ── TYPOGRAPHY ── */
+h1 { font-size: 32px; font-weight: 700; color: var(--dark); line-height: 1.2; margin-bottom: 16px; }
+h2 { font-size: 24px; font-weight: 700; color: var(--dark); line-height: 1.3; margin: 48px 0 16px; padding-top: 48px; border-top: 1px solid var(--border); }
+h2:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+h3 { font-size: 17px; font-weight: 600; color: var(--dark); margin: 28px 0 10px; }
+h4 { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin: 24px 0 8px; }
+p { margin-bottom: 14px; color: var(--text); font-size: 15px; line-height: 1.7; }
+ul, ol { padding-left: 20px; margin-bottom: 14px; }
+li { font-size: 15px; line-height: 1.7; margin-bottom: 4px; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { font-weight: 600; }
+
+/* ── SKILL TAG ── */
+.skill-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  background: rgba(0,61,255,0.08);
+  color: var(--blue);
+  border: 1px solid rgba(0,61,255,0.15);
+}
+.skill-tag.phase1 { background: rgba(0,135,90,0.08); color: var(--green); border-color: rgba(0,135,90,0.2); }
+.skill-tag.phase2 { background: rgba(255,105,0,0.08); color: var(--orange); border-color: rgba(255,105,0,0.2); }
+.skill-tag.phase35 { background: rgba(84,104,255,0.1); color: var(--purple); border-color: rgba(84,104,255,0.2); }
+.skill-tag.quality { background: rgba(33,36,61,0.08); color: var(--dark); border-color: rgba(33,36,61,0.15); }
+
+/* ── CODE ── */
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 16px 0;
+  position: relative;
+}
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+pre code { background: none; border: none; padding: 0; font-size: inherit; }
+.copy-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: var(--dark);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+pre:hover .copy-btn { opacity: 1; }
+.copy-btn:active { background: var(--blue); }
+
+/* ── TABLE ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 16px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+th {
+  background: var(--dark);
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 14px;
+  text-align: left;
+}
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: rgba(0,0,0,0.015); }
+
+/* ── INVOKE EXAMPLES ── */
+.invoke-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 20px;
+}
+.invoke-example {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-style: italic;
+  max-width: 100%;
+  word-break: break-word;
+}
+.invoke-example:hover { border-color: var(--blue); background: rgba(0,61,255,0.04); color: var(--blue); }
+
+/* ── CALLOUT ── */
+.callout {
+  border-left: 3px solid var(--blue);
+  background: rgba(0,61,255,0.04);
+  padding: 14px 18px;
+  border-radius: 0 6px 6px 0;
+  margin: 16px 0;
+  font-size: 14px;
+}
+.callout.warn { border-left-color: var(--orange); background: rgba(255,105,0,0.04); }
+.callout.success { border-left-color: var(--green); background: rgba(0,135,90,0.04); }
+
+/* ── PIPELINE DIAGRAM ── */
+.pipeline-container { overflow-x: auto; padding: 8px 0 16px; }
+.pipeline-outer {
+  min-width: 780px;
+  padding: 24px;
+  background: var(--dark);
+  border-radius: 12px;
+  color: white;
+}
+.pipeline-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 16px;
+}
+.pipeline-orch {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+}
+.pipeline-arrow-down {
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 20px;
+  line-height: 1;
+  padding: 6px 0;
+  margin-bottom: 4px;
+}
+.pipeline-phases {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+.pipeline-phase {
+  flex: 1;
+  min-width: 0;
+}
+.pipeline-phase-arrow {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 28px;
+  color: rgba(255,255,255,0.35);
+  font-size: 18px;
+  flex-shrink: 0;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.pipeline-box {
+  display: block;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 12px 14px;
+  text-decoration: none;
+  transition: all 0.15s;
+  cursor: pointer;
+  text-align: center;
+}
+.pipeline-box:hover { background: rgba(0,61,255,0.25); border-color: var(--blue); }
+.pipeline-box.orch { background: rgba(0,61,255,0.2); border-color: var(--blue); min-width: 220px; }
+.pipeline-box-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 6px;
+}
+.pipeline-box-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+.pipeline-sub-skills {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pipeline-sub {
+  display: block;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: rgba(200,208,224,0.85);
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.15s;
+}
+.pipeline-sub:hover { background: rgba(84,104,255,0.25); border-color: var(--purple); color: white; }
+
+/* ── SEARCH / FILTER ── */
+.search-bar-wrap { margin-bottom: 20px; }
+#examples-search {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  background: white;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+#examples-search:focus { border-color: var(--blue); }
+#examples-search::placeholder { color: #aaa; }
+#search-count { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+
+/* ── EXAMPLES GALLERY ── */
+.examples-group { margin-bottom: 24px; }
+.examples-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 10px 14px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  user-select: none;
+  margin-bottom: 4px;
+}
+.examples-group-header:hover { background: rgba(0,61,255,0.04); border-color: var(--blue); }
+.examples-group-title { font-size: 14px; font-weight: 600; flex: 1; }
+.examples-group-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2px 8px;
+}
+.examples-chevron { color: var(--text-secondary); font-size: 12px; transition: transform 0.2s; }
+.examples-group.open .examples-chevron { transform: rotate(90deg); }
+.examples-body { display: none; padding: 8px 0 4px; }
+.examples-group.open .examples-body { display: block; }
+.example-item {
+  padding: 8px 14px;
+  font-size: 13.5px;
+  color: var(--text);
+  font-style: italic;
+  border-left: 2px solid transparent;
+  margin-bottom: 2px;
+  transition: all 0.12s;
+  border-radius: 0 4px 4px 0;
+  cursor: default;
+}
+.example-item:hover { background: rgba(0,61,255,0.04); border-left-color: var(--blue); color: var(--blue); }
+.example-item.hidden { display: none; }
+.example-item::before { content: '"'; }
+.example-item::after { content: '"'; }
+
+/* ── HERO SECTION ── */
+.hero {
+  background: linear-gradient(135deg, var(--dark) 0%, #2d3166 100%);
+  color: white;
+  padding: 48px 56px 40px;
+  margin: 0;
+  border-bottom: 1px solid var(--border);
+}
+.hero h1 { color: white; margin-bottom: 12px; }
+.hero p { color: rgba(255,255,255,0.75); font-size: 16px; margin-bottom: 0; }
+.hero-stats {
+  display: flex;
+  gap: 32px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.hero-stat { }
+.hero-stat-num { font-size: 28px; font-weight: 700; color: white; line-height: 1; }
+.hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 4px; letter-spacing: 0.03em; }
+
+/* ── MCP BADGE ── */
+.mcp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(84,104,255,0.12);
+  border: 1px solid rgba(84,104,255,0.25);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--purple);
+  margin: 4px 4px 4px 0;
+}
+.mcp-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--purple);
+  flex-shrink: 0;
+}
+
+/* ── STEP ITEM ── */
+.step-item {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.step-content { flex: 1; min-width: 0; }
+.step-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.step-desc { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+
+/* ── OUTPUT FILES ── */
+.output-file {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.output-file:last-child { border-bottom: none; }
+.output-file-icon {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.output-file-name { font-size: 13px; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--dark); }
+.output-file-desc { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ── SECTION ANCHOR OFFSET ── */
+.section-anchor { padding-top: 80px; margin-top: -80px; display: block; }
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  #sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+  #sidebar.open { transform: translateX(0); }
+  #main { margin-left: 0; }
+  #menu-toggle { display: flex; }
+  .content { padding: 24px 20px 60px; }
+  .hero { padding: 56px 20px 32px; }
+  .hero-stats { gap: 20px; }
+  .pipeline-phases { flex-wrap: wrap; }
+  h1 { font-size: 26px; }
+  h2 { font-size: 20px; }
+}
+@media (max-width: 480px) {
+  .content { padding: 20px 16px 60px; }
+  .hero { padding: 52px 16px 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HAMBURGER -->
+<button id="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle navigation">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-title">Algolia Search Audit</div>
+    <div class="sidebar-logo-sub">Skill Suite Documentation</div>
+    <div><span class="sidebar-badge">13 Skills</span></div>
+  </div>
+  <nav>
+    <div class="nav-group">
+      <span class="nav-group-label">Getting Started</span>
+      <a class="nav-link" href="#what-is">What is the Search Audit?</a>
+      <a class="nav-link" href="#how-it-works">How it works</a>
+      <a class="nav-link" href="#installation">Installation &amp; Setup</a>
+      <a class="nav-link" href="#mcp-servers">Required MCP Servers</a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">The Pipeline</span>
+      <a class="nav-link" href="#pipeline-overview">Overview</a>
+      <a class="nav-link" href="#pipeline-diagram">Phase diagram</a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Skills Reference</span>
+      <a class="nav-link" href="#orchestrator-section">Orchestrator</a>
+      <a class="nav-link sub" href="#skill-algolia-search-audit">algolia-search-audit</a>
+      <a class="nav-link" href="#phase1-section">Phase 1 — Research</a>
+      <a class="nav-link sub" href="#skill-algolia-audit-research">algolia-audit-research</a>
+      <a class="nav-link sub" href="#skill-algolia-audit-financials">algolia-audit-financials</a>
+      <a class="nav-link sub" href="#skill-algolia-live-signals">algolia-live-signals</a>
+      <a class="nav-link sub" href="#skill-algolia-intel-industry">algolia-intel-industry</a>
+      <a class="nav-link sub" href="#skill-algolia-intel-partner">algolia-intel-partner</a>
+      <a class="nav-link sub" href="#skill-algolia-intel-queries">algolia-intel-queries</a>
+      <a class="nav-link" href="#phase2-section">Phase 2 — Browser Audit</a>
+      <a class="nav-link sub" href="#skill-algolia-audit-browser">algolia-audit-browser</a>
+      <a class="nav-link" href="#phase35-section">Phase 3-5 — Report &amp; Deliverables</a>
+      <a class="nav-link sub" href="#skill-algolia-audit-report">algolia-audit-report</a>
+      <a class="nav-link sub" href="#skill-algolia-synth-business-case">algolia-synth-business-case</a>
+      <a class="nav-link sub" href="#skill-algolia-synth-sales-plays">algolia-synth-sales-plays</a>
+      <a class="nav-link" href="#quality-section">Quality Gates</a>
+      <a class="nav-link sub" href="#skill-algolia-audit-factcheck">algolia-audit-factcheck</a>
+      <a class="nav-link sub" href="#skill-algolia-audit-eval">algolia-audit-eval</a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Examples</span>
+      <a class="nav-link" href="#invocation-examples">Invocation Examples</a>
+    </div>
+  </nav>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Algolia Search Audit</h1>
+  <p>A production-grade skill suite that automates comprehensive search audits on prospect websites — from live intelligence gathering to browser testing, ROI modeling, and publication-ready deliverables.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="hero-stat-num">13</div><div class="hero-stat-label">Skills</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">5</div><div class="hero-stat-label">Phases</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">8</div><div class="hero-stat-label">Deliverables</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">20</div><div class="hero-stat-label">Browser Tests</div></div>
+    <div class="hero-stat"><div class="hero-stat-num">20</div><div class="hero-stat-label">Factcheck Dims</div></div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- GETTING STARTED -->
+<span class="section-anchor" id="what-is"></span>
+<h2>What is the Search Audit?</h2>
+<p>The Algolia Search Audit is an end-to-end intelligence and testing system for Algolia sales teams. Given a prospect's website URL, it automatically researches the company, tests their search experience in a real browser, identifies gaps Algolia can solve, and produces a complete package of sales deliverables — all sourced, fact-checked, and publication-ready.</p>
+<p>It is designed to replace hours of manual research with a single command, while producing output that is more thorough, consistent, and credible than anything built by hand.</p>
+
+<div class="callout">
+<strong>Primary audience:</strong> Algolia Account Executives, Sales Engineers, and BDRs preparing for discovery calls with e-commerce and digital commerce prospects.
+</div>
+
+<h3>What it covers</h3>
+<ul>
+  <li><strong>Company intelligence</strong> — tech stack, traffic, financials, executive quotes from earnings calls, hiring signals, competitive landscape</li>
+  <li><strong>Browser-based search testing</strong> — 20 automated test behaviors including NLP/semantic search, typo tolerance, federated search, personalization, and merchandising</li>
+  <li><strong>Scoring</strong> — 10 search capability areas scored with evidence from browser findings</li>
+  <li><strong>ROI modeling</strong> — 6-component business case with formulas the AE can customize</li>
+  <li><strong>Sales deliverables</strong> — SPA report, AE report, battle card, leave-behind PDF, AE playbook, strategic signal brief</li>
+  <li><strong>Fact-checking</strong> — 20-dimension verification gate before any output is shared</li>
+</ul>
+
+<span class="section-anchor" id="how-it-works"></span>
+<h2>How it works</h2>
+<p>The orchestrator skill (<code>algolia-search-audit</code>) accepts a prospect URL and runs the full pipeline end-to-end. Each phase is a discrete sub-skill with its own verification gate — if a gate fails, the pipeline stops and shows a recovery command rather than silently continuing with bad data.</p>
+
+<div class="step-item">
+  <div class="step-num">1</div>
+  <div class="step-content">
+    <div class="step-title">Phase 1 — Pre-Audit Research</div>
+    <div class="step-desc">14 intelligence steps across 4 parallel waves. Produces 13 scratchpad files covering company context, tech stack (BuiltWith), traffic (SimilarWeb), competitors, financials (Yahoo Finance + SEC EDGAR), investor intelligence, hiring signals (Apify/LinkedIn), industry benchmarks, partner relationships, and test queries.</div>
+  </div>
+</div>
+<div class="step-item">
+  <div class="step-num">2</div>
+  <div class="step-content">
+    <div class="step-title">Phase 2 — Browser-Based Audit</div>
+    <div class="step-desc">20 automated search behavior tests using Playwright with stealth mode (WAF bypass). Tests include SAYT, typo tolerance, NLP/semantic search, federated search, dynamic facets, personalization, recommendations, merchandising rules, and analytics visibility. Produces 10+ screenshots as evidence.</div>
+  </div>
+</div>
+<div class="step-item">
+  <div class="step-num">3</div>
+  <div class="step-content">
+    <div class="step-title">Phase 3 — Scoring</div>
+    <div class="step-desc">Scores 10 search capability areas based on browser findings. Output: <code>10-scoring-matrix.md</code> and the structured <code>audit-data.json</code>.</div>
+  </div>
+</div>
+<div class="step-item">
+  <div class="step-num">4</div>
+  <div class="step-content">
+    <div class="step-title">Phase 4 — Report &amp; Deliverables</div>
+    <div class="step-desc">Renders the full SPA (Single Page Application) audit report, AE action card, battle card, and leave-behind from the JSON data. Generates PDF via headless Chrome. Writes AE playbook and strategic signal brief.</div>
+  </div>
+</div>
+<div class="step-item">
+  <div class="step-num">5</div>
+  <div class="step-content">
+    <div class="step-title">Phase 5 — Factcheck (Mandatory)</div>
+    <div class="step-desc">20-dimension verification gate. Re-calls all APIs, WebFetches source URLs, verifies investor quotes verbatim against transcripts. Produces PROCEED / WARN / BLOCKED verdict. No audit ships without passing this gate.</div>
+  </div>
+</div>
+
+<span class="section-anchor" id="installation"></span>
+<h2>Installation &amp; Setup</h2>
+
+<h3>1. Set the audit directory</h3>
+<p>All audit workspaces are written to a user-configured directory. Set this once and add it to your shell profile:</p>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>export ALGOLIA_AUDIT_DIR="$HOME/algolia-audits"
+# Add to ~/.zshrc or ~/.bashrc to persist across sessions</pre>
+
+<h3>2. Install skill dependencies</h3>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>cd ~/.claude/skills/algolia-search-audit
+npm install
+npx playwright install chromium</pre>
+
+<h3>3. Verify installation</h3>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button># Check Playwright is ready
+node -e "require('playwright-extra'); console.log('Playwright ready')"
+
+# Check Node version (must be ≥18)
+node --version</pre>
+
+<h3>4. Workspace structure</h3>
+<p>Every audit creates this folder structure under <code>$ALGOLIA_AUDIT_DIR</code>:</p>
+<pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>$ALGOLIA_AUDIT_DIR/{CompanyName}/
+├── research/          ← 13 scratchpad files + CHECKPOINT.md
+├── factcheck/         ← factcheck dimension files (never published)
+├── scripts/           ← company-specific scripts
+└── deliverables/
+    ├── {slug}/index.html     ← SPA audit report
+    ├── screenshots/          ← browser test screenshots (≥10 PNG)
+    ├── ae-report.html
+    ├── battle-card.html
+    └── leave-behind.html</pre>
+
+<span class="section-anchor" id="mcp-servers"></span>
+<h2>Required MCP Servers</h2>
+<p>Five MCP servers are required for full functionality. The skill is MCP-first — always prefers structured API data over web search.</p>
+
+<table>
+<thead><tr><th>MCP Server</th><th>Used for</th><th>Phases</th></tr></thead>
+<tbody>
+<tr><td><span class="mcp-badge"><span class="mcp-badge-dot"></span>Chrome / Playwright MCP</span></td><td>Browser automation, screenshots, WAF bypass via stealth mode</td><td>Phase 2</td></tr>
+<tr><td><span class="mcp-badge"><span class="mcp-badge-dot"></span>SimilarWeb MCP</span></td><td>14 endpoints: traffic, engagement, sources, geography, demographics, top keywords, competitors, referrals, popular pages</td><td>Phase 1</td></tr>
+<tr><td><span class="mcp-badge"><span class="mcp-badge-dot"></span>BuiltWith MCP</span></td><td>7 endpoints: domain-lookup, relationships, recommendations, financial, social, trust, keywords</td><td>Phase 1</td></tr>
+<tr><td><span class="mcp-badge"><span class="mcp-badge-dot"></span>Yahoo Finance MCP</span></td><td>Financial statements (3-year), stock info, analyst recommendations, news feed, quarterly data</td><td>Phase 1</td></tr>
+<tr><td><span class="mcp-badge"><span class="mcp-badge-dot"></span>Apify MCP</span></td><td>LinkedIn Jobs scraper, LinkedIn company posts, Twitter/X posts, Google News</td><td>Phase 1</td></tr>
+</tbody>
+</table>
+
+<div class="callout warn">
+If a required MCP server is unavailable, the skill notes the gap and continues with available data. Missing MCP data is labeled <code>[UNAVAILABLE]</code> rather than silently omitted.
+</div>
+
+<!-- THE PIPELINE -->
+<span class="section-anchor" id="pipeline-overview"></span>
+<h2>Pipeline Overview</h2>
+<p>The audit pipeline is modular. The orchestrator (<code>algolia-search-audit</code>) calls each sub-skill in sequence, verifying completion gates before advancing. Individual sub-skills can also be called independently — useful for refreshing a single phase or running only part of the research.</p>
+
+<h3>Phase dependencies</h3>
+<table>
+<thead><tr><th>Phase</th><th>Requires</th><th>Produces</th></tr></thead>
+<tbody>
+<tr><td>Phase 1 (Research)</td><td>Nothing — entry point</td><td>13 scratchpad files in <code>research/</code></td></tr>
+<tr><td>Phase 2 (Browser)</td><td><code>01-company-context.md</code>, <code>02-tech-stack.md</code>, <code>05-test-queries.md</code></td><td><code>09-browser-findings.md</code> + screenshots</td></tr>
+<tr><td>Phase 3-5 (Report)</td><td>All 12 scratchpad files + ≥10 screenshots</td><td>8 deliverable files + <code>audit-data.json</code></td></tr>
+<tr><td>Factcheck</td><td>Deliverables directory populated</td><td><code>FACTCHECK_GATE.md</code> + 3 output files</td></tr>
+</tbody>
+</table>
+
+<span class="section-anchor" id="pipeline-diagram"></span>
+<h2>Phase Diagram</h2>
+
+<div class="pipeline-container">
+<div class="pipeline-outer">
+  <div style="text-align:center;margin-bottom:16px;">
+    <a class="pipeline-box orch" href="#skill-algolia-search-audit" style="display:inline-block;min-width:240px;">
+      <div class="pipeline-box-title">Orchestrator</div>
+      <div class="pipeline-box-name">algolia-search-audit</div>
+    </a>
+  </div>
+  <div class="pipeline-arrow-down">↓</div>
+  <div class="pipeline-phases">
+    <div class="pipeline-phase">
+      <a class="pipeline-box" href="#phase1-section" style="display:block;">
+        <div class="pipeline-box-title">Phase 1</div>
+        <div class="pipeline-box-name">Research</div>
+      </a>
+      <div class="pipeline-sub-skills">
+        <a class="pipeline-sub" href="#skill-algolia-audit-research">algolia-audit-research</a>
+        <a class="pipeline-sub" href="#skill-algolia-audit-financials">↳ audit-financials</a>
+        <a class="pipeline-sub" href="#skill-algolia-live-signals">↳ live-signals</a>
+        <a class="pipeline-sub" href="#skill-algolia-intel-industry">↳ intel-industry</a>
+        <a class="pipeline-sub" href="#skill-algolia-intel-partner">↳ intel-partner</a>
+        <a class="pipeline-sub" href="#skill-algolia-intel-queries">↳ intel-queries</a>
+      </div>
+    </div>
+    <div class="pipeline-phase-arrow">→</div>
+    <div class="pipeline-phase">
+      <a class="pipeline-box" href="#phase2-section" style="display:block;">
+        <div class="pipeline-box-title">Phase 2</div>
+        <div class="pipeline-box-name">Browser Audit</div>
+      </a>
+      <div class="pipeline-sub-skills">
+        <a class="pipeline-sub" href="#skill-algolia-audit-browser">algolia-audit-browser</a>
+        <a class="pipeline-sub" href="#skill-algolia-audit-browser">↳ 20 test behaviors</a>
+        <a class="pipeline-sub" href="#skill-algolia-audit-browser">↳ Playwright stealth</a>
+      </div>
+    </div>
+    <div class="pipeline-phase-arrow">→</div>
+    <div class="pipeline-phase">
+      <a class="pipeline-box" href="#phase35-section" style="display:block;">
+        <div class="pipeline-box-title">Phase 3-5</div>
+        <div class="pipeline-box-name">Report &amp; Deliverables</div>
+      </a>
+      <div class="pipeline-sub-skills">
+        <a class="pipeline-sub" href="#skill-algolia-audit-report">algolia-audit-report</a>
+        <a class="pipeline-sub" href="#skill-algolia-synth-business-case">↳ synth-business-case</a>
+        <a class="pipeline-sub" href="#skill-algolia-synth-sales-plays">↳ synth-sales-plays</a>
+      </div>
+    </div>
+    <div class="pipeline-phase-arrow">→</div>
+    <div class="pipeline-phase">
+      <a class="pipeline-box" href="#quality-section" style="display:block;">
+        <div class="pipeline-box-title">Quality Gate</div>
+        <div class="pipeline-box-name">Fact-Check &amp; Eval</div>
+      </a>
+      <div class="pipeline-sub-skills">
+        <a class="pipeline-sub" href="#skill-algolia-audit-factcheck">algolia-audit-factcheck</a>
+        <a class="pipeline-sub" href="#skill-algolia-audit-eval">algolia-audit-eval</a>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+<!-- SKILLS REFERENCE -->
+<span class="section-anchor" id="orchestrator-section"></span>
+<h2>Orchestrator</h2>
+
+<span class="section-anchor" id="skill-algolia-search-audit"></span>
+<h2>algolia-search-audit</h2>
+<p class="skill-tag">Orchestrator — Full Pipeline</p>
+<p>The top-level orchestrator that runs the complete Algolia Search Audit end-to-end. Accepts a prospect URL, delegates to each sub-skill in sequence, enforces verification gates between phases, runs the mandatory factcheck, stages deliverables for local review, and publishes to GitHub/Vercel on explicit approval.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li><code>$ALGOLIA_AUDIT_DIR</code> environment variable set</li>
+  <li>All 5 MCP servers active (BuiltWith, SimilarWeb, Yahoo Finance, Apify, Playwright)</li>
+  <li>Node ≥18 + Playwright Chromium installed</li>
+  <li><code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code> for parallel wave execution (optional but recommended)</li>
+</ul>
+
+<h3>Phase flags</h3>
+<table>
+<thead><tr><th>Flag</th><th>What runs</th></tr></thead>
+<tbody>
+<tr><td><code>--phase research</code></td><td>Phase 1 only (all research sub-skills)</td></tr>
+<tr><td><code>--phase searchaudit</code></td><td>Phase 2 only (browser testing)</td></tr>
+<tr><td><code>--phase deliverables</code></td><td>Phase 3-5 only (scoring + report)</td></tr>
+<tr><td><code>--phase financials</code></td><td>Financial profile + investor intel only</td></tr>
+<tr><td><code>--phase hiring</code></td><td>Hiring signals only</td></tr>
+<tr><td><code>--no-browser</code></td><td>Skip Phase 2; research + report only</td></tr>
+<tr><td><em>(no flag)</em></td><td>Full end-to-end audit</td></tr>
+</tbody>
+</table>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">📊</div><div><div class="output-file-name">{slug}-audit-data.json</div><div class="output-file-desc">Source of truth JSON — all structured audit data. Powers all HTML renders.</div></div></div>
+<div class="output-file"><div class="output-file-icon">🌐</div><div><div class="output-file-name">{slug}/index.html</div><div class="output-file-desc">Full SPA audit report for AE, SE, BD teams. Primary internal deliverable.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📋</div><div><div class="output-file-name">ae-report.html</div><div class="output-file-desc">AE action card — condensed findings and next steps.</div></div></div>
+<div class="output-file"><div class="output-file-icon">⚔️</div><div><div class="output-file-name">battle-card.html</div><div class="output-file-desc">Competitive battle card for deal room use.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📄</div><div><div class="output-file-name">leave-behind.html + .pdf</div><div class="output-file-desc">Prospect-facing one-pager. PDF generated via headless Chrome.</div></div></div>
+<div class="output-file"><div class="output-file-icon">🎯</div><div><div class="output-file-name">{slug}-playbook.md</div><div class="output-file-desc">AE/BDR playbook with MEDDPICC, talking points, objection handling.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📡</div><div><div class="output-file-name">{slug}-strategic-signal-brief.md</div><div class="output-file-desc">Signal brief optimized for downstream LLM / CRM consumption.</div></div></div>
+
+<h3>How to invoke</h3>
+<p>You don't need to use the exact skill name. Say it naturally:</p>
+<div class="invoke-examples">
+  <div class="invoke-example">run a full algolia search audit on dsw.com — research, browser testing, scoring, report, all deliverables end to end</div>
+  <div class="invoke-example">i have an enterprise prospect at nordstrom.com — do a complete search audit and give me everything i need before the AE call</div>
+  <div class="invoke-example">audit best buy's search experience — i want the full audit: intel, browser tests, findings scored, deck, AE brief, landing page, the works</div>
+  <div class="invoke-example">my manager wants a search audit on target.com by friday — run the whole thing end to end</div>
+  <div class="invoke-example">kick off an algolia search audit on tapestry.com — coach, kate spade, stuart weitzman all on one platform</div>
+  <div class="invoke-example">do a comprehensive search audit on wayfair.com — all phases, all deliverables, ready for an enterprise pitch</div>
+  <div class="invoke-example">i need to audit the search experience on home depot before my discovery call — run the full audit pipeline</div>
+  <div class="invoke-example">start a search audit on chewy.com — we're pitching them next month and i need the complete intelligence package and audit report</div>
+</div>
+
+<!-- PHASE 1 -->
+<span class="section-anchor" id="phase1-section"></span>
+<h2>Phase 1 — Research</h2>
+<p>Phase 1 produces 13 intelligence scratchpad files in <code>$ALGOLIA_AUDIT_DIR/{CompanyName}/research/</code>. It runs in 4 parallel waves when Agent Teams mode is active, or sequentially in VS Code. The phase is complete when all 13 files exist and pass their byte-size gates.</p>
+
+<span class="section-anchor" id="skill-algolia-audit-research"></span>
+<h2>algolia-audit-research</h2>
+<p class="skill-tag phase1">Phase 1 — Research Orchestrator</p>
+<p>Runs all 14 Phase 1 research steps to build the full intelligence workspace. Calls Python data-collection scripts for deterministic MCP API coverage (SimilarWeb 11 endpoints, BuiltWith 7 endpoints, Yahoo Finance all statements), then calls sub-skills for specialized intelligence modules. Writes 13 scratchpad files plus CHECKPOINT.md and workspace manifest.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li>BuiltWith MCP, SimilarWeb MCP, Yahoo Finance MCP, Apify MCP, WebSearch</li>
+  <li><code>$ALGOLIA_AUDIT_DIR</code> set</li>
+  <li>Python 3 (for data-collection scripts)</li>
+</ul>
+
+<h3>What it produces</h3>
+<table>
+<thead><tr><th>File</th><th>Contents</th></tr></thead>
+<tbody>
+<tr><td><code>01-company-context.md</code></td><td>Company overview, executives, LinkedIn/Twitter handles, Algolia case study matches</td></tr>
+<tr><td><code>02-tech-stack.md</code></td><td>BuiltWith full stack analysis, search vendor detection (active vs. tag-only)</td></tr>
+<tr><td><code>03-traffic-data.md</code></td><td>SimilarWeb 11 endpoints: visits, engagement, channels, geo, demographics, keywords</td></tr>
+<tr><td><code>04-competitors.md</code></td><td>Competitor list + search provider per competitor (Golden Angle detection)</td></tr>
+<tr><td><code>05-test-queries.md</code></td><td>14-18 vertically-calibrated browser test queries</td></tr>
+<tr><td><code>06-strategic-context.md</code></td><td>Strategic angles, trigger events, vertical ICP match</td></tr>
+<tr><td><code>07-hiring-signals.md</code></td><td>LinkedIn job postings scored by ICP tier + buying committee assessment</td></tr>
+<tr><td><code>08-financial-profile.md</code></td><td>3-year financials, ROI estimate, margin zone, analyst consensus</td></tr>
+<tr><td><code>09b-social-signals.md</code></td><td>LinkedIn + Twitter executive posts scored by Algolia relevance</td></tr>
+<tr><td><code>09c-news-signals.md</code></td><td>Google News articles categorized by signal type (leadership change, tech investment, etc.)</td></tr>
+<tr><td><code>10-scoring-matrix.md</code></td><td>Placeholder for Phase 3 scoring</td></tr>
+<tr><td><code>11-investor-intelligence.md</code></td><td>SEC 10-K highlights, verbatim exec quotes from earnings calls</td></tr>
+<tr><td><code>12-icp-priority-mapping.md</code></td><td>ICP tier, pain priority map, recommended ABX contacts</td></tr>
+</tbody>
+</table>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">i need to kick off the pre-audit research for DSW Shoes before we can run any browser tests — their main URL is dsw.com</div>
+  <div class="invoke-example">starting the algolia search audit on nordstrom.com — run phase 1 research and get all the intel files set up in the workspace</div>
+  <div class="invoke-example">the prospect is Chewy.com — pull together the full background intelligence package. traffic, hiring signals, financials, investor intel, the works</div>
+  <div class="invoke-example">kick off algolia audit research on wayfair.com — this is a big enterprise deal, so be thorough with investor intelligence and exec quotes from earnings calls</div>
+  <div class="invoke-example">getting ready to do a search audit for home depot. start with the research phase — i want all 13 intel files before we do any browser testing</div>
+  <div class="invoke-example">prep a full pre-audit research dossier on ulta beauty. need competitive intel, tech stack, exec bios, and traffic data before my AE discovery call on friday</div>
+  <div class="invoke-example">run phase 1 on macys.com — i specifically need the financial profile and investor intelligence since they're publicly traded NYSE: M</div>
+  <div class="invoke-example">research phase for target.com audit. build the workspace, pull traffic from similarweb, get the builtwith tech data, linkedin hiring signals, vertical industry benchmarks</div>
+</div>
+
+<span class="section-anchor" id="skill-algolia-audit-financials"></span>
+<h2>algolia-audit-financials</h2>
+<p class="skill-tag phase1">Phase 1 — Financial Intelligence</p>
+<p>Dedicated financial and investor intelligence module extracted from the research pipeline. Handles public companies via Yahoo Finance MCP (all financial statements) + SEC EDGAR WebFetch (10-K MD&A, risk factors) + earnings call transcript WebFetch. Handles private companies via a 6-source waterfall: ecdb/PitchBook, LinkedIn headcount, CEO interviews, trade press, Inc 5000, and job posting volume as investment proxy.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li>Yahoo Finance MCP (public companies)</li>
+  <li>WebFetch + WebSearch for SEC EDGAR + earnings transcripts</li>
+  <li><code>01-company-context.md</code> must exist in workspace</li>
+</ul>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">💰</div><div><div class="output-file-name">08-financial-profile.md</div><div class="output-file-desc">3-year revenue trend, EBITDA margin zone (red/yellow/green), ROI estimate with formula, analyst consensus. All figures labeled [FACT] or [ESTIMATE] with source.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📣</div><div><div class="output-file-name">11-investor-intelligence.md</div><div class="output-file-desc">Verbatim executive quotes from earnings calls (any named speaker), SEC 10-K strategic priorities and risk factors, analyst consensus, forward guidance signals.</div></div></div>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">run the financial intel module for the DSW audit — they're public so pull yahoo finance, SEC 10-K, and earnings call transcripts</div>
+  <div class="invoke-example">costco is NYSE: COST — pull their last 3 years of revenue, gross margin, ecommerce growth, and any CFO quotes about digital investment</div>
+  <div class="invoke-example">tapestry (TPR) is public — run the financial analysis including SEC EDGAR 10-K risk factors and any recent earnings call mentions of search or digital</div>
+  <div class="invoke-example">chewy is private — use the 6-source waterfall to estimate their revenue, funding history, and any investor signals for the audit research</div>
+  <div class="invoke-example">generate 08-financial-profile.md and 11-investor-intelligence.md for the best buy audit workspace</div>
+  <div class="invoke-example">pull the investor intelligence for ulta beauty — i need CFO and CEO quotes about digital priorities from the last 4 earnings calls</div>
+  <div class="invoke-example">wayfair is public W on NYSE — run the financial intelligence extraction for their audit, including recent analyst downgrades and profitability concerns</div>
+  <div class="invoke-example">build an ROI model for the DSW audit — break down conversion lift, AOV increase, and bounce reduction into dollar figures</div>
+</div>
+
+<span class="section-anchor" id="skill-algolia-live-signals"></span>
+<h2>algolia-live-signals</h2>
+<p class="skill-tag phase1">Phase 1 — Live Intelligence (Apify)</p>
+<p>Apify-powered live data collection layer. Runs three parallel scraping phases: hiring intelligence from LinkedIn Jobs (50 jobs, scored by ICP tier taxonomy), social signals from LinkedIn company posts + Twitter/X (filtered by relevance score ≥6 and minimum engagement), and news signals from Google News (3 query variants, 60-day lookback, categorized by signal type). Total cost: ~$0.14/audit.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li>Apify MCP with actors: <code>curious_coder/linkedin-jobs-scraper</code>, <code>harvestapi/linkedin-company-posts</code>, <code>apidojo/tweet-scraper</code>, <code>data_xplorer/google-news-scraper-fast</code></li>
+  <li><code>01-company-context.md</code> must exist (provides LinkedIn URL, Twitter handle)</li>
+</ul>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">👥</div><div><div class="output-file-name">07-hiring-signals.md</div><div class="output-file-desc">LinkedIn job postings scored by ICP tier (Economic Buyer / Technical Buyer / Champion / Context). Vacancy signals flagged. Buying committee assessment. All job URLs included.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📱</div><div><div class="output-file-name">09b-social-signals.md</div><div class="output-file-desc">LinkedIn + Twitter posts scored by Algolia relevance. Categories: SEARCH_PAIN, TECH_INVESTMENT, INTERNATIONAL_EXPANSION, CONVERSION_FOCUS, EXEC_PRIORITY, etc.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📰</div><div><div class="output-file-name">09c-news-signals.md</div><div class="output-file-desc">Google News articles categorized as LEADERSHIP_CHANGE, FUNDING_EVENT, TECH_INVESTMENT, PRODUCT_LAUNCH, INTERNATIONAL, DIGITAL_INITIATIVE, COMPETITIVE_PRESSURE.</div></div></div>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">scrape the live hiring signals for DSW shoes — check linkedin jobs and get current open roles in search, engineering, and ecommerce</div>
+  <div class="invoke-example">pull live social signals for nordstrom — what has their leadership been posting on linkedin and twitter about digital transformation?</div>
+  <div class="invoke-example">run the apify signals collection for the best buy audit — hiring signals from linkedin, social posts from executives, and google news mentions</div>
+  <div class="invoke-example">collect live signals for target.com audit — what are they hiring for right now? any leadership posts about search or personalization?</div>
+  <div class="invoke-example">algolia-live-signals for wayfair — they're heavy tech hires lately, i want to see what specific roles and any exec posts about site search</div>
+  <div class="invoke-example">the 09b-hiring-signals.md file is missing from the DSW workspace — run the live signals module now to generate it</div>
+  <div class="invoke-example">run the apify scrapers to collect live intel for chewy — news signals from google news, hiring from linkedin, social from twitter</div>
+  <div class="invoke-example">get me the linkedin job listings and twitter activity for lululemon's leadership team for the audit research file</div>
+</div>
+
+<span class="section-anchor" id="skill-algolia-intel-industry"></span>
+<h2>algolia-intel-industry</h2>
+<p class="skill-tag phase1">Phase 1 — Industry Intelligence</p>
+<p>Collects vertical benchmarks, analyst insights, expert quotes, and competitive signals from the prospect's industry. Provides the "bigger picture" context that makes sales narratives credible. Critically: every article's publication date is verified and articles older than 18 months are classified as "Historical Context" rather than current trends.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li><code>01-company-context.md</code> (for vertical classification)</li>
+  <li><code>04-competitors.md</code> (for competitive landscape context)</li>
+  <li>WebSearch + WebFetch</li>
+</ul>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">🏭</div><div><div class="output-file-name">industry-intel.md</div><div class="output-file-desc">Vertical benchmarks table (site search usage, conversion uplift), 2025-2026 trends with source verification labels (WEBFETCH vs WEBSEARCH), expert quotes, competitive landscape in vertical, Algolia vertical positioning.</div></div></div>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">pull the industry intelligence for the DSW audit — shoe retail vertical, baymard benchmarks, forrester search stats, and competitor signals</div>
+  <div class="invoke-example">nordstrom is in luxury department store vertical — collect industry-intel.md with analyst benchmarks, vertical trends, and competitive search landscape</div>
+  <div class="invoke-example">run the vertical intelligence module for best buy — consumer electronics vertical, what are the industry conversion benchmarks and NLP search adoption rates?</div>
+  <div class="invoke-example">collect the bigger-picture industry context for the home depot audit — home improvement retail vertical, search engagement benchmarks, expert analyst quotes</div>
+  <div class="invoke-example">run algolia-intel-industry for the wayfair audit — home furnishings vertical, competitive signals, and vertical search trends i can use in the sales narrative</div>
+  <div class="invoke-example">the 06-industry-intel.md is missing from the target workspace — run the industry intelligence collection now</div>
+  <div class="invoke-example">what are the industry benchmarks for ecommerce search in the apparel vertical? collecting this for the lululemon audit intelligence file</div>
+  <div class="invoke-example">collect analyst benchmarks and expert quotes for the grocery ecommerce vertical for a prospect audit — costco is in warehouse club retail</div>
+</div>
+
+<span class="section-anchor" id="skill-algolia-intel-partner"></span>
+<h2>algolia-intel-partner</h2>
+<p class="skill-tag phase1">Phase 1 — Partner Intelligence</p>
+<p>Identifies two types of partners relevant to the deal: tech partners (platforms in Algolia's co-sell ecosystem that the prospect already uses) and SI/implementation partners (consulting firms with existing C-suite relationships at the prospect). SI partner discovery is dynamic via Crossbeam MCP — never from a hardcoded list. Produces specific sales action recommendations with named contacts and activation routes.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li><code>02-tech-stack.md</code> (for tech partner detection)</li>
+  <li>Crossbeam MCP (primary source for partner overlap — gracefully degrades if unavailable)</li>
+  <li>WebSearch for SI relationship confirmation</li>
+</ul>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">🤝</div><div><div class="output-file-name">partner-intel.md</div><div class="output-file-desc">Section A: Tech partners confirmed in stack + Crossbeam overlap. Section B: SI/agency partners with evidence and C-suite access level. Section C: Specific sales action plan (immediate + secondary). All data labeled with evidence tier.</div></div></div>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">find algolia co-sell partners for DSW shoes — which SI firms or tech partners have existing relationships there that we can leverage?</div>
+  <div class="invoke-example">run the partner intelligence module for nordstrom audit — identify both tech ecosystem partners and SI/agency partners with C-suite access</div>
+  <div class="invoke-example">generate partner-intel.md for the tapestry audit — check crossbeam for tech partner overlaps and identify any SI partners who've worked with coach or kate spade</div>
+  <div class="invoke-example">identify SI partners for the wayfair algolia pitch — they're a salesforce commerce cloud shop, which implementation partners have C-suite access there?</div>
+  <div class="invoke-example">the 07-partner-intel.md file is missing from the DSW workspace — run partner intelligence now and check crossbeam for overlaps</div>
+  <div class="invoke-example">lululemon partner intel — which SIs or tech partners in algolia's ecosystem have existing relationships at lululemon that could help open the door?</div>
+  <div class="invoke-example">who are the algolia ecosystem partners relevant to a target.com pitch? look for both platform tech partners and consulting SIs</div>
+  <div class="invoke-example">run partner discovery for the home depot audit — identify replatforming SIs, adobe commerce partners, and any agency with home improvement retail experience</div>
+</div>
+
+<span class="section-anchor" id="skill-algolia-intel-queries"></span>
+<h2>algolia-intel-queries</h2>
+<p class="skill-tag phase1">Phase 1 — Test Query Generation</p>
+<p>Generates 14-18 vertically-calibrated test queries for Phase 2 browser testing. Reads the company's actual product categories, house brands, and top organic keywords (from <code>03-traffic-data.md</code>) to create queries that reflect real shopping intent — not generic placeholders. Produces a browser audit mapping table that links each query to the specific Phase 2 test step that uses it.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li><code>01-company-context.md</code> (required — company vertical + product categories)</li>
+  <li><code>03-traffic-data.md</code> (optional — enables keyword-derived typo variants)</li>
+</ul>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">🔍</div><div><div class="output-file-name">05-test-queries.md</div><div class="output-file-desc">14-18 queries across 8 types: broad category, specific product, NLP/conversational, typo variants, synonym/colloquial, non-product content, brand queries, no-results recovery. Includes browser audit mapping table.</div></div></div>
+
+<h3>Query types</h3>
+<table>
+<thead><tr><th>Type</th><th>Count</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>Broad category</td><td>2</td><td>SAYT + results quality</td></tr>
+<tr><td>Specific product</td><td>2</td><td>Precision + relevance</td></tr>
+<tr><td>NLP / Conversational</td><td>2-3</td><td>Semantic search test</td></tr>
+<tr><td>Typo variants</td><td>2</td><td>Typo tolerance</td></tr>
+<tr><td>Synonym / colloquial</td><td>2</td><td>Synonym handling</td></tr>
+<tr><td>Non-product content</td><td>2</td><td>Federated search</td></tr>
+<tr><td>Brand / sub-brand</td><td>2</td><td>Brand intent detection</td></tr>
+<tr><td>Gibberish / no-results</td><td>1</td><td>Zero-results handling</td></tr>
+</tbody>
+</table>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">generate the test queries for the DSW browser audit — i need 14-18 vertically-calibrated queries covering NLP, typo, synonyms, and zero-results scenarios</div>
+  <div class="invoke-example">before i run the playwright browser tests on nordstrom.com, generate the test-queries.md file with the right query mix for luxury department store</div>
+  <div class="invoke-example">create the query set for the best buy browser audit — consumer electronics vertical, make sure to include NLP queries like 'best 4k tv for gaming under 1000'</div>
+  <div class="invoke-example">the 10-test-queries.md file is missing from the home depot workspace — generate the test queries now before we start phase 2</div>
+  <div class="invoke-example">i need the query library for lululemon browser testing — activewear vertical, include conversational queries like 'something to wear to hot yoga that won't show sweat'</div>
+  <div class="invoke-example">create test-queries.md for the wayfair audit — home furnishings vertical, 14-18 queries for the 20-step browser test protocol</div>
+  <div class="invoke-example">what queries should we run on costco.com for the browser phase — warehouse club retail, include membership-specific and bulk-buying intent queries</div>
+  <div class="invoke-example">generate vertically-calibrated test queries for target.com browser audit — mass merchant vertical, mix of NLP, category, brand, typo, and synonym tests</div>
+</div>
+
+
+<!-- PHASE 2 -->
+<span class="section-anchor" id="phase2-section"></span>
+<h2>Phase 2 — Browser Audit</h2>
+
+<span class="section-anchor" id="skill-algolia-audit-browser"></span>
+<h2>algolia-audit-browser</h2>
+<p class="skill-tag phase2">Phase 2 — Browser Testing</p>
+<p>Runs 20 automated search behavior tests on the prospect's website using Playwright with <code>puppeteer-extra-plugin-stealth</code>. The stealth plugin patches ~12 fingerprinting vectors (including <code>navigator.webdriver</code>) making the browser indistinguishable from a real user — confirmed to bypass Akamai, Cloudflare, and Imperva WAF. Chrome MCP remains available as a supplementary tool for network request inspection.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li>Phase 1 workspace complete: <code>01-company-context.md</code>, <code>02-tech-stack.md</code>, <code>05-test-queries.md</code></li>
+  <li>Node ≥18 + <code>playwright-extra</code> + Chromium installed</li>
+  <li>Screenshots directory created: <code>$ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/screenshots/</code></li>
+</ul>
+
+<h3>The 20 test steps</h3>
+<table>
+<thead><tr><th>Step</th><th>Test</th><th>Screenshot</th><th>Algolia Product</th></tr></thead>
+<tbody>
+<tr><td>2a</td><td>Homepage initial observations</td><td><code>01-homepage.png</code></td><td>—</td></tr>
+<tr><td>2a½</td><td>Search vendor network verification</td><td>—</td><td>Competitive intelligence</td></tr>
+<tr><td>2b</td><td>Empty state (click without typing)</td><td><code>02-empty-state.png</code></td><td>Query Suggestions</td></tr>
+<tr><td>2c</td><td>Search-As-You-Type (SAYT)</td><td><code>03-sayt-{query}.png</code></td><td>Autocomplete</td></tr>
+<tr><td>2d</td><td>Full search results quality</td><td><code>04-results-{query}.png</code></td><td>Search</td></tr>
+<tr><td>2e</td><td>Typo tolerance</td><td><code>05-typo-{query}.png</code></td><td>Typo Tolerance</td></tr>
+<tr><td>2f</td><td>Synonym / colloquial terms</td><td><code>06-synonym-{query}.png</code></td><td>Synonyms</td></tr>
+<tr><td>2g</td><td>No-results handling</td><td><code>07-no-results.png</code></td><td>No-Results Rules</td></tr>
+<tr><td>2h</td><td>Non-product content search</td><td><code>08-non-product-{query}.png</code></td><td>Federated Search</td></tr>
+<tr><td>2i</td><td>Intent detection (brand, category, attribute)</td><td><code>09-intent-{query}.png</code></td><td>Rules Engine</td></tr>
+<tr><td>2j</td><td>Merchandising consistency</td><td><code>10-merchandising.png</code></td><td>Merchandising</td></tr>
+<tr><td>2k</td><td>Federated search check</td><td><code>11-federated.png</code></td><td>Federated Search</td></tr>
+<tr><td>2l</td><td>Mobile experience</td><td><code>12-mobile-{query}.png</code></td><td>Mobile Search</td></tr>
+<tr><td>2m</td><td>Semantic / NLP search</td><td><code>13-nlp-{query}.png</code></td><td>NeuralSearch</td></tr>
+<tr><td>2n</td><td>Dynamic facets &amp; filtering</td><td><code>14-dynamic-facets.png</code></td><td>Dynamic Faceting</td></tr>
+<tr><td>2o</td><td>Popular &amp; recent searches</td><td><code>15-popular-searches.png</code></td><td>Query Suggestions</td></tr>
+<tr><td>2p</td><td>Dynamic search categories</td><td><code>16-dynamic-categories.png</code></td><td>Federated + Rules</td></tr>
+<tr><td>2q</td><td>Personalization signals</td><td><code>17-personalization.png</code></td><td>Personalization</td></tr>
+<tr><td>2r</td><td>Recommendations / FBT on PDPs</td><td><code>18-recommendations.png</code></td><td>Recommend</td></tr>
+<tr><td>2s</td><td>Banners &amp; merchandising rules</td><td><code>19-banners.png</code></td><td>Rules Engine</td></tr>
+<tr><td>2t</td><td>Analytics visibility signals</td><td><code>20-analytics.png</code></td><td>Analytics</td></tr>
+</tbody>
+</table>
+
+<h3>Gate 2 (blocking)</h3>
+<p>Before Phase 3 starts: ≥10 screenshots on disk, all ≥50KB (screenshots &lt;50KB indicate WAF error pages), zero empty files, all steps referenced in <code>09-browser-findings.md</code> with disk paths confirmed.</p>
+
+<h3>WAF recovery escalation</h3>
+<ol>
+  <li>Playwright headless + stealth (default)</li>
+  <li>Playwright headed (<code>--headed</code> flag) — visible browser</li>
+  <li>User manually solves CAPTCHA, automation continues</li>
+  <li>Document "WAF blocked automated testing" and proceed with available data</li>
+</ol>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">📸</div><div><div class="output-file-name">screenshots/ (≥10 PNG files)</div><div class="output-file-desc">Evidence screenshots for every test step. Must be &gt;100KB (real content). Saved to <code>$ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/screenshots/</code>.</div></div></div>
+<div class="output-file"><div class="output-file-icon">🔬</div><div><div class="output-file-name">09-browser-findings.md</div><div class="output-file-desc">Structured observations for all 20 steps. Each entry includes: query tested, screenshot path (verified on disk), result count, observation, and gap identified.</div></div></div>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">phase 1 research is done for DSW — now run the browser audit on dsw.com and take screenshots of autocomplete, search results, and zero-results states</div>
+  <div class="invoke-example">run phase 2 on best buy — test NLP semantic queries, typo tolerance, and how their facets behave. phase 1 workspace already exists</div>
+  <div class="invoke-example">the research files are ready for tapestry. now run the 20 browser test behaviors and capture every screenshot to the deliverables folder</div>
+  <div class="invoke-example">do the browser testing for the home depot audit — use playwright stealth to bypass WAF and test all the autocomplete and NLP scenarios</div>
+  <div class="invoke-example">lululemon.com browser audit — test 'black yoga pants under 100 dollars' as an NLP query, check zero-results handling, and screenshot the SAYT dropdown</div>
+  <div class="invoke-example">start the WAF bypass browser testing on wayfair.com — they use akamai so we need playwright stealth mode for this one</div>
+  <div class="invoke-example">i need the browser findings file for costco before i can generate the report — run phase 2 now and get me 09-browser-findings.md</div>
+  <div class="invoke-example">run the 20-step search behavior tests on macy's — the workspace at $ALGOLIA_AUDIT_DIR/Macys has all the research done</div>
+</div>
+
+<!-- PHASE 3-5 -->
+<span class="section-anchor" id="phase35-section"></span>
+<h2>Phase 3-5 — Report &amp; Deliverables</h2>
+
+<span class="section-anchor" id="skill-algolia-audit-report"></span>
+<h2>algolia-audit-report</h2>
+<p class="skill-tag phase35">Phase 3-5 — Scoring + Report</p>
+<p>Scores 10 search capability areas from browser findings, synthesizes all research into <code>audit-data.json</code>, and renders the full set of HTML + PDF deliverables via the <code>render-audit.ts</code> renderer. Enforces a mandatory data refresh before writing (re-reads all scratchpad files) and runs a 4-step validation chain before any render: JSON schema validation, style token check, renderer internal gates, and SPA runtime test.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+  <li>All 12 scratchpad files (01-12) in <code>research/</code></li>
+  <li>≥10 screenshots in <code>deliverables/screenshots/</code></li>
+  <li>Deno (for renderer)</li>
+  <li>Preflight script passes: <code>bash scripts/preflight.sh</code></li>
+</ul>
+
+<h3>The 10 scored areas</h3>
+<table>
+<thead><tr><th>#</th><th>Area</th><th>Maps to Algolia product</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Typo tolerance</td><td>Search core</td></tr>
+<tr><td>2</td><td>Synonym handling</td><td>Synonyms</td></tr>
+<tr><td>3</td><td>SAYT / Autocomplete</td><td>Autocomplete + Query Suggestions</td></tr>
+<tr><td>4</td><td>Intent detection</td><td>Rules Engine</td></tr>
+<tr><td>5</td><td>No-results handling</td><td>Rules + NeuralSearch</td></tr>
+<tr><td>6</td><td>Federated search</td><td>Federated Search</td></tr>
+<tr><td>7</td><td>Semantic / NLP search</td><td>NeuralSearch</td></tr>
+<tr><td>8</td><td>Dynamic facets + personalization</td><td>Dynamic Faceting + Personalization</td></tr>
+<tr><td>9</td><td>Recommendations + merchandising</td><td>Recommend + Merchandising</td></tr>
+<tr><td>10</td><td>Merchandising consistency</td><td>Merchandising + Analytics</td></tr>
+</tbody>
+</table>
+
+<h3>Validation chain (mandatory)</h3>
+<ol>
+  <li><code>validate-json-schema.py</code> — blocks on wrong field names or score math errors</li>
+  <li><code>check-style-tokens.py</code> — blocks on raw inline styles (T.* token violations)</li>
+  <li><code>render-audit.ts</code> — re-runs both gates internally, then renders</li>
+  <li><code>test-spa-runtime.js</code> — verifies SPA renders without blank sections</li>
+</ol>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">📊</div><div><div class="output-file-name">{slug}-audit-data.json</div><div class="output-file-desc">Source of truth. Powers all HTML renders. Contains all structured fields: findings, scoring, financials, competitive synthesis, ABX contacts, gap_pairs.</div></div></div>
+<div class="output-file"><div class="output-file-icon">🌐</div><div><div class="output-file-name">{slug}/index.html</div><div class="output-file-desc">Full SPA audit report. Primary deliverable for AE, SE, and BD teams.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📋</div><div><div class="output-file-name">ae-report.html</div><div class="output-file-desc">AE action card — condensed view of findings and recommended next steps.</div></div></div>
+<div class="output-file"><div class="output-file-icon">⚔️</div><div><div class="output-file-name">battle-card.html</div><div class="output-file-desc">Competitive battle card for deal room preparation.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📄</div><div><div class="output-file-name">leave-behind.html + .pdf</div><div class="output-file-desc">Prospect-facing leave-behind. PDF via headless Chrome print-to-PDF.</div></div></div>
+<div class="output-file"><div class="output-file-icon">🎯</div><div><div class="output-file-name">{slug}-playbook.md</div><div class="output-file-desc">Merged AE brief + sales plays.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📡</div><div><div class="output-file-name">{slug}-strategic-signal-brief.md</div><div class="output-file-desc">Signal-dense brief for CRM / downstream LLM consumption.</div></div></div>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">phase 1 and phase 2 are done for the DSW audit — ready to score the 10 search areas and generate the full report with all deliverables</div>
+  <div class="invoke-example">generate the full set of audit deliverables for nordstrom — the deck, landing page, AE pre-call brief, strategic signal brief, the whole package</div>
+  <div class="invoke-example">run phases 3 through 5 on the costco workspace — we have all 12 scratchpad files and at least 15 screenshots done</div>
+  <div class="invoke-example">research is done and browser testing is done for target.com — now i need the scoring, AE playbook, and strategic signal brief generated</div>
+  <div class="invoke-example">we finished the browser audit for lululemon. generate the html deliverables, the pdf book, and the ae playbook from the existing workspace</div>
+  <div class="invoke-example">score the 10 search areas for the macy's audit — i have all the research files and browser findings ready. output the audit-data.json and render the index.html</div>
+  <div class="invoke-example">i've got all 12 scratchpad files for home depot and 18 screenshots. run the report generation phase and create all 6 output files</div>
+  <div class="invoke-example">build the audit-data.json and render the SPA report for the tapestry audit workspace that's already at $ALGOLIA_AUDIT_DIR/Tapestry/</div>
+</div>
+
+<span class="section-anchor" id="skill-algolia-synth-business-case"></span>
+<h2>algolia-synth-business-case</h2>
+<p class="skill-tag phase35">Phase 3-5 — ROI Modeling</p>
+<p>Builds a component-level ROI model from audit data. Reads financial profile, scoring matrix, and traffic data to produce 6 quantified revenue impact components. Every dollar figure shows the full formula. Every estimate is labeled <code>[ESTIMATE]</code>. Produces a fill-in-the-blank structure the AE can customize with actual prospect numbers during discovery.</p>
+
+<div class="callout">
+<strong>Core rule:</strong> Every number must show its formula. A number without a formula is a violation. If any input is not verifiable, it is labeled <code>[ESTIMATE]</code> with an AE fill-in prompt.
+</div>
+
+<h3>The 6 ROI components</h3>
+<table>
+<thead><tr><th>#</th><th>Component</th><th>Formula inputs</th><th>Active when</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Search Conversion Lift</td><td>monthly visits × search usage rate × conversion delta × AOV × 12</td><td>intent_detection gap</td></tr>
+<tr><td>2</td><td>AOV Increase</td><td>search sessions × conversion × AOV delta × 12</td><td>merchandising / personalization gap</td></tr>
+<tr><td>3</td><td>Bounce Rate Reduction</td><td>visits × search rate × bounce delta × recovery conversion × AOV × 12</td><td>empty state / SAYT gap</td></tr>
+<tr><td>4</td><td>No-Results Recovery</td><td>searches × no_results_rate × AOV × recovery_rate × 12</td><td>typo / NLP gap</td></tr>
+<tr><td>5</td><td>Speed / Latency Gain</td><td>visits × search rate × delay buckets × 1% per 100ms × AOV × 12</td><td>latency gap</td></tr>
+<tr><td>6</td><td>Long-Tail Discovery</td><td>searches × NLP fail rate × AOV × recovery_rate × 12</td><td>semantic/NLP gap</td></tr>
+</tbody>
+</table>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">build the ROI model for DSW shoes — break down conversion lift, AOV increase, and bounce reduction into dollar figures the AE can customize</div>
+  <div class="invoke-example">run the business case module for nordstrom — i need the 6-component ROI breakdown with placeholders for the AE to fill in actual numbers</div>
+  <div class="invoke-example">build the financial justification model for the tapestry pitch — show conversion lift, AOV, no-results recovery, and long-tail discovery components</div>
+  <div class="invoke-example">generate the ROI business case for the home depot algolia opportunity — 6 components, fill-in-the-blank structure for the AE presentation</div>
+  <div class="invoke-example">run synth-business-case for target.com — $20B ecommerce, model the search ROI across all 6 measurable components</div>
+  <div class="invoke-example">create the financial justification doc for wayfair — they have a high bounce rate, focus the model on bounce reduction and no-results recovery components</div>
+  <div class="invoke-example">build the ROI model for the chewy algolia pitch — private company ~$3B revenue, estimate all 6 components based on industry benchmarks</div>
+  <div class="invoke-example">i need the business case output file for lululemon before the AE call — give me the component-level ROI breakdown with their estimated revenue numbers</div>
+</div>
+
+<span class="section-anchor" id="skill-algolia-synth-sales-plays"></span>
+<h2>algolia-synth-sales-plays</h2>
+<p class="skill-tag phase35">Phase 3-5 — Sales Playbook</p>
+<p>Generates an executable AE/BDR playbook using the prospect's own language from earnings calls. Every talking point cites a verbatim executive quote. Discovery questions use terminology from transcripts and job postings — not generic "search" language. The MEDDPICC map is populated from actual research files, not generic placeholders. A playbook without exec quotes is a template — this skill ships a playbook.</p>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">🎯</div><div><div class="output-file-name">{slug}-playbook.md</div><div class="output-file-desc">6 sections: BLUF header (30-second pre-call), Top 5 talking points (each grounded in exec quote), Discovery questions (SPIN-structured), MEDDPICC gap map, Objection handling (4+ objections), Power map.</div></div></div>
+
+<h3>The 6 playbook sections</h3>
+<table>
+<thead><tr><th>Section</th><th>Contents</th></tr></thead>
+<tbody>
+<tr><td>BLUF Header</td><td>Signal tier (HOT/WARM/COLD), top angle, key exec contact, most urgent trigger signal</td></tr>
+<tr><td>Talking Points (5)</td><td>Each: hook using exec language, browser finding evidence, verbatim exec quote + source, competitor proof, exact opening line for AE</td></tr>
+<tr><td>Discovery Questions</td><td>SPIN-structured: 3 Implication + 2 Need-Payoff + 1 Problem confirmation. Each with branching IF/THEN responses.</td></tr>
+<tr><td>MEDDPICC Gap Map</td><td>All 8 components populated from research: Metrics, Economic Buyer, Decision Criteria, Decision Process, Paper Process, Implication, Champion, Competition</td></tr>
+<tr><td>Objection Handling</td><td>Minimum 4: "built in-house", "too expensive", "locked in with vendor", "not a priority". Each with Response + Pivot + Fallback.</td></tr>
+<tr><td>Power Map</td><td>Tier 1 Champion / Technical Buyer / Coach / Blocker — with approach route per contact</td></tr>
+</tbody>
+</table>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">build the AE playbook for DSW shoes — personalized talking points, discovery questions, objection handling, and MEDDPICC gap map using their earnings call language</div>
+  <div class="invoke-example">run the sales plays generator for nordstrom — i need discovery Q&A trees and objection handling written in their own words from the last 3 earnings calls</div>
+  <div class="invoke-example">generate the tapestry sales playbook — executive-level talking points from coach and kate spade leadership quotes, objection responses, and co-sell motion with SI partners</div>
+  <div class="invoke-example">run synth-sales-plays for the home depot audit — i need the discovery questions and competitive displacement talking points before the AE call on friday</div>
+  <div class="invoke-example">create the algolia sales playbook for lululemon — map their MEDDPICC gaps, build personalized openers from CEO quotes, and write objection responses for 'we already have search'</div>
+  <div class="invoke-example">generate the AE playbook for wayfair — they've had profitability pressure, frame the playbook around cost reduction and conversion efficiency</div>
+  <div class="invoke-example">the {company}-playbook.md is missing from the costco workspace — generate it now with MEDDPICC, talking points, and objection handling</div>
+  <div class="invoke-example">build the BDR playbook for target.com — cold outreach angles, linkedin message templates, and the first call talk track all grounded in their exec posts</div>
+</div>
+
+<!-- QUALITY GATES -->
+<span class="section-anchor" id="quality-section"></span>
+<h2>Quality Gates</h2>
+
+<span class="section-anchor" id="skill-algolia-audit-factcheck"></span>
+<h2>algolia-audit-factcheck</h2>
+<p class="skill-tag quality">Quality Gate — Mandatory Factcheck</p>
+<p>20-dimension verification system that is mandatory before any audit output is shared. The Full tier (~30-40 min) re-calls all MCP APIs, WebFetches every source URL, and verifies investor quotes verbatim against actual transcripts. External verification is 90% of the job — cross-file consistency is 10%. Produces a machine-readable FACTCHECK_GATE.md that the orchestrator reads to determine PROCEED / WARN / BLOCKED.</p>
+
+<div class="callout">
+<strong>Non-negotiable rule:</strong> Every audit must end with <code>/algolia-audit-factcheck</code> at Full tier before any output is shown to the user or published. This was established as a hard requirement after multiple audits were delivered with unverified data.
+</div>
+
+<h3>Evidence tier system</h3>
+<table>
+<thead><tr><th>Tier</th><th>Definition</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td><strong>AUTHENTIC</strong></td><td>MCP API, SEC EDGAR, official IR, official press release</td><td>Keep — cite normally</td></tr>
+<tr><td><strong>WEBFETCH</strong></td><td>Third-party article WebFetched — claim appears on page</td><td>Keep — label with source URL</td></tr>
+<tr><td><strong>WEBSEARCH</strong></td><td>Found via search — URL not WebFetch verified</td><td>Keep — amber warning label</td></tr>
+<tr><td><strong>NO_SOURCE</strong></td><td>No verifiable source exists</td><td>Drop entirely. No hedging.</td></tr>
+</tbody>
+</table>
+
+<h3>Execution tiers</h3>
+<table>
+<thead><tr><th>Tier</th><th>Time</th><th>External calls</th><th>What runs</th></tr></thead>
+<tbody>
+<tr><td><strong>Full</strong> (default)</td><td>~30-40 min</td><td>~30-40</td><td>All 20 dimensions + source URLs + competitor APIs + browser re-tests</td></tr>
+<tr><td><strong>Standard</strong></td><td>~15 min</td><td>~15-20</td><td>+ SimilarWeb/BuiltWith re-calls + WebFetch sample URLs</td></tr>
+<tr><td><strong>Quick</strong></td><td>~3-5 min</td><td>0</td><td>Dims 1-3 only: consistency + math + reference data. NOT a real factcheck.</td></tr>
+</tbody>
+</table>
+
+<h3>The 20 verification dimensions</h3>
+<p><strong>Group A (Intelligence, Dims 1-11):</strong> Company context, tech stack, traffic parameters, competitor claims, financial integrity, investor quote verification, hiring URL validity, social currency, news freshness, industry benchmarks, partner data.</p>
+<p><strong>Group B (Browser, Dim 12):</strong> Screenshots on disk, file sizes &gt;50KB, queries match claims.</p>
+<p><strong>Group C (Synthesis, Dims 13-17):</strong> Scoring justification, competitive claims, ROI math, sales play specificity, case study vertical relevance.</p>
+<p><strong>Group D (Deliverables, Dims 18-20):</strong> Source coverage, cross-deliverable consistency, arithmetic.</p>
+
+<h3>FACTCHECK_GATE.md verdict</h3>
+<table>
+<thead><tr><th>Verdict</th><th>Score</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td><strong>PROCEED</strong></td><td>≥9.0 / HIGH CONFIDENCE</td><td>Orchestrator auto-advances to staging</td></tr>
+<tr><td><strong>WARN</strong></td><td>6.0-8.9 / MODERATE</td><td>Stage for review, require explicit "publish" before pushing</td></tr>
+<tr><td><strong>BLOCKED</strong></td><td>Any INCORRECT/DISCREPANT items</td><td>Do NOT stage. Show blocking issues. Wait for user direction.</td></tr>
+</tbody>
+</table>
+
+<h3>What it produces</h3>
+<div class="output-file"><div class="output-file-icon">✅</div><div><div class="output-file-name">research/FACTCHECK_GATE.md</div><div class="output-file-desc">Machine-readable gate file. Fields: SCORE, CONFIDENCE, ACTION, BLOCKING_COUNT, WARNING_COUNT. Read by orchestrator.</div></div></div>
+<div class="output-file"><div class="output-file-icon">📋</div><div><div class="output-file-name">deliverables/{slug}-factcheck-report.md</div><div class="output-file-desc">Human-readable 20-dimension scored report with verdict, critical issues, and warnings.</div></div></div>
+<div class="output-file"><div class="output-file-icon">🔧</div><div><div class="output-file-name">deliverables/{slug}-correction-manifest.md</div><div class="output-file-desc">Machine-readable fix list: atomic corrections with file + field references.</div></div></div>
+<div class="output-file"><div class="output-file-icon">💡</div><div><div class="output-file-name">deliverables/{slug}-skill-feedback.md</div><div class="output-file-desc">Methodology improvement patterns for SKILL.md — root cause analysis + specific fix recommendations.</div></div></div>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">run the factcheck on the costco audit before i hand it off to the AE — need to know if it's safe to share with the prospect</div>
+  <div class="invoke-example">the nordstrom audit is ready but i want a confidence gate before we send anything — run the full fact-check and tell me if it's PROCEED, WARN, or BLOCKED</div>
+  <div class="invoke-example">fact-check the DSW search audit deliverables — i'm especially concerned about the similarweb traffic numbers and the linkedin hiring role counts</div>
+  <div class="invoke-example">i need a PROCEED/WARN/BLOCKED verdict on the best buy audit before the enterprise pitch presentation on monday morning</div>
+  <div class="invoke-example">validate all 6 deliverable files for the tapestry audit — cross-check the stats, verify source citations are live links, confirm investor quotes against transcripts</div>
+  <div class="invoke-example">run the full 20-dimension factcheck on the home depot workspace at $ALGOLIA_AUDIT_DIR/HomeDepot/ — the AE presentation is today</div>
+  <div class="invoke-example">the investor quotes in the lululemon deck — can you verify them against the actual Q3 earnings call transcripts before i use them in the presentation?</div>
+  <div class="invoke-example">run factcheck on macy's audit — specifically check for cross-file consistency between the deck slide statistics and the numbers in the main report</div>
+</div>
+
+<span class="section-anchor" id="skill-algolia-audit-eval"></span>
+<h2>algolia-audit-eval</h2>
+<p class="skill-tag quality">Quality Gate — Module Evaluator</p>
+<p>Quality evaluator for individual sub-skills. Scores module output across 5 dimensions with explicit pass/fail criteria. Used after Phase C/E fixes to confirm improvements work, after building new modules, before declaring any skill "production-ready". Pass threshold is avg ≥7.0 across all 5 dimensions.</p>
+
+<h3>The 5 evaluation dimensions</h3>
+<table>
+<thead><tr><th>#</th><th>Dimension</th><th>Weight</th><th>Pass condition</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Completeness</td><td>2/10</td><td>All expected files exist and above byte thresholds</td></tr>
+<tr><td>2</td><td>Source Density</td><td>2/10</td><td>≥15 source URLs across output files; data points labeled [FACT]/[ESTIMATE]/[OBSERVED]</td></tr>
+<tr><td>3</td><td>Instruction Adherence</td><td>2/10</td><td>Skill-specific checklist: CHECKPOINT.md updated, MCP-first pattern followed, wave architecture used</td></tr>
+<tr><td>4</td><td>Data Accuracy</td><td>2/10</td><td>3 spot-checks: revenue figure, traffic stat, exec quote — all match source scratchpad files exactly</td></tr>
+<tr><td>5</td><td>No Fabrication</td><td>2/10</td><td>Zero impact_stat fields without source URL, no bare numbers without labels</td></tr>
+</tbody>
+</table>
+
+<div class="callout success">
+<strong>Scoring rule:</strong> <code>SCORE = (passing_checks / total_checks_run) × 10</code>. Never estimate or guess. Show: N passing / M total = score. CONFIDENCE reflects coverage, not the score.
+</div>
+
+<h3>How to invoke</h3>
+<div class="invoke-examples">
+  <div class="invoke-example">the algolia-audit-research output for DSW looks incomplete — can you score it across the 5 quality dimensions and tell me if it passes the 7.0 threshold?</div>
+  <div class="invoke-example">run the eval on the algolia-live-signals module — i just pushed a bug fix and need to confirm it still meets quality standards before merging</div>
+  <div class="invoke-example">after the phase C fix, run the standard quality eval on algolia-audit-browser and give me scores across completeness, source density, instruction adherence, accuracy, and no-fabrication</div>
+  <div class="invoke-example">eval the algolia-audit-financials module — i'm especially worried about data accuracy and whether it's fabricating any stats when the yahoo finance data is thin</div>
+  <div class="invoke-example">we just shipped the investor intelligence sub-skill — run the quality eval to check if it meets the pass threshold</div>
+  <div class="invoke-example">i want a module quality score on algolia-audit-report — specifically is it following instruction adherence and hitting source density requirements?</div>
+  <div class="invoke-example">the algolia-intel-queries output feels thin and the test queries seem too generic — formally evaluate it and tell me which dimensions are dragging the score below 7</div>
+  <div class="invoke-example">need a quality gate verdict on this phase E fix for algolia-audit-research before i commit it — pass or fail?</div>
+</div>
+
+
+<!-- INVOCATION EXAMPLES -->
+<span class="section-anchor" id="invocation-examples"></span>
+<h2>Invocation Examples</h2>
+<p>All 100+ natural language phrases that trigger skills in this suite. Use the search box to filter, or browse by skill. Click any phrase to copy it.</p>
+
+<div class="search-bar-wrap">
+  <input type="text" id="examples-search" placeholder="Search examples... (e.g. 'factcheck', 'browser', 'nordstrom')" oninput="filterExamples(this.value)">
+  <div id="search-count"></div>
+</div>
+
+<div id="examples-container">
+
+<div class="examples-group open" data-skill="algolia-search-audit">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-search-audit — Orchestrator</span>
+    <span class="examples-group-count">10 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">run a full algolia search audit on dsw.com — research, browser testing, scoring, report, all deliverables end to end</div>
+    <div class="example-item">i have an enterprise prospect at nordstrom.com — do a complete search audit and give me everything i need before the AE call</div>
+    <div class="example-item">audit best buy's search experience — i want the full audit: intel, browser tests, findings scored, deck, AE brief, landing page, the works</div>
+    <div class="example-item">my manager wants a search audit on target.com by friday — run the whole thing end to end</div>
+    <div class="example-item">kick off an algolia search audit on tapestry.com — coach, kate spade, stuart weitzman all on one platform</div>
+    <div class="example-item">do a comprehensive search audit on wayfair.com — all phases, all deliverables, ready for an enterprise pitch</div>
+    <div class="example-item">run /algolia-search-audit on lululemon.com — full pipeline from research through PDF deliverable</div>
+    <div class="example-item">i need to audit the search experience on home depot before my discovery call — run the full audit pipeline</div>
+    <div class="example-item">start a search audit on chewy.com — we're pitching them next month and i need the complete intelligence package and audit report</div>
+    <div class="example-item">run an audit on ulta beauty's search — full end-to-end, all 5 phases, all 6 deliverable files</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-audit-research">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-audit-research — Phase 1 Research</span>
+    <span class="examples-group-count">10 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">i need to kick off the pre-audit research for DSW Shoes before we can run any browser tests — their main URL is dsw.com</div>
+    <div class="example-item">starting the algolia search audit on nordstrom.com — run phase 1 research and get all the intel files set up in the workspace</div>
+    <div class="example-item">run the research phase for best buy — we need company context, tech stack from builtwith, traffic from similarweb, competitors, all of it before i can present to the AE</div>
+    <div class="example-item">the prospect is Chewy.com — pull together the full background intelligence package. traffic, hiring signals, financials, investor intel, the works</div>
+    <div class="example-item">kick off algolia audit research on wayfair.com — this is a big enterprise deal, so be thorough with investor intelligence and exec quotes from earnings calls</div>
+    <div class="example-item">getting ready to do a search audit for home depot. start with the research phase — i want all 13 intel files before we do any browser testing</div>
+    <div class="example-item">prep a full pre-audit research dossier on ulta beauty. need competitive intel, tech stack, exec bios, and traffic data before my AE discovery call on friday</div>
+    <div class="example-item">run phase 1 on macys.com — i specifically need the financial profile and investor intelligence since they're publicly traded NYSE: M</div>
+    <div class="example-item">research phase for target.com audit. build the workspace, pull traffic from similarweb, get the builtwith tech data, linkedin hiring signals, vertical industry benchmarks</div>
+    <div class="example-item">my manager wants me to do a search audit on lululemon.com — what do i run first to gather all the background context and build the research files?</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-audit-browser">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-audit-browser — Phase 2 Browser Testing</span>
+    <span class="examples-group-count">10 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">phase 1 research is done for DSW — now run the browser audit on dsw.com and take screenshots of autocomplete, search results, and zero-results states</div>
+    <div class="example-item">kick off the playwright browser tests on nordstrom.com — we need the 09-browser-findings.md and at least 15 screenshots before we can score</div>
+    <div class="example-item">run phase 2 on best buy — test NLP semantic queries, typo tolerance, and how their facets behave. phase 1 workspace already exists</div>
+    <div class="example-item">the research files are ready for tapestry. now run the 20 browser test behaviors and capture every screenshot to the deliverables folder</div>
+    <div class="example-item">run the search behavior audit on target.com — test the 20 behaviors including federated search, merchandising consistency, and intent detection</div>
+    <div class="example-item">do the browser testing for the home depot audit — use playwright stealth to bypass WAF and test all the autocomplete and NLP scenarios</div>
+    <div class="example-item">lululemon.com browser audit — test 'black yoga pants under 100 dollars' as an NLP query, check zero-results handling, and screenshot the SAYT dropdown</div>
+    <div class="example-item">run the 20-step search behavior tests on macy's — the workspace at $ALGOLIA_AUDIT_DIR/Macys has all the research done</div>
+    <div class="example-item">i need the browser findings file for costco before i can generate the report — run phase 2 now and get me 09-browser-findings.md</div>
+    <div class="example-item">start the WAF bypass browser testing on wayfair.com — they use akamai so we need playwright stealth mode for this one</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-audit-report">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-audit-report — Phase 3-5 Report</span>
+    <span class="examples-group-count">10 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">phase 1 and phase 2 are done for the DSW audit — ready to score the 10 search areas and generate the full report with all deliverables</div>
+    <div class="example-item">generate the full set of audit deliverables for nordstrom — the deck, landing page, AE pre-call brief, strategic signal brief, the whole package</div>
+    <div class="example-item">run phases 3 through 5 on the costco workspace — we have all 12 scratchpad files and at least 15 screenshots done</div>
+    <div class="example-item">build the audit-data.json and render the SPA report for the tapestry audit workspace that's already at $ALGOLIA_AUDIT_DIR/Tapestry/</div>
+    <div class="example-item">research is done and browser testing is done for target.com — now i need the scoring, AE playbook, and strategic signal brief generated</div>
+    <div class="example-item">create the mckinsey pyramid deck and the dual-view landing page for best buy — workspace is already populated with all the scratchpad files</div>
+    <div class="example-item">we finished the browser audit for lululemon. generate the html deliverables, the pdf book, and the ae playbook from the existing workspace</div>
+    <div class="example-item">score the 10 search areas for the macy's audit — i have all the research files and browser findings ready. output the audit-data.json and render the index.html</div>
+    <div class="example-item">i've got all 12 scratchpad files for home depot and 18 screenshots. run the report generation phase and create all 6 output files</div>
+    <div class="example-item">ulta beauty workspace is complete with research and browser data — render the audit SPA, generate the PDF, and write the strategic signal brief</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-audit-factcheck">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-audit-factcheck — Quality Gate</span>
+    <span class="examples-group-count">10 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">run the factcheck on the costco audit before i hand it off to the AE — need to know if it's safe to share with the prospect</div>
+    <div class="example-item">validate all 6 deliverable files for the tapestry audit — cross-check the stats, verify source citations are live links, confirm investor quotes against transcripts</div>
+    <div class="example-item">the nordstrom audit is ready but i want a confidence gate before we send anything — run the full fact-check and tell me if it's PROCEED, WARN, or BLOCKED</div>
+    <div class="example-item">fact-check the DSW search audit deliverables — i'm especially concerned about the similarweb traffic numbers and the linkedin hiring role counts</div>
+    <div class="example-item">i need a PROCEED/WARN/BLOCKED verdict on the best buy audit before the enterprise pitch presentation on monday morning</div>
+    <div class="example-item">check the target audit deliverables for inconsistencies — do the stats in the deck match the main report? are the source citations correct?</div>
+    <div class="example-item">run the full 20-dimension factcheck on the home depot workspace at $ALGOLIA_AUDIT_DIR/HomeDepot/ — the AE presentation is today</div>
+    <div class="example-item">the investor quotes in the lululemon deck — can you verify them against the actual Q3 earnings call transcripts before i use them in the presentation?</div>
+    <div class="example-item">run factcheck on macy's audit — specifically check for cross-file consistency between the deck slide statistics and the numbers in the main report</div>
+    <div class="example-item">double check my roi math in the best buy business case — is the 3.2% conversion lift multiplied correctly against their $14B ecommerce revenue?</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-audit-eval">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-audit-eval — Module Evaluator</span>
+    <span class="examples-group-count">8 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">the algolia-audit-research output for DSW looks incomplete — can you score it across the 5 quality dimensions and tell me if it passes the 7.0 threshold?</div>
+    <div class="example-item">run the eval on the algolia-live-signals module — i just pushed a bug fix and need to confirm it still meets quality standards before merging</div>
+    <div class="example-item">i rebuilt the algolia-intel-industry skill from scratch — evaluate its output quality before we add it to the platform</div>
+    <div class="example-item">after the phase C fix, run the standard quality eval on algolia-audit-browser and give me scores across completeness, source density, instruction adherence, accuracy, and no-fabrication</div>
+    <div class="example-item">eval the algolia-audit-financials module — i'm especially worried about data accuracy and whether it's fabricating any stats when the yahoo finance data is thin</div>
+    <div class="example-item">we just shipped the investor intelligence sub-skill — run the quality eval to check if it meets the pass threshold</div>
+    <div class="example-item">the algolia-intel-queries output feels thin and the test queries seem too generic — formally evaluate it and tell me which dimensions are dragging the score below 7</div>
+    <div class="example-item">need a quality gate verdict on this phase E fix for algolia-audit-research before i commit it — pass or fail?</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-audit-financials">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-audit-financials — Financial Intelligence</span>
+    <span class="examples-group-count">10 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">run the financial intel module for the DSW audit — they're public so pull yahoo finance, SEC 10-K, and earnings call transcripts</div>
+    <div class="example-item">costco is NYSE: COST — pull their last 3 years of revenue, gross margin, ecommerce growth, and any CFO quotes about digital investment</div>
+    <div class="example-item">nordstrom financials for the audit — public company, need 08-financial-profile.md and the investor intelligence file with exec quotes</div>
+    <div class="example-item">tapestry (TPR) is public — run the financial analysis including SEC EDGAR 10-K risk factors and any recent earnings call mentions of search or digital</div>
+    <div class="example-item">chewy is private — use the 6-source waterfall to estimate their revenue, funding history, and any investor signals for the audit research</div>
+    <div class="example-item">generate 08-financial-profile.md and 11-investor-intelligence.md for the best buy audit workspace</div>
+    <div class="example-item">target corporation TGT — pull financial statements, ecommerce revenue breakdown, and investor intelligence for the algolia audit dossier</div>
+    <div class="example-item">wayfair is public W on NYSE — run the financial intelligence extraction for their audit, including recent analyst downgrades and profitability concerns</div>
+    <div class="example-item">the prospect is an uncommon goods — private company, estimated $200M revenue. run the private company financial waterfall for their audit</div>
+    <div class="example-item">pull the investor intelligence for ulta beauty — i need CFO and CEO quotes about digital priorities from the last 4 earnings calls</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-live-signals">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-live-signals — Apify Intelligence</span>
+    <span class="examples-group-count">8 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">scrape the live hiring signals for DSW shoes — check linkedin jobs and get current open roles in search, engineering, and ecommerce</div>
+    <div class="example-item">pull live social signals for nordstrom — what has their leadership been posting on linkedin and twitter about digital transformation?</div>
+    <div class="example-item">run the apify signals collection for the best buy audit — hiring signals from linkedin, social posts from executives, and google news mentions</div>
+    <div class="example-item">collect live signals for target.com audit — what are they hiring for right now? any leadership posts about search or personalization?</div>
+    <div class="example-item">algolia-live-signals for wayfair — they're heavy tech hires lately, i want to see what specific roles and any exec posts about site search</div>
+    <div class="example-item">the 09b-hiring-signals.md file is missing from the DSW workspace — run the live signals module now to generate it</div>
+    <div class="example-item">run the apify scrapers to collect live intel for chewy — news signals from google news, hiring from linkedin, social from twitter</div>
+    <div class="example-item">get me the linkedin job listings and twitter activity for lululemon's leadership team for the audit research file</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-intel-industry">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-intel-industry — Industry Intelligence</span>
+    <span class="examples-group-count">8 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">pull the industry intelligence for the DSW audit — shoe retail vertical, baymard benchmarks, forrester search stats, and competitor signals</div>
+    <div class="example-item">nordstrom is in luxury department store vertical — collect industry-intel.md with analyst benchmarks, vertical trends, and competitive search landscape</div>
+    <div class="example-item">run the vertical intelligence module for best buy — consumer electronics vertical, what are the industry conversion benchmarks and NLP search adoption rates?</div>
+    <div class="example-item">collect the bigger-picture industry context for the home depot audit — home improvement retail vertical, search engagement benchmarks, expert analyst quotes</div>
+    <div class="example-item">run algolia-intel-industry for the wayfair audit — home furnishings vertical, competitive signals, and vertical search trends i can use in the sales narrative</div>
+    <div class="example-item">the 06-industry-intel.md is missing from the target workspace — run the industry intelligence collection now</div>
+    <div class="example-item">what are the industry benchmarks for ecommerce search in the apparel vertical? collecting this for the lululemon audit intelligence file</div>
+    <div class="example-item">collect analyst benchmarks and expert quotes for the grocery ecommerce vertical for a prospect audit — costco is in warehouse club retail</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-intel-partner">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-intel-partner — Partner Intelligence</span>
+    <span class="examples-group-count">8 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">find algolia co-sell partners for DSW shoes — which SI firms or tech partners have existing relationships there that we can leverage?</div>
+    <div class="example-item">run the partner intelligence module for nordstrom audit — identify both tech ecosystem partners and SI/agency partners with C-suite access</div>
+    <div class="example-item">best buy partner intel — discover which implementation partners (agencies, SIs) have existing relationships we could activate for a co-sell motion</div>
+    <div class="example-item">generate partner-intel.md for the tapestry audit — check crossbeam for tech partner overlaps and identify any SI partners who've worked with coach or kate spade</div>
+    <div class="example-item">who are the algolia ecosystem partners relevant to a target.com pitch? look for both platform tech partners and consulting SIs</div>
+    <div class="example-item">the 07-partner-intel.md file is missing from the DSW workspace — run partner intelligence now and check crossbeam for overlaps</div>
+    <div class="example-item">lululemon partner intel — which SIs or tech partners in algolia's ecosystem have existing relationships at lululemon that could help open the door?</div>
+    <div class="example-item">identify SI partners for the wayfair algolia pitch — they're a salesforce commerce cloud shop, which implementation partners have C-suite access there?</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-intel-queries">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-intel-queries — Test Query Generation</span>
+    <span class="examples-group-count">8 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">generate the test queries for the DSW browser audit — i need 14-18 vertically-calibrated queries covering NLP, typo, synonyms, and zero-results scenarios</div>
+    <div class="example-item">before i run the playwright browser tests on nordstrom.com, generate the test-queries.md file with the right query mix for luxury department store</div>
+    <div class="example-item">create the query set for the best buy browser audit — consumer electronics vertical, make sure to include NLP queries like 'best 4k tv for gaming under 1000'</div>
+    <div class="example-item">the 10-test-queries.md file is missing from the home depot workspace — generate the test queries now before we start phase 2</div>
+    <div class="example-item">i need the query library for lululemon browser testing — activewear vertical, include conversational queries like 'something to wear to hot yoga that won't show sweat'</div>
+    <div class="example-item">create test-queries.md for the wayfair audit — home furnishings vertical, 14-18 queries for the 20-step browser test protocol</div>
+    <div class="example-item">what queries should we run on costco.com for the browser phase — warehouse club retail, include membership-specific and bulk-buying intent queries</div>
+    <div class="example-item">generate vertically-calibrated test queries for target.com browser audit — mass merchant vertical, mix of NLP, category, brand, typo, and synonym tests</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-synth-business-case">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-synth-business-case — ROI Model</span>
+    <span class="examples-group-count">8 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">build the ROI model for DSW shoes — break down conversion lift, AOV increase, and bounce reduction into dollar figures the AE can customize</div>
+    <div class="example-item">run the business case module for nordstrom — i need the 6-component ROI breakdown with placeholders for the AE to fill in actual numbers</div>
+    <div class="example-item">build the financial justification model for the tapestry pitch — show conversion lift, AOV, no-results recovery, and long-tail discovery components</div>
+    <div class="example-item">generate the ROI business case for the home depot algolia opportunity — 6 components, fill-in-the-blank structure for the AE presentation</div>
+    <div class="example-item">run synth-business-case for target.com — $20B ecommerce, model the search ROI across all 6 measurable components</div>
+    <div class="example-item">create the financial justification doc for wayfair — they have a high bounce rate, focus the model on bounce reduction and no-results recovery components</div>
+    <div class="example-item">build the ROI model for the chewy algolia pitch — private company ~$3B revenue, estimate all 6 components based on industry benchmarks</div>
+    <div class="example-item">i need the business case output file for lululemon before the AE call — give me the component-level ROI breakdown with their estimated revenue numbers</div>
+  </div>
+</div>
+
+<div class="examples-group" data-skill="algolia-synth-sales-plays">
+  <div class="examples-group-header" onclick="toggleGroup(this.parentElement)">
+    <span class="examples-chevron">▶</span>
+    <span class="examples-group-title">algolia-synth-sales-plays — Sales Playbook</span>
+    <span class="examples-group-count">8 examples</span>
+  </div>
+  <div class="examples-body">
+    <div class="example-item">build the AE playbook for DSW shoes — personalized talking points, discovery questions, objection handling, and MEDDPICC gap map using their earnings call language</div>
+    <div class="example-item">run the sales plays generator for nordstrom — i need discovery Q&A trees and objection handling written in their own words from the last 3 earnings calls</div>
+    <div class="example-item">generate the tapestry sales playbook — executive-level talking points from coach and kate spade leadership quotes, objection responses, and co-sell motion with SI partners</div>
+    <div class="example-item">run synth-sales-plays for the home depot audit — i need the discovery questions and competitive displacement talking points before the AE call on friday</div>
+    <div class="example-item">create the algolia sales playbook for lululemon — map their MEDDPICC gaps, build personalized openers from CEO quotes, and write objection responses for 'we already have search'</div>
+    <div class="example-item">generate the AE playbook for wayfair — they've had profitability pressure, frame the playbook around cost reduction and conversion efficiency</div>
+    <div class="example-item">the {company}-playbook.md is missing from the costco workspace — generate it now with MEDDPICC, talking points, and objection handling</div>
+    <div class="example-item">build the BDR playbook for target.com — cold outreach angles, linkedin message templates, and the first call talk track all grounded in their exec posts</div>
+  </div>
+</div>
+
+</div><!-- end examples-container -->
+
+</div><!-- end content -->
+</div><!-- end main -->
+
+<script>
+// ── SIDEBAR TOGGLE ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('menu-toggle');
+  if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !toggle.contains(e.target)) {
+    sidebar.classList.remove('open');
+  }
+});
+
+// ── ACTIVE NAV HIGHLIGHTING ──
+const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+const sections = [];
+navLinks.forEach(link => {
+  const id = link.getAttribute('href').slice(1);
+  const el = document.getElementById(id);
+  if (el) sections.push({ id, el, link });
+});
+
+function updateActiveNav() {
+  const scrollY = window.scrollY + 100;
+  let current = sections[0];
+  for (const s of sections) {
+    if (s.el.getBoundingClientRect().top + window.scrollY <= scrollY) {
+      current = s;
+    }
+  }
+  navLinks.forEach(l => l.classList.remove('active'));
+  if (current) current.link.classList.add('active');
+}
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+updateActiveNav();
+
+// ── COPY CODE BUTTONS ──
+function copyCode(btn) {
+  const pre = btn.parentElement;
+  const code = pre.textContent.replace(btn.textContent, '').trim();
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// ── EXAMPLE GROUPS TOGGLE ──
+function toggleGroup(group) {
+  group.classList.toggle('open');
+}
+
+// ── FILTER EXAMPLES ──
+function filterExamples(query) {
+  const q = query.toLowerCase().trim();
+  let visibleCount = 0;
+  const groups = document.querySelectorAll('.examples-group');
+  groups.forEach(group => {
+    const items = group.querySelectorAll('.example-item');
+    let groupVisible = 0;
+    items.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      if (!q || text.includes(q)) {
+        item.classList.remove('hidden');
+        groupVisible++;
+      } else {
+        item.classList.add('hidden');
+      }
+    });
+    const header = group.querySelector('.examples-group-header');
+    const countEl = group.querySelector('.examples-group-count');
+    if (!q || groupVisible > 0) {
+      group.style.display = '';
+      if (q) group.classList.add('open');
+      if (countEl) countEl.textContent = q ? `${groupVisible} match${groupVisible !== 1 ? 'es' : ''}` : `${items.length} examples`;
+    } else {
+      group.style.display = 'none';
+    }
+    visibleCount += groupVisible;
+  });
+  const countEl = document.getElementById('search-count');
+  if (q) {
+    countEl.textContent = `${visibleCount} example${visibleCount !== 1 ? 's' : ''} matching "${query}"`;
+  } else {
+    countEl.textContent = '';
+    groups.forEach(g => {
+      const items = g.querySelectorAll('.example-item');
+      const countSpan = g.querySelector('.examples-group-count');
+      if (countSpan) countSpan.textContent = `${items.length} examples`;
+    });
+  }
+}
+
+// ── EXAMPLE ITEM CLICK TO COPY ──
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('example-item')) {
+    const text = e.target.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = e.target.style.background;
+      e.target.style.background = 'rgba(0,61,255,0.1)';
+      e.target.style.borderLeftColor = 'var(--blue)';
+      setTimeout(() => {
+        e.target.style.background = orig;
+        e.target.style.borderLeftColor = '';
+      }, 800);
+    });
+  }
+});
+</script>
+</body>
+</html>

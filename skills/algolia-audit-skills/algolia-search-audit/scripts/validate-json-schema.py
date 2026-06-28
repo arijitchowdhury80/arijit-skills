@@ -434,6 +434,23 @@ for _i, _f in enumerate(d.get('findings') or []):
     if _f.get('impact_stat') and not _f.get('impact_stat_source'):
         fail(f'findings[{_i}] ("{_f.get("title","?")[:40]}") has impact_stat but no impact_stat_source — remove stat or cite it (BLOCKING)')
 
+# ── finding enrichment — BLOCKING checks ─────────────────────────────────────
+for _i, _f in enumerate(d.get('findings') or []):
+    _ib = _f.get('industry_benchmark')
+    if _ib is not None:
+        if not _ib.get('source') or not str(_ib['source']).strip():
+            fail(
+                f'findings[{_i}] ("{_f.get("title","?")[:40]}") '
+                f'industry_benchmark.source is empty — every benchmark must cite source URL (BLOCKING)'
+            )
+    _ad = _f.get('anxiety_driver')
+    if _ad is not None:
+        if not _ad.get('quantified_impact') or not str(_ad['quantified_impact']).strip():
+            fail(
+                f'findings[{_i}] ("{_f.get("title","?")[:40]}") '
+                f'anxiety_driver.quantified_impact is empty — no naked anxiety claims (BLOCKING)'
+            )
+
 # case_studies — url and result required
 for _i, _cs in enumerate(d.get('case_studies') or []):
     if not _cs.get('url'):

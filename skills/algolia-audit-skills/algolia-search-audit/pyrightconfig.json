@@ -1,5 +1,6 @@
 {
   "include": ["scripts"],
+  "extraPaths": ["scripts"],
   "exclude": ["scripts/__pycache__"],
   "pythonVersion": "3.13",
   "pythonPlatform": "Darwin",

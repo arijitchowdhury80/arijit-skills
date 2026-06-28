@@ -1,0 +1,1 @@
+/Users/arijitchowdhury/.claude/skills/detect-search/detect-search.md

@@ -5,274 +5,965 @@
   "description": "Canonical data model for all Algolia Search Audit deliverables. Each field maps to a renderer token or a future database column.",
   "version": "2.0",
   "type": "object",
-  "required": ["meta", "cover", "score", "company_snapshot", "findings"],
+  "required": [
+    "meta",
+    "cover",
+    "score",
+    "company_snapshot",
+    "findings"
+  ],
   "properties": {
     "meta": {
       "type": "object",
-      "required": ["company", "domain", "audit_date", "audited_by", "version"],
+      "required": [
+        "company",
+        "domain",
+        "audit_date",
+        "audited_by",
+        "version"
+      ],
       "properties": {
-        "company":    { "type": "string", "description": "Company display name e.g. 'Costco Wholesale'" },
-        "domain":     { "type": "string", "description": "Primary domain e.g. 'costco.com'" },
-        "audit_date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "YYYY-MM-DD" },
-        "audited_by": { "type": "string", "description": "AE full name" },
-        "version":    { "type": "string", "description": "e.g. 'v1'" },
+        "company": {
+          "type": "string",
+          "description": "Company display name e.g. 'Costco Wholesale'"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Primary domain e.g. 'costco.com'"
+        },
+        "audit_date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "YYYY-MM-DD"
+        },
+        "audited_by": {
+          "type": "string",
+          "description": "AE full name"
+        },
+        "version": {
+          "type": "string",
+          "description": "e.g. 'v1'"
+        },
         "data_vintage": {
           "type": "object",
-          "description": "Actual data freshness dates from API responses — NOT today's date",
+          "description": "Actual data freshness dates from API responses \u2014 NOT today's date",
           "properties": {
-            "similarweb":    { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-            "builtwith":     { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-            "yahoo_finance": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+            "similarweb": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "builtwith": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "yahoo_finance": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
           }
         }
       }
     },
-
     "cover": {
       "type": "object",
-      "required": ["photo_url", "company_logo_url"],
+      "required": [
+        "photo_url",
+        "company_logo_url"
+      ],
       "properties": {
-        "photo_url":        { "type": "string", "format": "uri", "description": "Absolute HTTPS URL to company storefront/HQ photo. Try Wikimedia Commons first." },
-        "company_logo_url": { "type": "string", "format": "uri", "description": "Absolute HTTPS URL to logo PNG/SVG. Try https://logo.clearbit.com/{domain}" },
-        "status_line":      { "type": ["string", "null"], "description": "e.g. 'Confidential · For Internal Use Only'" }
+        "photo_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Absolute HTTPS URL to company storefront/HQ photo. Try Wikimedia Commons first."
+        },
+        "company_logo_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Absolute HTTPS URL to logo PNG/SVG. Try https://logo.clearbit.com/{domain}"
+        },
+        "status_line": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. 'Confidential \u00b7 For Internal Use Only'"
+        }
       }
     },
-
     "score": {
       "type": "object",
-      "required": ["overall", "verdict", "verdict_class", "breakdown", "critical_count", "moderate_count"],
+      "required": [
+        "overall",
+        "verdict",
+        "verdict_class",
+        "breakdown",
+        "critical_count",
+        "moderate_count"
+      ],
       "properties": {
-        "overall":        { "type": "number", "minimum": 0, "maximum": 10, "description": "One decimal e.g. 3.2" },
-        "verdict":        { "type": "string", "description": "e.g. 'Needs Significant Work'" },
-        "verdict_class":  { "type": "string", "enum": ["critical", "moderate", "ok"] },
+        "overall": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "One decimal e.g. 3.2"
+        },
+        "verdict": {
+          "type": "string",
+          "description": "e.g. 'Needs Significant Work'"
+        },
+        "verdict_class": {
+          "type": "string",
+          "enum": [
+            "critical",
+            "moderate",
+            "ok"
+          ]
+        },
         "breakdown": {
           "type": "object",
           "description": "Sub-scores 0-10 for each dimension",
           "properties": {
-            "latency":                          { "type": "number", "minimum": 0, "maximum": 10 },
-            "typo_tolerance":                   { "type": "number", "minimum": 0, "maximum": 10 },
-            "query_suggestions_empty_state":    { "type": "number", "minimum": 0, "maximum": 10 },
-            "intent_detection":                 { "type": "number", "minimum": 0, "maximum": 10 },
-            "merchandising_consistency":        { "type": "number", "minimum": 0, "maximum": 10 },
-            "content_commerce_ux":              { "type": "number", "minimum": 0, "maximum": 10 },
-            "semantic_nlp_search":              { "type": "number", "minimum": 0, "maximum": 10 },
-            "dynamic_facets_personalization":   { "type": "number", "minimum": 0, "maximum": 10 },
-            "recommendations_merchandising":    { "type": "number", "minimum": 0, "maximum": 10 },
-            "search_intelligence":              { "type": "number", "minimum": 0, "maximum": 10 }
+            "latency": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "typo_tolerance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "query_suggestions_empty_state": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "intent_detection": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "merchandising_consistency": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "content_commerce_ux": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "semantic_nlp_search": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "dynamic_facets_personalization": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "recommendations_merchandising": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "search_intelligence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            }
           }
         },
-        "critical_count":  { "type": "number" },
-        "moderate_count":  { "type": "number" }
+        "critical_count": {
+          "type": "number"
+        },
+        "moderate_count": {
+          "type": "number"
+        }
       }
     },
-
     "company_snapshot": {
       "type": "object",
-      "required": ["industry", "current_search_vendor", "monthly_visits"],
+      "required": [
+        "industry",
+        "current_search_vendor",
+        "monthly_visits"
+      ],
       "properties": {
-        "industry":               { "type": "string" },
-        "hq":                     { "type": ["string", "null"] },
-        "employees":              { "type": ["string", "null"], "description": "Formatted e.g. '285,000'" },
-        "revenue":                { "type": ["string", "null"], "description": "Formatted e.g. '$14.2B'" },
-        "revenue_source":         { "type": ["string", "null"], "format": "uri" },
-        "revenue_source_label":   { "type": ["string", "null"], "description": "e.g. 'Yahoo Finance'" },
-        "founded":                { "type": ["string", "null"] },
-        "ticker":                 { "type": ["string", "null"], "description": "e.g. 'COST'" },
-        "current_search_vendor":  { "type": "string", "description": "e.g. 'Lucidworks Fusion'" },
-        "ecommerce_platform":     { "type": ["string", "null"] },
-        "monthly_visits":         { "type": "string", "description": "Formatted e.g. '14.2M'" },
-        "visits_source":          { "type": ["string", "null"], "format": "uri" }
+        "industry": {
+          "type": "string"
+        },
+        "hq": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "employees": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Formatted e.g. '285,000'"
+        },
+        "revenue": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Formatted e.g. '$14.2B'"
+        },
+        "revenue_source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "revenue_source_label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. 'Yahoo Finance'"
+        },
+        "founded": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ticker": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. 'COST'"
+        },
+        "current_search_vendor": {
+          "type": "string",
+          "description": "e.g. 'Lucidworks Fusion'"
+        },
+        "ecommerce_platform": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "monthly_visits": {
+          "type": "string",
+          "description": "Formatted e.g. '14.2M'"
+        },
+        "visits_source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        }
       }
     },
-
     "executives": {
       "type": "array",
       "description": "Named executives with exact quotes from primary sources. ANY named exec, not just CEO/CFO.",
       "items": {
         "type": "object",
-        "required": ["name", "title", "quote", "quote_source", "quote_date"],
+        "required": [
+          "name",
+          "title",
+          "quote",
+          "quote_source",
+          "quote_date"
+        ],
         "properties": {
-          "name":               { "type": "string" },
-          "title":              { "type": "string" },
-          "quote":              { "type": "string", "description": "Exact quote — never paraphrase" },
-          "quote_source":       { "type": "string", "format": "uri", "description": "URL to transcript/10-K/press release/video" },
-          "quote_source_label": { "type": "string", "description": "e.g. 'Q3 2025 Earnings Call'" },
-          "quote_date":         { "type": "string", "pattern": "^\\d{4}-\\d{2}$", "description": "YYYY-MM" },
-          "relevance":          { "type": ["string", "null"], "description": "Why this quote matters for search strategy" }
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string",
+            "description": "Exact quote \u2014 never paraphrase"
+          },
+          "quote_source": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to transcript/10-K/press release/video"
+          },
+          "quote_source_label": {
+            "type": "string",
+            "description": "e.g. 'Q3 2025 Earnings Call'"
+          },
+          "quote_date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}$",
+            "description": "YYYY-MM"
+          },
+          "relevance": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why this quote matters for search strategy"
+          }
         }
       }
     },
-
     "intelligence_signals": {
       "type": "array",
       "description": "All collected intelligence signals. 9 types. Used in battle card, SPA, and AE brief.",
       "items": {
         "type": "object",
-        "required": ["type", "badge_label", "text", "source_url", "source_date", "relevance"],
+        "required": [
+          "type",
+          "badge_label",
+          "text",
+          "source_url",
+          "source_date",
+          "relevance"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["exec", "media", "funding", "industry-risk", "industry-opp", "competitor", "customer", "partner", "hiring"],
-            "description": "Signal type — drives CSS class and filter"
+            "enum": [
+              "exec",
+              "media",
+              "funding",
+              "industry-risk",
+              "industry-opp",
+              "competitor",
+              "customer",
+              "partner",
+              "hiring"
+            ],
+            "description": "Signal type \u2014 drives CSS class and filter"
           },
           "badge_label": {
             "type": "string",
             "description": "Display label e.g. 'Exec Statement' | 'Media Quote' | 'Funding Event' | 'Industry Risk' | 'Industry Opportunity' | 'Competitor Move' | 'Customer Signal' | 'Partner Signal' | 'Hiring Signal'"
           },
-          "text":         { "type": "string", "description": "The signal text or quote" },
-          "source_name":  { "type": ["string", "null"], "description": "Attribution name e.g. 'CEO at Retail Innovation Summit'" },
-          "source_url":   { "type": "string", "format": "uri" },
-          "source_date":  { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
-          "relevance":    { "type": "string", "description": "Specific reason this creates urgency for Algolia" }
+          "text": {
+            "type": "string",
+            "description": "The signal text or quote"
+          },
+          "source_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Attribution name e.g. 'CEO at Retail Innovation Summit'"
+          },
+          "source_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "source_date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "relevance": {
+            "type": "string",
+            "description": "Specific reason this creates urgency for Algolia"
+          }
         }
       }
     },
-
     "competitors": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "domain"],
+        "required": [
+          "name",
+          "domain"
+        ],
         "properties": {
-          "name":            { "type": "string" },
-          "domain":          { "type": "string" },
-          "search_vendor":   { "type": ["string", "null"] },
-          "monthly_traffic": { "type": ["string", "null"] },
-          "traffic_rank":    { "type": ["number", "null"] },
-          "notes":           { "type": ["string", "null"] }
+          "name": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "search_vendor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "monthly_traffic": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "traffic_rank": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         }
       }
     },
-
     "findings": {
       "type": "array",
       "description": "Audit findings. Each finding requires a screenshot, impact stat source, and Algolia case study.",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "title", "severity", "category", "tested_query", "actual_behavior", "screenshot_file", "algolia_solution"],
+        "required": [
+          "id",
+          "title",
+          "severity",
+          "category",
+          "tested_query",
+          "actual_behavior",
+          "screenshot_file",
+          "algolia_solution"
+        ],
         "properties": {
-          "id":                       { "type": "string", "pattern": "^F\\d{2}$", "description": "e.g. 'F01'" },
-          "title":                    { "type": "string", "maxLength": 60 },
-          "severity":                 { "type": "string", "enum": ["critical", "moderate", "positive"] },
-          "category":                 { "type": "string", "description": "e.g. 'Semantic Search'" },
-          "tested_query":             { "type": "string", "description": "Exact query string typed during audit" },
-          "expected_behavior":        { "type": ["string", "null"] },
-          "actual_behavior":          { "type": "string" },
-          "impact_stat":              { "type": ["string", "null"], "description": "e.g. '0 relevant results'" },
-          "impact_stat_source":       { "type": ["string", "null"], "format": "uri", "description": "URL to Baymard/Forrester/screenshot source" },
-          "screenshot_file":          { "type": "string", "description": "Relative path e.g. 'screenshots/03-nlp-test.png'" },
-          "prospect_description":     { "type": ["string", "null"], "description": "Non-technical description for prospect-facing docs" },
-          "algolia_solution":         { "type": "string" },
-          "algolia_case_study_url":   { "type": ["string", "null"], "format": "uri" },
-          "algolia_case_study_company": { "type": ["string", "null"] },
-          "algolia_case_study_result":  { "type": ["string", "null"], "description": "Specific metric e.g. '+37% conversion'" }
-        }
-      }
-    },
-
-    "gap_pairs": {
-      "type": "array",
-      "description": "Strategy vs. Reality pairs for battle card. Exec promise → audit finding that contradicts it.",
-      "items": {
-        "type": "object",
-        "required": ["said_quote", "said_attr", "found_title", "found_evidence"],
-        "properties": {
-          "said_quote":        { "type": "string", "description": "Exec quote about digital/search/CX promise" },
-          "said_attr":         { "type": "string", "description": "Name, Title" },
-          "said_source_url":   { "type": ["string", "null"], "format": "uri" },
-          "said_source_label": { "type": ["string", "null"] },
-          "said_date":         { "type": ["string", "null"] },
-          "found_title":       { "type": "string", "description": "1-line audit finding that contradicts the promise" },
-          "found_evidence":    { "type": "string", "description": "Query tested + screenshot reference" }
-        }
-      }
-    },
-
-    "toc": {
-      "type": "array",
-      "description": "Table of contents structure. One entry per Act.",
-      "items": {
-        "type": "object",
-        "required": ["act", "sections"],
-        "properties": {
-          "act": { "type": "string", "description": "e.g. 'ACT I: THE VERDICT'" },
-          "sections": {
+          "id": {
+            "type": "string",
+            "pattern": "^F\\d{2}$",
+            "description": "e.g. 'F01'"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "critical",
+              "moderate",
+              "positive"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "description": "e.g. 'Semantic Search'"
+          },
+          "tested_query": {
+            "type": "string",
+            "description": "Exact query string typed during audit"
+          },
+          "expected_behavior": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "actual_behavior": {
+            "type": "string"
+          },
+          "impact_stat": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "e.g. '0 relevant results'"
+          },
+          "impact_stat_source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "URL to Baymard/Forrester/screenshot source"
+          },
+          "screenshot_file": {
+            "type": "string",
+            "description": "Relative path e.g. 'screenshots/03-nlp-test.png'"
+          },
+          "prospect_description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Non-technical description for prospect-facing docs"
+          },
+          "algolia_solution": {
+            "type": "string"
+          },
+          "algolia_case_study_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "algolia_case_study_company": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "algolia_case_study_result": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Specific metric e.g. '+37% conversion'"
+          },
+          "pain_frame": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Business translation of the finding in exec language."
+          },
+          "anxiety_driver": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "calculation": {
+                "type": "string"
+              },
+              "competitor_comparison": {
+                "type": "string"
+              },
+              "quantified_impact": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "calculation",
+              "competitor_comparison",
+              "quantified_impact"
+            ]
+          },
+          "industry_benchmark": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "metric_name": {
+                "type": "string"
+              },
+              "best_in_class": {
+                "type": "string"
+              },
+              "current_score": {
+                "type": "string"
+              },
+              "gap": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "metric_name",
+              "best_in_class",
+              "current_score",
+              "gap",
+              "source"
+            ]
+          },
+          "discovery_questions": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "situation": {
+                "type": "string"
+              },
+              "problem": {
+                "type": "string"
+              },
+              "implication": {
+                "type": "string"
+              },
+              "need_payoff": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "situation",
+              "problem",
+              "implication",
+              "need_payoff"
+            ]
+          },
+          "algolia_angle": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "capability": {
+                "type": "string"
+              },
+              "specifics": {
+                "type": "string"
+              },
+              "time_to_value": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "capability",
+              "specifics"
+            ]
+          },
+          "value_map": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "gap": {
+                "type": "string"
+              },
+              "capability": {
+                "type": "string"
+              },
+              "outcome": {
+                "type": "string"
+              },
+              "metric": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "gap",
+              "capability",
+              "outcome",
+              "metric"
+            ]
+          },
+          "objection_handling": {
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["title", "anchor"],
+              "required": [
+                "objection",
+                "counter"
+              ],
               "properties": {
-                "title":  { "type": "string" },
-                "anchor": { "type": "string", "description": "CSS id without # e.g. 'ch-bottom-line'" },
-                "page":   { "type": ["number", "null"] }
+                "objection": {
+                  "type": "string"
+                },
+                "counter": {
+                  "type": "string"
+                },
+                "evidence_ref": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
               }
             }
           }
         }
       }
     },
-
+    "gap_pairs": {
+      "type": "array",
+      "description": "Strategy vs. Reality pairs for battle card. Exec promise \u2192 audit finding that contradicts it.",
+      "items": {
+        "type": "object",
+        "required": [
+          "said_quote",
+          "said_attr",
+          "found_title",
+          "found_evidence"
+        ],
+        "properties": {
+          "said_quote": {
+            "type": "string",
+            "description": "Exec quote about digital/search/CX promise"
+          },
+          "said_attr": {
+            "type": "string",
+            "description": "Name, Title"
+          },
+          "said_source_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "said_source_label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "said_date": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "found_title": {
+            "type": "string",
+            "description": "1-line audit finding that contradicts the promise"
+          },
+          "found_evidence": {
+            "type": "string",
+            "description": "Query tested + screenshot reference"
+          }
+        }
+      }
+    },
+    "toc": {
+      "type": "array",
+      "description": "Table of contents structure. One entry per Act.",
+      "items": {
+        "type": "object",
+        "required": [
+          "act",
+          "sections"
+        ],
+        "properties": {
+          "act": {
+            "type": "string",
+            "description": "e.g. 'ACT I: THE VERDICT'"
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "title",
+                "anchor"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "anchor": {
+                  "type": "string",
+                  "description": "CSS id without # e.g. 'ch-bottom-line'"
+                },
+                "page": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "financials": {
       "type": "object",
       "properties": {
-        "ticker":                   { "type": ["string", "null"] },
-        "market_cap":               { "type": ["string", "null"] },
+        "ticker": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "market_cap": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "revenue_3y": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "year":    { "type": "string" },
-              "revenue": { "type": "string" }
+              "year": {
+                "type": "string"
+              },
+              "revenue": {
+                "type": "string"
+              }
             }
           }
         },
-        "total_digital_revenue":    { "type": ["string", "null"], "description": "Formatted e.g. '$14.2B'" },
-        "ecommerce_revenue_est":    { "type": ["string", "null"], "description": "Formatted e.g. '$4.2B'" },
-        "search_roi_est":           { "type": ["string", "null"], "description": "Formatted e.g. '$210M/yr'. Calc: ecom_rev * 0.15 * 0.05" },
-        "search_addressable":       { "type": ["string", "null"], "description": "Formatted. 15% of digital revenue." },
-        "conservative_lift_label":  { "type": ["string", "null"], "description": "Formatted. 5% of addressable." },
-        "revenue_source":           { "type": ["string", "null"], "format": "uri" },
-        "revenue_source_label":     { "type": ["string", "null"] }
+        "total_digital_revenue": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Formatted e.g. '$14.2B'"
+        },
+        "ecommerce_revenue_est": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Formatted e.g. '$4.2B'"
+        },
+        "search_roi_est": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Formatted e.g. '$210M/yr'. Calc: ecom_rev * 0.15 * 0.05"
+        },
+        "search_addressable": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Formatted. 15% of digital revenue."
+        },
+        "conservative_lift_label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Formatted. 5% of addressable."
+        },
+        "revenue_source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "revenue_source_label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
-
     "traffic": {
       "type": "object",
       "properties": {
-        "monthly_visits":   { "type": ["string", "null"] },
-        "visit_duration":   { "type": ["string", "null"], "description": "e.g. '4m 23s'" },
-        "bounce_rate":      { "type": ["string", "null"], "description": "e.g. '42.3%'" },
-        "pages_per_visit":  { "type": ["string", "null"] },
+        "monthly_visits": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "visit_duration": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. '4m 23s'"
+        },
+        "bounce_rate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. '42.3%'"
+        },
+        "pages_per_visit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "top_channels": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "channel": { "type": "string" },
-              "share":   { "type": "string", "description": "e.g. '38.2%'" }
+              "channel": {
+                "type": "string"
+              },
+              "share": {
+                "type": "string",
+                "description": "e.g. '38.2%'"
+              }
             }
           }
         },
         "search_abandonment": {
           "type": "object",
-          "description": "Outbound traffic to google.com — quantified proof users give up on on-site search",
+          "description": "Outbound traffic to google.com \u2014 quantified proof users give up on on-site search",
           "properties": {
-            "google_outbound_pct":       { "type": ["string", "null"], "description": "e.g. '9.27%'" },
-            "google_outbound_mom_change":{ "type": ["string", "null"], "description": "e.g. '+117.81%'" },
-            "narrative":                 { "type": ["string", "null"], "description": "1-sentence AE talking point" }
+            "google_outbound_pct": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "e.g. '9.27%'"
+            },
+            "google_outbound_mom_change": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "e.g. '+117.81%'"
+            },
+            "narrative": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "1-sentence AE talking point"
+            }
           }
         },
         "ai_referral": {
           "type": "object",
-          "description": "AI chatbot referral traffic — signals how the prospect's audience discovers products via AI",
+          "description": "AI chatbot referral traffic \u2014 signals how the prospect's audience discovers products via AI",
           "properties": {
-            "chatgpt_pct":     { "type": ["string", "null"], "description": "ChatGPT share of referral traffic e.g. '16.55%'" },
-            "chatgpt_mom":     { "type": ["string", "null"], "description": "MoM change e.g. '+49.74%'" },
-            "gemini_pct":      { "type": ["string", "null"], "description": "Gemini share if present" },
-            "total_ai_pct":    { "type": ["string", "null"], "description": "Total AI chatbot share of referring industry traffic e.g. '55.52%'" },
-            "narrative":       { "type": ["string", "null"], "description": "1-sentence AE talking point" }
+            "chatgpt_pct": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "ChatGPT share of referral traffic e.g. '16.55%'"
+            },
+            "chatgpt_mom": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "MoM change e.g. '+49.74%'"
+            },
+            "gemini_pct": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Gemini share if present"
+            },
+            "total_ai_pct": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Total AI chatbot share of referring industry traffic e.g. '55.52%'"
+            },
+            "narrative": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "1-sentence AE talking point"
+            }
           }
         },
         "top_referrers": {
@@ -281,30 +972,66 @@
           "items": {
             "type": "object",
             "properties": {
-              "domain":     { "type": "string" },
-              "share_pct":  { "type": "string" },
-              "mom_change": { "type": ["string", "null"] }
+              "domain": {
+                "type": "string"
+              },
+              "share_pct": {
+                "type": "string"
+              },
+              "mom_change": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
             }
           }
         },
         "paid_search": {
           "type": "object",
-          "description": "Paid search channel intelligence — keywords reveal competitive intent and seasonal patterns",
+          "description": "Paid search channel intelligence \u2014 keywords reveal competitive intent and seasonal patterns",
           "properties": {
-            "share_of_total_pct": { "type": ["string", "null"], "description": "e.g. '10.05%'" },
+            "share_of_total_pct": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "e.g. '10.05%'"
+            },
             "top_keywords": {
               "type": "array",
               "items": {
                 "type": "object",
                 "properties": {
-                  "keyword":    { "type": "string" },
-                  "share_pct":  { "type": "string" },
-                  "mom_change": { "type": ["string", "null"] }
+                  "keyword": {
+                    "type": "string"
+                  },
+                  "share_pct": {
+                    "type": "string"
+                  },
+                  "mom_change": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
                 }
               }
             },
-            "competitor_bidding": { "type": ["string", "null"], "description": "Competitor brand name if prospect is bidding on it e.g. 'party city'" },
-            "narrative":          { "type": ["string", "null"], "description": "1-sentence AE talking point on paid search behavior" }
+            "competitor_bidding": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Competitor brand name if prospect is bidding on it e.g. 'party city'"
+            },
+            "narrative": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "1-sentence AE talking point on paid search behavior"
+            }
           }
         },
         "competitor_traffic": {
@@ -313,111 +1040,430 @@
           "items": {
             "type": "object",
             "properties": {
-              "domain":      { "type": "string" },
-              "visits_3mo":  { "type": "string" }
+              "domain": {
+                "type": "string"
+              },
+              "visits_3mo": {
+                "type": "string"
+              }
             }
           }
         },
-        "source_url": { "type": ["string", "null"], "format": "uri" }
+        "source_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        }
       }
     },
-
     "tech_stack": {
       "type": "object",
       "properties": {
-        "ecommerce_platform":  { "type": ["string", "null"] },
-        "cms":                 { "type": ["string", "null"] },
-        "search_provider":     { "type": ["string", "null"] },
-        "personalization":     { "type": ["string", "null"] },
-        "analytics":           { "type": ["string", "null"] },
-        "tag_manager":         { "type": ["string", "null"] },
-        "tech_stack_summary":  { "type": ["string", "null"], "description": "Short e.g. 'Salesforce Commerce / Lucidworks / Adobe Analytics'" },
-        "source_url":          { "type": ["string", "null"], "format": "uri" }
+        "ecommerce_platform": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cms": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "search_provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "personalization": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "analytics": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tag_manager": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tech_stack_summary": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Short e.g. 'Salesforce Commerce / Lucidworks / Adobe Analytics'"
+        },
+        "source_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        }
       }
     },
-
     "ae_fields": {
       "type": "object",
       "properties": {
-        "ae_name":             { "type": ["string", "null"] },
-        "ae_email":            { "type": ["string", "null"] },
-        "next_step_action":    { "type": ["string", "null"], "description": "Specific single action" },
-        "next_step_owner":     { "type": ["string", "null"] },
-        "next_step_date":      { "type": ["string", "null"] },
-        "urgency_level":       { "type": ["string", "null"], "enum": ["high", "medium", "low", null] },
-        "urgency_label":       { "type": ["string", "null"], "description": "e.g. 'High Urgency'" },
-        "urgency_color":       { "type": ["string", "null"], "description": "Hex color e.g. '#DC2626'" },
-        "talk_track_opener":   { "type": ["string", "null"], "description": "Opening line for the call" },
-        "talk_track_cta":      { "type": ["string", "null"], "description": "Closing ask" }
+        "ae_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ae_email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "next_step_action": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Specific single action"
+        },
+        "next_step_owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "next_step_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "urgency_level": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "high",
+            "medium",
+            "low",
+            null
+          ]
+        },
+        "urgency_label": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "e.g. 'High Urgency'"
+        },
+        "urgency_color": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Hex color e.g. '#DC2626'"
+        },
+        "talk_track_opener": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Opening line for the call"
+        },
+        "talk_track_cta": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Closing ask"
+        }
       }
     },
-
     "next_steps": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["step_num", "title", "description"],
+        "required": [
+          "step_num",
+          "title",
+          "description"
+        ],
         "properties": {
-          "step_num":    { "type": "number" },
-          "title":       { "type": "string" },
-          "description": { "type": "string" }
+          "step_num": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
         }
       }
     },
-
     "methodology": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "1 paragraph describing audit method"
     },
-
     "bibliography": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["n", "label", "url"],
+        "required": [
+          "n",
+          "label",
+          "url"
+        ],
         "properties": {
-          "n":        { "type": "number" },
-          "label":    { "type": "string" },
-          "url":      { "type": "string", "format": "uri" },
-          "accessed": { "type": ["string", "null"] }
+          "n": {
+            "type": "number"
+          },
+          "label": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "accessed": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         }
       }
     },
-
     "partner_intel": {
-      "type": ["object", "null"],
-      "description": "Partner intelligence — tech partners (co-sell) and SI partners (warm intro). Optional module.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Partner intelligence \u2014 tech partners (co-sell) and SI partners (warm intro). Optional module.",
       "properties": {
-        "tech_partners": { "type": "array" },
-        "si_partners":   { "type": "array" },
-        "immediate_action": { "type": ["string", "null"] },
-        "co_sell_recommendation": { "type": ["string", "null"] },
-        "crossbeam_data_available": { "type": ["boolean", "null"] },
-        "source_label": { "type": ["string", "null"] }
+        "tech_partners": {
+          "type": "array"
+        },
+        "si_partners": {
+          "type": "array"
+        },
+        "immediate_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "co_sell_recommendation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "crossbeam_data_available": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "source_label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
-
     "tab_subtitles": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "Personalized subtitle line shown under each active SPA tab. Generated by algolia-audit-report.",
       "properties": {
-        "summary":  { "type": ["string", "null"] },
-        "account":  { "type": ["string", "null"] },
-        "findings": { "type": ["string", "null"] },
-        "case":     { "type": ["string", "null"] },
-        "playbook": { "type": ["string", "null"] }
+        "summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "account": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "findings": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "case": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "playbook": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       }
     },
-
     "recommended_first_play": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "Single strongest recommended first action. Drives Summary tab highlights card.",
       "properties": {
-        "type":     { "type": ["string", "null"], "enum": ["partner_warm_intro","strategic_angle","competitive","timing",null] },
-        "headline": { "type": ["string", "null"] },
-        "detail":   { "type": ["string", "null"] },
-        "urgency":  { "type": ["string", "null"], "enum": ["high","medium","low",null] },
-        "source":   { "type": ["string", "null"] }
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "partner_warm_intro",
+            "strategic_angle",
+            "competitive",
+            "timing",
+            null
+          ]
+        },
+        "headline": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detail": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "urgency": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "high",
+            "medium",
+            "low",
+            null
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "search_analytics": {
+      "type": "object",
+      "description": "First-party Algolia telemetry for EXISTING-customer (expansion) audits. Powers the 'Your Search, By the Numbers' SPA section. Optional \u2014 absent on displacement/greenfield audits.",
+      "properties": {
+        "window": {
+          "type": "string"
+        },
+        "source_label": {
+          "type": "string"
+        },
+        "index": {
+          "type": "string"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "detail": {
+                "type": "string"
+              },
+              "read": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              }
+            }
+          }
+        },
+        "volume": {
+          "type": "object"
+        },
+        "zero_result_queries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "volume_30d": {
+                "type": "integer"
+              },
+              "type": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "no_click_queries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "results": {
+                "type": "integer"
+              },
+              "clicks": {
+                "type": "integer"
+              },
+              "volume_30d": {
+                "type": "integer"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        }
       }
     }
   }

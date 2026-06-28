@@ -28,3 +28,16 @@ screenshots/
 *-correction-manifest.md
 *-skill-feedback.md
 scratchpad/
+auth/
+__pycache__/
+.pytest_cache/
+*.pyc
+.deno/
+deno.lock
+*.bak
+*.bak-*
+*-tmp.js
+*.pid
+*.log
+*.simple.bak.html
+detect-search-workspace/
