@@ -29,6 +29,18 @@ TIMEOUT = 30
 ABOUT_PATTERNS = ["/about", "/about-us", "/company", "/who-we-are", "/our-story"]
 CAREERS_PATTERNS = ["/careers", "/jobs", "/join-us", "/work-with-us", "/join"]
 INVESTOR_PATTERNS = ["/investors", "/investor-relations", "/ir"]
+LEADERSHIP_PATTERNS = [
+    "/about/leadership", "/about/team", "/about/executive-team",
+    "/leadership", "/team", "/executive-team", "/about/executives",
+    "/about/management", "/company/leadership", "/about/our-team",
+]
+
+EXEC_TITLE_KEYWORDS = [
+    "chief executive", "ceo", "chief technology", "cto", "chief information", "cio",
+    "chief digital", "cdo", "chief marketing", "cmo", "chief operating", "coo",
+    "chief financial", "cfo", "president", "vp ", "vice president",
+    "director", "head of", "general manager", "managing director",
+]
 
 def scout_available():
     try:
@@ -76,17 +88,83 @@ def try_url_patterns(domain, patterns, use_js=False):
     for pattern in patterns:
         url = f"https://www.{domain}{pattern}"
         result = scrape_with_scout(url, use_js=use_js)
-        if result["success"] and len(result["markdown"]) > 100:
+        md = result.get("markdown", "")
+        if result["success"] and isinstance(md, str) and len(md) > 100:
             return result, url
 
     # Fallback: try without www
     for pattern in patterns:
         url = f"https://{domain}{pattern}"
         result = scrape_with_scout(url, use_js=use_js)
-        if result["success"] and len(result["markdown"]) > 100:
+        md = result.get("markdown", "")
+        if result["success"] and isinstance(md, str) and len(md) > 100:
             return result, url
 
     return None, None
+
+def extract_description(markdown):
+    """Extract company description from About page markdown. Returns first substantial paragraph."""
+    if not markdown:
+        return None
+    # Strip markdown headers and bullets, find first paragraph ≥ 80 chars
+    for line in markdown.split("\n"):
+        line = line.strip()
+        if line.startswith(("#", "-", "*", "|", "!", "[")):
+            continue
+        if len(line) >= 80:
+            return line[:600]
+    return None
+
+
+def extract_executives(markdown):
+    """
+    Extract executive name+title pairs from a leadership page.
+    Best-effort: looks for lines where a known title keyword appears near a capitalized name.
+    Returns list of {"name": str, "title": str, "source": "Scout"}.
+    """
+    if not markdown:
+        return []
+
+    executives = []
+    lines = markdown.split("\n")
+    seen_names = set()
+
+    for i, line in enumerate(lines):
+        line_lower = line.lower()
+        if not any(kw in line_lower for kw in EXEC_TITLE_KEYWORDS):
+            continue
+
+        # Extract title — the line itself or the keyword match
+        title_line = line.strip().lstrip("#*- ").strip()
+        if len(title_line) < 3 or len(title_line) > 120:
+            continue
+
+        # Look for a name on the preceding or following line (capitalized words)
+        name = None
+        for offset in [-1, +1, -2, +2]:
+            idx = i + offset
+            if 0 <= idx < len(lines):
+                candidate = lines[idx].strip().lstrip("#*- ").strip()
+                # Name heuristic: 2–4 capitalized words, no special chars, not a title keyword
+                words = candidate.split()
+                if (2 <= len(words) <= 4
+                        and all(w[0].isupper() for w in words if w)
+                        and not any(kw in candidate.lower() for kw in EXEC_TITLE_KEYWORDS)
+                        and len(candidate) < 60):
+                    name = candidate
+                    break
+
+        if name and name not in seen_names:
+            seen_names.add(name)
+            executives.append({
+                "name": name,
+                "title": title_line,
+                "source": "Scout leadership page",
+                "label": f"[FACT — Scout scrape, {TODAY}]"
+            })
+
+    return executives[:10]  # cap at 10
+
 
 def extract_social_links(markdown, links):
     """
@@ -126,62 +204,82 @@ def extract_social_links(markdown, links):
 
     return result
 
-def run(domain, output_dir):
+def run(domain, _output_dir=None):
     if not scout_available():
         return {
             "scout_available": False,
             "error": "Scout not running at " + SCOUT_BASE,
+            "description": None,
+            "executives": [],
             "linkedin_url": None,
             "twitter_handle": None,
             "careers_url": None,
-            "website": None
+            "website": None,
         }
 
     result = {
         "scout_available": True,
+        "description": None,
+        "executives": [],
         "linkedin_url": None,
         "twitter_handle": None,
         "careers_url": None,
         "website": f"https://www.{domain}",
-        "sources": {}
+        "sources": {},
     }
 
-    # Step 1: Try About pages
+    # Step 1: About page — description + social links
     about_result, about_url = try_url_patterns(domain, ABOUT_PATTERNS, use_js=False)
     if not about_result:
-        # Retry with JS if no-JS failed
         about_result, about_url = try_url_patterns(domain, ABOUT_PATTERNS, use_js=True)
 
     if about_result and about_result["success"]:
-        social = extract_social_links(about_result["markdown"], about_result["links"])
+        md = about_result.get("markdown", "") or ""
+        result["description"] = extract_description(md)
+        social = extract_social_links(md, about_result.get("links", []))
         result["linkedin_url"] = social["linkedin_url"]
         result["twitter_handle"] = social["twitter_handle"]
         result["sources"]["about"] = {
             "url": about_url,
-            "label": f"[FACT — Scout scrape, {TODAY}]"
+            "label": f"[FACT — Scout scrape, {TODAY}]",
         }
 
-    # Step 2: Try Careers pages
+    # Step 2: Leadership page — exec name/title extraction
+    leadership_result, leadership_url = try_url_patterns(domain, LEADERSHIP_PATTERNS, use_js=False)
+    if not leadership_result:
+        leadership_result, leadership_url = try_url_patterns(domain, LEADERSHIP_PATTERNS, use_js=True)
+
+    if leadership_result and leadership_result["success"]:
+        md = leadership_result.get("markdown", "") or ""
+        execs = extract_executives(md)
+        if execs:
+            result["executives"] = execs
+            result["sources"]["leadership"] = {
+                "url": leadership_url,
+                "label": f"[FACT — Scout scrape, {TODAY}]",
+            }
+
+    # Step 3: Careers page
     careers_result, careers_url = try_url_patterns(domain, CAREERS_PATTERNS, use_js=False)
     if careers_result and careers_result["success"]:
         result["careers_url"] = careers_url
         result["sources"]["careers"] = {
             "url": careers_url,
-            "label": f"[FACT — Scout scrape, {TODAY}]"
+            "label": f"[FACT — Scout scrape, {TODAY}]",
         }
 
-    # Step 3: Try Investor pages (extract PDFs if any)
-    investor_urls = []
+    # Step 4: Investor page — IR URL + PDF discovery
     investor_result, investor_url = try_url_patterns(domain, INVESTOR_PATTERNS, use_js=False)
     if investor_result and investor_result["success"]:
-        # Find PDF links
-        pdfs = [l for l in investor_result["links"] if l.lower().endswith(".pdf")]
-        if pdfs:
-            investor_urls = pdfs[:3]  # Top 3 PDFs
-            result["sources"]["investor_urls"] = {
-                "urls": investor_urls,
-                "label": f"[FACT — Scout scrape, {TODAY}]"
-            }
+        result["ir_url"] = investor_url
+        raw_links = investor_result.get("links", [])
+        links_list = raw_links if isinstance(raw_links, list) else []
+        pdfs = [l for l in links_list if isinstance(l, str) and l.lower().endswith(".pdf")]
+        result["sources"]["investor"] = {
+            "url": investor_url,
+            "pdf_urls": pdfs[:3],
+            "label": f"[FACT — Scout scrape, {TODAY}]",
+        }
 
     return result
 

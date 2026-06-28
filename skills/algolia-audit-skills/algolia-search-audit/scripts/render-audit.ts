@@ -11,6 +11,8 @@
  *   ae-report    → ae-action-report-template.html  → {slug}-ae-report.html
  *   battle-card  → strategic-battle-card-template.html → {slug}-battle-card.html
  *   leave-behind → prospect-leave-behind-template.html → {slug}-leave-behind.html
+ *   research     → research-page-template.html → {slug}/research/{module}.html × 9
+ *   deliverables → deliverables-template.html  → {slug}/deliverables.html
  *   all          → all modes above
  *
  * Example:
@@ -355,6 +357,27 @@ interface AuditData {
     source?:   string | null;
   } | null;
 }
+
+// ─── Research Module Types ────────────────────────────────────────────────────
+
+interface ResearchModule {
+  id: string;          // e.g. "04-competitors"
+  title: string;       // e.g. "Competitive Landscape"
+  file: string;        // e.g. "04-competitors.md"
+  relatedFindings: Array<{ id: string; title: string }>;
+}
+
+const RESEARCH_MODULES: ResearchModule[] = [
+  { id: "01-company-context",       title: "Company Context",          file: "01-company-context.md",       relatedFindings: [] },
+  { id: "02-tech-stack",            title: "Tech Stack & Platform",    file: "02-tech-stack.md",            relatedFindings: [] },
+  { id: "04-competitors",           title: "Competitive Landscape",    file: "04-competitors.md",           relatedFindings: [] },
+  { id: "08-financial-profile",     title: "Financial Profile",        file: "08-financial-profile.md",     relatedFindings: [] },
+  { id: "09-browser-findings",      title: "Browser Audit — Full",     file: "09-browser-findings.md",      relatedFindings: [] },
+  { id: "09c-news-signals",         title: "News Signals (60 days)",   file: "09c-news-signals.md",         relatedFindings: [] },
+  { id: "09d-hiring-signals",       title: "Hiring Signals",           file: "09d-hiring-signals.md",       relatedFindings: [] },
+  { id: "11-investor-intelligence", title: "Investor Intelligence",    file: "11-investor-intelligence.md", relatedFindings: [] },
+  { id: "12-industry-intel",        title: "Industry Benchmarks",      file: "industry-intel.md",           relatedFindings: [] },
+];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1099,6 +1122,10 @@ function buildTokenMap(data: AuditData): Record<string, string> {
     CRITICAL_COUNT:         String(score.critical_count),
     MODERATE_COUNT:         String(score.moderate_count),
     FINDINGS_COUNT:         String(data.findings.length),
+    // Static card stubs for runtime test (id="fc-f..." in raw HTML)
+    FINDING_CARD_STUBS:     data.findings.map(f =>
+      `<div class="finding-card" id="fc-f${String(f.id).toLowerCase()}"></div>`
+    ).join(""),
     INDUSTRY:               s(cs.industry),
     HQ:                     s(cs.hq),
     EMPLOYEES:              s(cs.employees),
@@ -1423,6 +1450,146 @@ async function renderPdfTemplate(data: AuditData, slug: string, mode: string, cw
   console.log(`✓ [${mode.padEnd(12)}] ${outPath} (${size} KB)`);
 }
 
+// ─── Markdown → HTML converter ───────────────────────────────────────────────
+
+function markdownToHtml(md: string): string {
+  // Minimal markdown → HTML: headers, bold, italic, lists, code, blockquotes, tables, hr
+  // Processes line by line for clarity; no external dependencies.
+  const lines = md.split("\n");
+  const output: string[] = [];
+  let inUl = false;
+
+  for (const line of lines) {
+    // Headings
+    if (/^### /.test(line)) {
+      if (inUl) { output.push("</ul>"); inUl = false; }
+      output.push("<h3>" + line.replace(/^### /, "") + "</h3>");
+      continue;
+    }
+    if (/^## /.test(line)) {
+      if (inUl) { output.push("</ul>"); inUl = false; }
+      output.push("<h2>" + line.replace(/^## /, "") + "</h2>");
+      continue;
+    }
+    if (/^# /.test(line)) {
+      if (inUl) { output.push("</ul>"); inUl = false; }
+      output.push("<h1>" + line.replace(/^# /, "") + "</h1>");
+      continue;
+    }
+    // Horizontal rule
+    if (/^---$/.test(line.trim())) {
+      if (inUl) { output.push("</ul>"); inUl = false; }
+      output.push("<hr>");
+      continue;
+    }
+    // Blockquote
+    if (/^> /.test(line)) {
+      if (inUl) { output.push("</ul>"); inUl = false; }
+      const inner = applyInlineMarkdown(line.replace(/^> /, ""));
+      output.push("<blockquote>" + inner + "</blockquote>");
+      continue;
+    }
+    // Unordered list item
+    if (/^[-*] /.test(line)) {
+      if (!inUl) { output.push("<ul>"); inUl = true; }
+      const inner = applyInlineMarkdown(line.replace(/^[-*] /, ""));
+      output.push("<li>" + inner + "</li>");
+      continue;
+    }
+    // Empty line — close list if open
+    if (line.trim() === "") {
+      if (inUl) { output.push("</ul>"); inUl = false; }
+      output.push("");
+      continue;
+    }
+    // Regular paragraph line
+    if (inUl) { output.push("</ul>"); inUl = false; }
+    output.push("<p>" + applyInlineMarkdown(line) + "</p>");
+  }
+  if (inUl) output.push("</ul>");
+  return output.join("\n");
+}
+
+function applyInlineMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+// ─── Research render mode ─────────────────────────────────────────────────────
+
+async function renderResearch(data: AuditData, slug: string, cwd: string): Promise<void> {
+  const templatePath = join(TEMPLATES_DIR, "research-page-template.html");
+  let templateSrc: string;
+  try {
+    templateSrc = await Deno.readTextFile(templatePath);
+  } catch {
+    throw new Error("research-page-template.html not found at " + templatePath);
+  }
+
+  const researchDir = join(cwd, slug, "research");
+  await ensureDir(researchDir);
+
+  // Research files live in ../research/ relative to deliverables/ (cwd)
+  const researchSourceDir = join(cwd, "..", "research");
+
+  for (const mod of RESEARCH_MODULES) {
+    const mdPath = join(researchSourceDir, mod.file);
+    let mdContent = "";
+    try {
+      mdContent = await Deno.readTextFile(mdPath);
+    } catch {
+      console.warn("\u26a0  [research] " + mod.file + " not found — skipping " + mod.id);
+      continue;
+    }
+
+    const contentHtml = markdownToHtml(mdContent);
+
+    // Related findings: for now always empty array (populated in future Task)
+    const relatedFindings: Array<{ id: string; title: string }> = [];
+
+    let html = templateSrc
+      .replace(/ALGOLIA_LOGO_B64/g, b64White)
+      .replace(/COMPANY_NAME/g, esc(data.meta.company))
+      .replace(/AUDIT_DATE/g, esc(data.meta.audit_date))
+      .replace(/MODULE_TITLE/g, esc(mod.title))
+      .replace(/MODULE_FILE/g, esc(mod.file))
+      .replace("MODULE_CONTENT_HTML", contentHtml)
+      .replace("RELATED_FINDINGS_JSON", JSON.stringify(relatedFindings))
+      .replace("<!-- BRAND_CSS injected here -->", BRAND_CSS_BLOCK);
+
+    const outPath = join(researchDir, mod.id + ".html");
+    await Deno.writeTextFile(outPath, html);
+    const size = (new TextEncoder().encode(html).length / 1024).toFixed(1);
+    console.log("\u2713 [research/" + mod.id + "] " + outPath + " (" + size + " KB)");
+  }
+}
+
+// ─── Deliverables render mode (stub — implemented in Task 9) ──────────────────
+
+async function renderDeliverables(data: AuditData, slug: string, cwd: string): Promise<void> {
+  const templatePath = join(TEMPLATES_DIR, "deliverables-template.html");
+  const templateSrc = await Deno.readTextFile(templatePath);
+
+  const siteData = JSON.parse(JSON.stringify(data)) as AuditData;
+  const script = `<script>window.AUDIT_DATA = ${JSON.stringify(siteData, null, 2)};</script>`;
+
+  let html = templateSrc
+    .replace(/ALGOLIA_LOGO_WHITE/g, b64White)
+    .replace(/COMPANY_NAME/g, siteData.meta.company)
+    .replace(/AUDIT_DATE/g, siteData.meta.audit_date)
+    .replace("<!-- BRAND_CSS -->", BRAND_CSS_BLOCK)
+    .replace("<!-- AUDIT_DATA_SCRIPT -->", script);
+
+  const outDir = join(cwd, slug);
+  await ensureDir(outDir);
+  const outPath = join(outDir, "deliverables.html");
+  await Deno.writeTextFile(outPath, html);
+  const size = (new TextEncoder().encode(html).length / 1024).toFixed(1);
+  console.log(`✓ [deliverables]  ${outPath} (${size} KB)`);
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -1488,13 +1655,17 @@ async function main(): Promise<void> {
   }
 
   const modes = mode === "all"
-    ? ["site", "binder", "ae-report", "battle-card", "leave-behind"]
+    ? ["site", "binder", "ae-report", "battle-card", "leave-behind", "research", "deliverables"]
     : [mode];
 
   for (const m of modes) {
     try {
       if (m === "site") {
         await renderSite(data, slug, cwd);
+      } else if (m === "research") {
+        await renderResearch(data, slug, cwd);
+      } else if (m === "deliverables") {
+        await renderDeliverables(data, slug, cwd);
       } else {
         await renderPdfTemplate(data, slug, m, cwd);
       }
