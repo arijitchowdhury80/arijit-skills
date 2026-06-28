@@ -11,8 +11,14 @@ Env: BUILTWITH_API_KEY, SIMILARWEB_API_KEY
 import sys, os, json, requests, subprocess
 from datetime import date
 
-BW_KEY = os.environ.get('BUILTWITH_API_KEY', '***REMOVED***')
-SW_KEY = os.environ.get('SIMILARWEB_API_KEY', '***REMOVED***')
+def _require_env(name):
+    val = os.environ.get(name)
+    if not val:
+        sys.exit(f"ERROR: {name} not set — export it before running (see .env.local). No hardcoded fallback.")
+    return val
+
+BW_KEY = _require_env('BUILTWITH_API_KEY')
+SW_KEY = _require_env('SIMILARWEB_API_KEY')
 TODAY = date.today().isoformat()
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PARSE_SCRIPT = os.path.join(SCRIPT_DIR, 'parse-builtwith.js')

@@ -39,7 +39,7 @@ Current endpoints called:
 
 Usage:
   python3 collect-traffic.py <domain> <output-dir>
-  SIMILARWEB_API_KEY env var (falls back to hardcoded key)
+  SIMILARWEB_API_KEY env var (required — no hardcoded fallback)
 
 Output:
   <output-dir>/03-traffic-data.md   — human-readable scratchpad
@@ -49,7 +49,13 @@ Output:
 import sys, os, json, requests
 from datetime import date, timedelta
 
-API_KEY = os.environ.get('SIMILARWEB_API_KEY', '***REMOVED***')
+def _require_env(name):
+    val = os.environ.get(name)
+    if not val:
+        sys.exit(f"ERROR: {name} not set — export it before running (see .env.local). No hardcoded fallback.")
+    return val
+
+API_KEY = _require_env('SIMILARWEB_API_KEY')
 TODAY = date.today().isoformat()
 
 # Date range: last 3 completed months
