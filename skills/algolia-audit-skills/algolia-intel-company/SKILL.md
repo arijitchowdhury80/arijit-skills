@@ -45,9 +45,22 @@ Capture stdout JSON. If `status == "failed"` → alert user and stop.
 
 ---
 
-## Step 2: Skill Enrichment
+## Step 2: Scout Direct-Fetch Enrichment (PRIMARY — runs before WebSearch)
 
-The script marks these fields as `[COLLECT_VIA_SKILL]`. Fill each using the tool specified:
+The script already invokes `scout_company.py` automatically (Step 4 in `collect-company.py`), which scrapes:
+- `/about` or `/about-us` → `description`, `linkedin_url`, `twitter_handle`
+- `/leadership`, `/about/leadership`, `/about/team`, etc. → `executives[]` (name + title)
+- `/careers`, `/jobs`, etc. → `careers_url`
+- `/investors`, `/ir` → `ir_url` + PDF links
+
+Check `scout_data` in the JSON output. For each field Scout successfully populated, label it:
+`[FACT — Scout scrape {url}, {date}]`
+
+**Only proceed to WebSearch (Step 2b) for fields Scout could not fill.**
+
+## Step 2b: WebSearch Fallback Enrichment
+
+For any field still null after Scout, use WebSearch:
 
 ### hq, founded, employee_count, public_private
 - Tool: WebSearch
@@ -59,19 +72,19 @@ The script marks these fields as `[COLLECT_VIA_SKILL]`. Fill each using the tool
 - Query: `"{CompanyName}" ecommerce retail vertical industry`
 - Label: `[FACT — company website, date]`
 
-### twitter_handle
+### twitter_handle (if Scout returned null)
 - Tool: WebSearch
 - Query: `"{CompanyName}" Twitter OR X.com official account`
 - Label: `[FACT — Twitter/X, date]` if confirmed
 
-### executives
+### executives (if Scout returned empty or incomplete list)
 - Tool: WebSearch
 - Query: `"{CompanyName}" CEO CTO CDO "VP Digital" "VP Commerce" executives 2025 2026`
 - For each named executive: confirm name + title + LinkedIn URL
 - Label: `[FACT — source URL, date]`
 - RULE: Named sources only. No "a spokesperson said."
 
-### ir_url (public companies only)
+### ir_url (public companies only, if Scout returned null)
 - Tool: WebSearch
 - Query: `"{CompanyName}" investor relations IR page`
 - Label: `[FACT — direct URL, date]`
