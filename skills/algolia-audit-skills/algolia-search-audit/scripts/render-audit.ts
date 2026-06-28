@@ -1364,7 +1364,7 @@ function checkUnreplacedTokens(html: string, slug: string, mode: string): boolea
 
 // ─── Site mode (SPA) ─────────────────────────────────────────────────────────
 
-async function renderSite(data: AuditData, _slug: string, cwd: string): Promise<void> {
+async function renderSite(data: AuditData, slug: string, cwd: string): Promise<void> {
   const templatePath = join(TEMPLATES_DIR, "index-template.html");
   let html: string;
   try {
@@ -1399,7 +1399,9 @@ async function renderSite(data: AuditData, _slug: string, cwd: string): Promise<
       : BRAND_CSS_BLOCK + html;
   }
 
-  const outDir = cwd;
+  // Output is {slug}/index.html (NOT hub-root index.html — that's the hub homepage).
+  // Screenshots at {slug}/screenshots/ resolve relative to this path.
+  const outDir = join(cwd, slug);
   await ensureDir(outDir);
   const outPath = join(outDir, "index.html");
   await Deno.writeTextFile(outPath, html);
