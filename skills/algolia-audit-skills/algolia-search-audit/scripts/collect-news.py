@@ -84,18 +84,29 @@ def load_ctx(output_dir):
     p = os.path.join(output_dir,'01-company-context.json')
     return json.load(open(p)) if os.path.exists(p) else {}
 
-def write_md(company, articles, errors, output_dir):
+def write_md(company, articles, errors, output_dir, collection_method):
     immediate = [a for a in articles if a['category'] in ('LEADERSHIP_CHANGE','FUNDING_EVENT')]
     strategic = [a for a in articles if a['category'] in ('TECH_INVESTMENT','DIGITAL_INITIATIVE','INTERNATIONAL')]
     context_  = [a for a in articles if a['category'] in ('PRODUCT_LAUNCH','COMPETITIVE','GENERAL')]
+
+    # Degradation discipline: Tavily is the [FACT]-grade primary; the RSS path is a
+    # fallback whose freshness/coverage is weaker, so flag it (not silent) and downgrade
+    # per-article labels accordingly (each article already carries its own source label).
+    degraded = collection_method != 'tavily'
+    method_note = {
+        'tavily': '[FACT-grade] Tavily news search (primary)',
+        'google_news_rss_fallback': '[OBSERVED — degraded] Google News RSS fallback (TAVILY_API_KEY unset)',
+    }.get(collection_method, collection_method)
 
     lines = [
         f'# News Signals — {company}',
         f'*Generated: {TODAY} via collect-news.py*',
         f'*Sources: Tavily (primary) / Google News RSS (fallback) / RSS/Newsroom WebFetch | Lookback: 60 days*',
+        f'*collection_method: {collection_method}* {"⚠ DEGRADED FALLBACK" if degraded else ""}',
         '',
         f'## Collection Summary',
         f'- Total articles: {len(articles)} | Lookback cutoff: {CUTOFF}',
+        f'- Collection method: {method_note}',
         '',
         '## 🔴 Immediate Action Signals (Leadership + Funding)',
     ]
@@ -106,7 +117,7 @@ def write_md(company, articles, errors, output_dir):
             f'- Category: {a["category"]}',
             f'- Algolia angle: {"New exec = tech review window open" if a["category"]=="LEADERSHIP_CHANGE" else "Budget signal — evaluate timing"}',
             f'- URL: {a.get("url","n/a")}',
-            f'- [FACT — Google News via Apify, {TODAY}]',
+            f'- {a.get("source","[OBSERVED — news search, " + TODAY + "]")}',
             '',
         ]
     if not immediate: lines += ['*None found*','']
@@ -126,8 +137,15 @@ def write_md(company, articles, errors, output_dir):
         '## Summary (last 60 days)',
         '*(Pattern synthesis populated by algolia-intel-news SKILL)*',
         '',
-        f'[FACT — Google News via Apify (data_xplorer/google-news-scraper-fast), {TODAY}]',
+        f'*Sourcing: {method_note}, {TODAY}*',
     ]
+    if degraded:
+        lines += [
+            '',
+            '> ⚠ **Collection degraded:** Tavily was unavailable; articles came from the Google '
+            'News RSS fallback. Freshness/coverage is weaker — treat as `[OBSERVED]`, not `[FACT]`, '
+            'and re-verify any signal you act on.',
+        ]
     if errors: lines += ['','## Collection Errors'] + [f'- {e}' for e in errors]
 
     out = os.path.join(output_dir, '09c-news-signals.md')
@@ -160,6 +178,9 @@ def main():
 
     articles = []
     use_tavily = bool(os.environ.get('TAVILY_API_KEY', ''))
+    # collection_method is a first-class field: tavily = [FACT]-grade primary;
+    # google_news_rss_fallback = degraded amber path (freshness/coverage weaker).
+    collection_method = 'tavily' if use_tavily else 'google_news_rss_fallback'
 
     for q in queries:
         if use_tavily:
@@ -209,8 +230,9 @@ def main():
                             if parsed:
                                 pub_date = f'{parsed[0]}-{parsed[1]:02d}-{parsed[2]:02d}'
                         if pub_date >= CUTOFF and title:
+                            # Amber label: RSS fallback freshness is unverified (degraded path).
                             articles.append({'title': title, 'url': url, 'date': pub_date,
-                                             'source': f'[FACT — Google News RSS, {pub_date}]',
+                                             'source': f'[OBSERVED — Google News RSS fallback, {pub_date}]',
                                              'category': categorize(title, '')})
                 else:
                     errors.append(f'Google News RSS query "{q[:40]}": HTTP {r.status_code}')
@@ -231,8 +253,8 @@ def main():
         if key not in seen: seen.add(key); unique.append(a)
     unique.sort(key=lambda x: x.get('date',''), reverse=True)
 
-    out = write_md(company, unique, errors, output_dir)
-    print(json.dumps({'status':'success' if unique else 'partial','domain':domain,'company_name':company,'output_file':out,'size_bytes':os.path.getsize(out),'total_articles':len(unique),'errors':errors},indent=2))
+    out = write_md(company, unique, errors, output_dir, collection_method)
+    print(json.dumps({'status':'success' if unique else 'partial','domain':domain,'company_name':company,'output_file':out,'size_bytes':os.path.getsize(out),'total_articles':len(unique),'collection_method':collection_method,'degraded':collection_method!='tavily','errors':errors},indent=2))
 
 if __name__ == '__main__':
     main()

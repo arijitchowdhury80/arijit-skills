@@ -56,6 +56,25 @@ If `research/09-browser-findings.md` exists with ≥ 50 lines, then `audit-data.
 
 ---
 
+## Mechanical dimensions — run the script FIRST (deterministic, not by hand)
+
+The mechanical dimensions (completeness, source-density, cross-file money consistency,
+no-fabrication placeholder/unsourced-impact grep, a money spot-check, and optional URL liveness)
+are implemented as a deterministic script. **Run it before doing any LLM verification** and read its
+JSON — do NOT re-derive these counts by hand (that is non-deterministic and the whole point of the
+script is reproducibility):
+
+```bash
+python3 ~/.claude/skills/algolia-audit-factcheck/scripts/factcheck_mechanical.py \
+  --audit-dir "$ALGOLIA_AUDIT_DIR" --company "{CompanyName}" [--check-urls --url-sample 8]
+# exit 0 = no mechanical blocker; exit 2 = BLOCKED (placeholder / missing required file / dead URL)
+# JSON.mechanical_action is PROCEED|BLOCKED — feed BLOCKED reasons straight into FACTCHECK_GATE.md
+```
+
+The script covers ONLY mechanical truths. The **judgment** dimensions below (quote-vs-transcript
+authenticity, "does this claim match the evidence", competitive-claim accuracy) stay on the LLM and
+are NOT in the script. If the script says BLOCKED, the gate is BLOCKED regardless of LLM dimensions.
+
 ## 20 Verification Dimensions
 **Group A (Intelligence modules 1-11):** Company context, tech stack, traffic params, competitor claims, financial integrity, investor quote verification, hiring URL validity, social currency, news freshness, industry benchmarks, partner data
 **Group B (Browser — Dim 12):** Screenshots on disk, file sizes >50KB, queries match claims

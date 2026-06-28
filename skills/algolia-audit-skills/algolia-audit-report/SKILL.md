@@ -72,6 +72,20 @@ If any check fails → **STOP. Tell the user: "Cannot run audit-report. [X] is i
 
 ## Execution Phases
 Phase 3: Score 10 areas → 10-scoring-matrix.md (see REFERENCE.md for scoring criteria)
+Phase 3b: **Compute the overall score with the SCRIPT — do NOT average by hand.**
+After writing the 10 per-area scores + severities into `10-scoring-matrix.md`, run:
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/calculate-score.py \
+  "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/"
+```
+The script parses the matrix, applies the weighted formula (HIGH×2.0, MEDIUM×1.0,
+LOW×0.5), and returns `overall_score`, `formula`, `severity_counts`, and `verdict`.
+**Use the script's `overall_score` and `verdict` everywhere downstream** — the deck
+headline, `{slug}-search-audit.md`, and the `score.overall` you write into
+audit-data.json. Never hand-average the 10 area scores; the per-area 0–10 judgment is
+yours, the weighted overall is the script's. (generate-audit-data.py recalculates the
+same formula at Phase 5a-patch — the two MUST agree; if they don't, you typed a number
+the script didn't produce.)
 Phase 4: Generate main report → {slug}-search-audit.md
 Phase 5a: Write audit-data.json (validate with validate-json-schema.py before render)
 Phase 5b: Run renderer → deno run --allow-read --allow-write --allow-net scripts/render-audit.ts {slug} all

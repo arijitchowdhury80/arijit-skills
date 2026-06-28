@@ -211,4 +211,19 @@ After writing the playbook, verify all of the following before declaring complet
 5. Objection count: at least 4 objections handled with Response + Pivot + Fallback
 6. No generic language: grep for "your company", "the prospect", "insert name" — if found, replace with actual names
 
+7. **Claim traceability (mechanical — run the checker, don't self-attest):** every talking point
+   must reference a real audit finding (`What we found:`) AND a verbatim exec quote (`Their words:`).
+   A talking point with neither is an ungrounded claim and violates the Section 1 sourcing rule.
+
+```bash
+SCRIPTS="$HOME/.claude/skills/algolia-search-audit/scripts"   # adjust if running from repo
+python3 "$SCRIPTS/check-claim-traceability.py" playbook \
+  "$AUDIT_DIR/{Company}/deliverables/{slug}-playbook.md"
+# Exit 0 = every talking point traces to a finding + quote. Exit 1 = ungrounded talking points listed.
+```
+
+This checks structure mechanically; it does NOT rewrite prose. If it reports a FAIL, add the missing
+`What we found:` / `Their words:` line to that talking point (or remove the talking point) — do not
+report completion while any talking point is ungrounded.
+
 If any gate fails: fix before reporting complete. Do not report completion with a failing gate.

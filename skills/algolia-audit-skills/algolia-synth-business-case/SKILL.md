@@ -18,12 +18,19 @@ Read `~/.claude/skills/algolia-search-audit/AGENT-CONTEXT.md` before taking any 
 
 ---
 
-## MANDATORY RULE: Show All Math
+## MANDATORY RULE: The SCRIPT does the math, not you
 
-Every dollar figure must show: `input × rate × factor = output`
-If any input is an estimate, label it `[ESTIMATE]`.
-If any input is verified from a named source, label it `[FACT — {source}]`.
-A number without a formula is a violation. Do not write it.
+**You do NOT compute any ROI dollar figure by hand.** All 6 components × 2 scenarios
+are computed deterministically by `calculate-roi.py --components`. Your job is to:
+1. EXTRACT the labeled assumptions from the research files (and mark AE fill-ins),
+2. PASS them to the script,
+3. WRITE the narrative around the numbers the script returns — verbatim.
+
+Every dollar figure must show its formula — but you copy the `formula_conservative` /
+`formula_moderate` strings the script emits; you never multiply anything yourself.
+If any input is an estimate, label it `[ESTIMATE]`. If verified from a named source,
+label it `[FACT — {source}]`. A number you computed by hand is a violation. A number
+the script did not emit is a violation. Do not write it.
 
 ---
 
@@ -116,15 +123,48 @@ Mark components as ACTIVE (gap confirmed) or CONDITIONAL (gap not confirmed — 
 
 ---
 
-## Step 3: Calculate the 6 ROI Components
+## Step 3: Calculate the 6 ROI Components — RUN THE SCRIPT
 
-For each component, write:
-1. Status: ACTIVE or CONDITIONAL
-2. What it measures
-3. Full formula with all inputs labeled
-4. Conservative and moderate scenarios
-5. Algolia improvement range with source
-6. AE fill-in prompt (what to ask the prospect)
+**Do not multiply anything by hand.** Assemble the labeled assumptions you extracted
+in Step 1–2 into a JSON object and pass it to `calculate-roi.py --components`. The
+script computes all 6 components × conservative + moderate, returns the per-component
+formula strings and the totals, and SKIPS any component whose required input is absent
+(it never fabricates a missing AOV or conversion rate).
+
+```bash
+# Assemble assumptions — ONLY values you can cite or that are AE fill-ins you have.
+# Omit anything you do not have; the script will SKIP the dependent component
+# rather than invent a number. current_conversion drives Component 2 only.
+python3 ~/.claude/skills/algolia-search-audit/scripts/calculate-roi.py --components \
+  --assumptions '{
+    "monthly_visits": <from 03-traffic-data.md, FACT>,
+    "aov": <from 08-financial-profile.md or AE fill-in>,
+    "search_usage_rate": 0.15,
+    "current_conversion": <AE fill-in — omit if unknown>,
+    "no_results_rate": 0.05,
+    "nlp_fail_rate": 0.20
+  }'
+```
+
+Per-component improvement rates (conversion delta, AOV delta, bounce delta, delay
+buckets, recovery rates, the moderate-scenario bumps) are the SKILL.md baselines and
+are built into the script. To override a baseline for a specific prospect, add the
+matching key from `COMPONENT_DEFAULTS` (e.g. `"c1_conv_delta_conservative": 0.18`) to
+the assumptions JSON — but only with a cited reason.
+
+Then, for each component, write into the output file:
+1. Status: copy the `status` the script returned (ACTIVE / CONDITIONAL / SKIPPED).
+   You may upgrade CONDITIONAL→ACTIVE by passing `"c2_status": "ACTIVE"` etc. when the
+   scoring matrix confirms the gap — that ACTIVE/CONDITIONAL judgment is yours, the
+   arithmetic is the script's.
+2. What it measures (the reference description below).
+3. The `formula_conservative` and `formula_moderate` strings — verbatim from the script.
+4. The `conservative` / `moderate` dollar figures — verbatim from the script.
+5. Algolia improvement range with source (the reference notes below).
+6. AE fill-in prompt (what to ask the prospect).
+
+The component descriptions below are REFERENCE for steps 2/5/6 only — they are NOT a
+licence to recompute the dollar figures. Numbers come from the script, full stop.
 
 ---
 
@@ -273,21 +313,19 @@ recovery_rate = 0.12 [ESTIMATE — 12% of recovered NLP fails convert]
 
 ---
 
-## Step 4: Calculate Totals
+## Step 4: Totals — COPY from the script
+
+Do NOT add the components yourself. The script already returns `totals.conservative`,
+`totals.moderate`, and the `*_formula` strings that sum the active components. Copy
+them verbatim. SKIPPED components are excluded from the totals by the script — if a
+component is SKIPPED, say so explicitly in the output ("not modeled — missing {input}"),
+do not silently drop it or backfill a guess.
 
 ### Conservative Total
-```
-C1_conservative + C2_conservative + C3_conservative + C4_conservative + C5_conservative + C6_conservative
-= $[total]M/year
-Formula shown: [expand each component's conservative figure with its inputs]
-```
+Copy `totals.conservative` and `totals.conservative_formula` from the script output.
 
 ### Moderate Total
-```
-C1_moderate + C2_moderate + C3_moderate + C4_moderate + C5_moderate + C6_moderate
-= $[total]M/year
-Formula shown: [expand each component's moderate figure with its inputs]
-```
+Copy `totals.moderate` and `totals.moderate_formula` from the script output.
 
 ### ASSUMPTION INVENTORY
 List every input labeled [ESTIMATE] that AE should replace with actual numbers:
@@ -500,5 +538,9 @@ Pass conditions:
 - All 6 components present (grep returns 6)
 - No component section contains a dollar figure without a preceding formula line
 - Every [ESTIMATE] input listed in the ASSUMPTION INVENTORY
+- **Every dollar figure in the file matches a figure emitted by `calculate-roi.py
+  --components`.** Re-run the script and diff: if a number in the file is not in the
+  script output, you computed it by hand — that is a BLOCKING violation. Replace it
+  with the script's figure or mark the component SKIPPED.
 
 If any condition fails: append a `## VERIFICATION FAILURES` section to the file listing what is missing. Do not silently pass.

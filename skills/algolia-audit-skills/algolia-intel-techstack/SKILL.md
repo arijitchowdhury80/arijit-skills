@@ -10,8 +10,10 @@ writes_to:
   - 02-tech-stack.md
   - 02-tech-stack.json
 mcp_required:
-  - builtwith: "all 7 endpoints — domain-lookup, relationships, recommendations, financial, social, trust, keywords"
+  - builtwith: "all 7 endpoints — domain-lookup, relationships, recommendations, financial, social, trust, keywords (SECONDARY search-vendor signal)"
   - similarweb: "get-website-content-technologies-agg (cross-check)"
+depends_on_skill:
+  - detect-search: "canonical search-vendor oracle — Layer 3 network verdict (primary)"
 skill_enrichment: true
 version: 1.0
 ---
@@ -57,43 +59,47 @@ Read `search_vendor` and `search_vendor_status` from `02-tech-stack.json`.
 - Cross-reference with BuiltWith results
 - Note any discrepancies
 
-### Layer 3: Live Network Inspection (MANDATORY — confirms active search API)
+### Layer 3: Live Network Inspection via `detect-search` (MANDATORY — canonical vendor oracle)
 
 This step is non-negotiable. BuiltWith detects installed JS tags, not what is actually firing in production. The only way to confirm the active search vendor is to observe the live network call.
 
-**Procedure:**
-1. Use chrome-devtools MCP to open a new browser page
-2. Navigate to `https://{domain}`
-3. Open the search box and type a generic product query (e.g. "shoes", "party supplies")
-4. Capture all network requests: `list_network_requests()`
-5. Scan for API calls that match known search vendor signatures:
-   - **Algolia:** `*.algolia.net`, `*.algolianet.com`, `application-id.algolia.net/1/indexes`
-   - **Elasticsearch:** `/_search`, `/api/search`, `es.{domain}`, port 9200/9243
-   - **Coveo:** `*.cloud.coveo.com`, `platform.cloud.coveo.com`
-   - **Bloomreach:** `*.bloomreach.com`, `*.brcloud.com`, `/api/v2/search`
-   - **Constructor.io:** `*.cnstrc.com`, `ac.cnstrc.com`
-   - **Searchspring:** `*.searchspring.net`, `*.searchspring.io`
-   - **Lucidworks:** `*.lucidworks.com`
-   - **Solr:** `/solr/`, `select?q=`
-6. Record the exact endpoint URL, request payload, and response structure
-7. Update `02-tech-stack.json`:
-   - `search_vendor_network_confirmed`: true/false
-   - `search_vendor_network_endpoint`: the exact URL observed (or null)
-   - `search_vendor_status`: upgrade to `"ACTIVE"` if network confirms; keep `"TAG_ONLY"` if not observed
-   - `network_check_date`: today's date
-   - `network_check_note`: what was observed or why it could not be confirmed (WAF block, login-gated, etc.)
+**Do NOT pattern-match network traffic by hand in the LLM.** The canonical, deterministic oracle for "what search vendor is this site actually running" is the **`detect-search` skill** — a Playwright packet-inspection detector (30+ vendor signatures, deep app_id / index / api_key extraction, catches proxied first-party setups, zero-FP per project memory). It returns the vendor verdict deterministically. BuiltWith (Layer 1) is the SECONDARY signal; `detect-search` is primary.
 
-**If WAF/bot detection blocks the request:**
-- Document the block: `network_check_note: "Blocked by {WAF vendor} — stealth mode required in Phase 2"`
-- Do NOT skip — record the block as data. A WAF block is itself a finding.
-- Set `search_vendor_status = "UNCONFIRMED_WAF_BLOCK"`
+**Procedure (deterministic — two scripts, no LLM pattern-matching):**
+
+```bash
+# 1. Run the canonical oracle. Triggers a real search interaction and inspects packets.
+node ~/.claude/skills/detect-search/detect-search.js "https://{domain}" \
+  --type-query "shoes" > /tmp/ds_{slug}.json
+
+# 2. Map its verdict into the canonical 02-tech-stack.json search-vendor fields.
+#    Pass the Layer-1 BuiltWith vendor so agreement/disagreement is recorded.
+python3 ~/.claude/skills/algolia-search-audit/scripts/map-detect-search.py \
+  --detect /tmp/ds_{slug}.json \
+  --builtwith-vendor "{search_vendor_from_layer1_or_empty}"
+```
+
+`map-detect-search.py` emits, deterministically, the exact fields below — merge them into `02-tech-stack.json`:
+- `search_vendor` — canonical display name (network truth wins over BuiltWith)
+- `search_vendor_status` — `ACTIVE` (network-confirmed) | `UNCONFIRMED_WAF_BLOCK` | `UNDETECTED`
+- `search_vendor_oracle: "detect-search"`
+- `search_vendor_network_confirmed` (bool) and `search_vendor_network_endpoint` (URL or null)
+- `search_vendor_details` — app_id, api_key, indexes, agent (where the vendor exposes them)
+- `search_vendor_builtwith` + `search_vendor_agreement` — the secondary BuiltWith signal and whether it agrees
+- `network_check_date`, `network_check_note`, `algolia_detected`
+
+**If `detect-search` reports `bot_blocked: true` (WAF):**
+- The mapper sets `search_vendor_status = "UNCONFIRMED_WAF_BLOCK"` automatically.
+- Do NOT skip — a WAF block is itself a finding. Record `network_check_note` ("stealth retry needed in Phase 2").
+
+**Only edge cases go back to the LLM:** if `detect-search` returns `UNDETECTED` but Layer 1/2 strongly suggest a tag (TAG_ONLY shadow deployment), or the two signals disagree (`search_vendor_agreement: false`), the LLM reconciles using the recorded fields — it does NOT invent a vendor.
 
 ### Final classification
-Combine Layers 1+2+3:
-- BuiltWith PRESENT + SimilarWeb confirms + Network observed → `search_vendor_status = "ACTIVE"`
-- BuiltWith PRESENT + Network NOT observed → `search_vendor_status = "TAG_ONLY"`
-- Network observed but NOT in BuiltWith → `search_vendor_status = "ACTIVE_UNTAGGED"` (shadow deployment)
-- WAF blocked network check → `search_vendor_status = "UNCONFIRMED_WAF_BLOCK"`
+Combine Layers 1+2+3, with `detect-search` as the authoritative network signal:
+- `detect-search` ACTIVE → `search_vendor_status = "ACTIVE"` (network-confirmed; takes precedence over BuiltWith)
+- BuiltWith PRESENT + `detect-search` UNDETECTED → `search_vendor_status = "TAG_ONLY"`
+- `detect-search` ACTIVE but vendor NOT in BuiltWith → `search_vendor_status = "ACTIVE_UNTAGGED"` (shadow deployment)
+- `detect-search` `bot_blocked` → `search_vendor_status = "UNCONFIRMED_WAF_BLOCK"`
 - Nothing found anywhere → `search_vendor_status = "UNDETECTED"`
 
 ### Existing customer handling
@@ -112,6 +118,7 @@ Pass criteria:
 - Both files exist and `02-tech-stack.md` ≥ 2000 bytes
 - `search_vendor` field is not null (can be "none-detected")
 - `search_vendor_status` is one of: ACTIVE | ACTIVE_LAYER1 | ACTIVE_UNTAGGED | TAG_ONLY | REMOVED | UNDETECTED | UNCONFIRMED_WAF_BLOCK
+- `search_vendor_oracle` field present (should be `"detect-search"` when Layer 3 ran)
 - `search_vendor_network_confirmed` field present (true/false)
 - `search_vendor_network_endpoint` field present (URL string or null)
 - `network_check_date` field present

@@ -8,8 +8,76 @@ Usage: python3 collect-financials.py <TICKER> <output-dir>
 Requires: pip install yfinance
 """
 
-import sys, os, json
+import sys, os, json, re, shutil
 from datetime import date
+
+
+# ── BUG-5 overwrite guard ────────────────────────────────────────────────────
+# 1E (public) and 1F (private) both write 08-financial-profile.{md}. They are
+# meant to be mutually exclusive by the orchestrator's public/private routing.
+# If routing misclassifies, or both run on a re-run, one silently clobbers the
+# other. Stamp a machine-readable company_type marker and refuse to overwrite a
+# file written by the OTHER path unless --force is given (then back it up first).
+COMPANY_TYPE_MARKER = '<!-- company_type:'  # full line: '<!-- company_type: public -->'
+
+
+def detect_existing_company_type(path):
+    """Return 'public' | 'private' | None for an existing 08-financial-profile.md."""
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding='utf-8') as f:
+            head = f.read(4096)
+    except OSError:
+        return None
+    m = re.search(r'<!--\s*company_type:\s*(public|private)\s*-->', head, re.IGNORECASE)
+    if m:
+        return m.group(1).lower()
+    # Legacy files (written before the marker existed) — infer from content so we
+    # still protect against the cross-path clobber. Private files carry [ESTIMATE]
+    # waterfall language; public files carry a Ticker line.
+    if re.search(r'^\*\*Ticker:\*\*', head, re.MULTILINE):
+        return 'public'
+    if re.search(r'\bWaterfall\b|6-Source|\[ESTIMATE — (ecdb|ranking|LinkedIn)', head, re.IGNORECASE):
+        return 'private'
+    return 'unknown'
+
+
+def overwrite_guard(out_path, this_type, force):
+    """Block a cross-path clobber. Returns None to proceed, or exits on refusal.
+
+    - No existing file        → proceed.
+    - Existing SAME type       → proceed (legitimate refresh).
+    - Existing OTHER/unknown   → refuse unless --force; with --force, back up the
+      existing file to 08-financial-profile.<type>.bak before overwriting.
+    """
+    existing = detect_existing_company_type(out_path)
+    if existing is None:
+        return
+    if existing == this_type:
+        return
+    # existing is the other type (or legacy 'unknown') — guard
+    if not force:
+        print(json.dumps({
+            'status': 'refused',
+            'reason': f'08-financial-profile.md already exists and was written by the '
+                      f'"{existing}" path; this is the "{this_type}" path. Refusing to '
+                      f'clobber a different company_type (BUG-5 guard). '
+                      f'Re-run with --force to back up and overwrite, or fix the '
+                      f'public/private routing in the orchestrator.',
+            'existing_company_type': existing,
+            'this_company_type': this_type,
+            'output_file': out_path,
+        }, indent=2))
+        sys.exit(2)
+    backup = out_path.replace('.md', f'.{existing}.bak')
+    shutil.copy2(out_path, backup)
+    print(json.dumps({
+        'status': 'overwrite_forced',
+        'backed_up_to': backup,
+        'replaced_company_type': existing,
+        'with_company_type': this_type,
+    }, indent=2), file=sys.stderr)
 
 def check_yfinance():
     try:
@@ -47,13 +115,51 @@ def safe_get(d, *keys, default="N/A"):
     return d if d is not None else default
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: collect-financials.py <TICKER> <output-dir>", file=sys.stderr)
+    # Parse optional flags without disturbing the two positional args
+    # (TICKER, output-dir). Supported: --company-type {public|private},
+    # --private (alias for --company-type private), --force.
+    argv = sys.argv[1:]
+    company_type = 'public'
+    force = False
+    positionals = []
+    i = 0
+    while i < len(argv):
+        tok = argv[i]
+        if tok == '--company-type':
+            company_type = argv[i + 1].lower()
+            i += 2
+            continue
+        if tok == '--private':
+            company_type = 'private'
+            i += 1
+            continue
+        if tok in ('--force', '--overwrite'):
+            force = True
+            i += 1
+            continue
+        if tok.startswith('--'):  # ignore unknown flags (e.g. --ticker passthrough)
+            # consume a following value only if it isn't another flag/positional
+            i += 1
+            continue
+        positionals.append(tok)
+        i += 1
+
+    if len(positionals) < 2:
+        print("Usage: collect-financials.py <TICKER> <output-dir> "
+              "[--company-type public|private] [--force]", file=sys.stderr)
         sys.exit(1)
 
-    ticker_sym = sys.argv[1].upper()
-    output_dir = sys.argv[2]
+    if company_type not in ('public', 'private'):
+        print(f"Error: --company-type must be public|private, got {company_type!r}", file=sys.stderr)
+        sys.exit(1)
+
+    ticker_sym = positionals[0].upper()
+    output_dir = positionals[1]
     today = date.today().isoformat()
+
+    # BUG-5: refuse to clobber the other path's 08-financial-profile.md
+    guard_path = os.path.join(output_dir, '08-financial-profile.md')
+    overwrite_guard(guard_path, company_type, force)
 
     yf = check_yfinance()
 
@@ -173,7 +279,8 @@ def main():
 
     # Build output
     ir_url = f"https://finance.yahoo.com/quote/{ticker_sym}/financials"
-    output = f"""# {company_name} — Financial Profile & ROI Estimate
+    output = f"""<!-- company_type: {company_type} -->
+# {company_name} — Financial Profile & ROI Estimate
 **Ticker:** {ticker_sym}
 **Generated:** {today}
 **Source:** Yahoo Finance (yfinance) [FACT — collect-financials.py, {today}]

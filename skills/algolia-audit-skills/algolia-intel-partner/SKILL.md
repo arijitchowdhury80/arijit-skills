@@ -94,15 +94,37 @@ Query Crossbeam for SI/implementation partner overlap on the prospect domain.
 Capture: which SI/agency partners show account overlap.
 Label all data: [FACT — Crossbeam MCP, {date}]
 
-### Step 4: WebSearch — SI partner relationships
-Run the following searches (all required, not optional):
-1. `"{company}" EPAM OR "Publicis Sapient" implementation OR "digital transformation"`
-2. `"{company}" Deloitte OR Accenture OR IBM implementation OR consulting`
-3. `"{company}" Merkle OR Perficient OR Valtech OR Capgemini digital`
-4. `"{company}" Adobe OR Salesforce implementation partner agency`
+### Step 4: WebSearch — SI partner relationships (GENUINELY DYNAMIC — derive candidates, do not hardcode names)
 
-For each search result that shows evidence of an SI relationship:
-- Record: SI name, evidence summary, source URL, recency of article/announcement
+The SI that matters is whichever firm actually has a relationship at THIS account — that changes per
+prospect. So the candidate firms must be **derived from this prospect's own signals**, never baked into
+the query string. Do NOT seed the query with a fixed roster of SI names (the old EPAM/Publicis/Deloitte/
+Accenture/IBM list) — that makes every SI outside those ~5 names structurally invisible, which directly
+contradicts the "discovered DYNAMICALLY" principle stated above.
+
+**Step 4a — Open discovery (name-free queries; let the prospect's signals surface the firm):**
+Run these (all required). None hardcodes an SI name — the SI name comes OUT of the result, not INTO the query:
+1. `"{company}" implementation partner` (broad — whatever firm is named is a candidate)
+2. `"{company}" digital transformation partner {current_year-1} OR {current_year}`
+3. `"{company}" systems integrator OR consulting partner`
+4. `"{company}" annual report implementation partner` (10-K/annual reports sometimes name SIs)
+
+**Step 4b — Tech-stack-bridged discovery (use THIS prospect's detected stack as the bridge):**
+For each platform detected in `02-tech-stack.md` (Step 1) — e.g. Salesforce Commerce Cloud, Adobe
+Commerce, SAP, commercetools — run:
+- `"{company}" {detected_platform} implementation partner`
+- `"{company}" {detected_platform} systems integrator`
+This surfaces the SI that did THIS prospect's actual platform work, whoever they are.
+
+**Step 4c — Reference registry (for recognition only, NOT for querying):**
+Algolia's SI ecosystem includes (non-exhaustive) Slalom, Grid Dynamics, Intellias, EPAM, Publicis
+Sapient, Deloitte Digital, Accenture, IBM iX, Merkle, Capgemini, ThoughtWorks, Perficient, Valtech.
+Use this list ONLY to recognise whether a firm that surfaced in 4a/4b is a known Algolia SI partner
+(and to tag the co-sell motion accordingly). Do NOT loop these names into search queries — a firm
+absent from this list but named in the prospect's own results is still a valid, higher-signal candidate.
+
+For each firm that surfaces in 4a/4b with evidence of an SI relationship:
+- Record: SI name, evidence summary, source URL, recency, and whether it is a known Algolia SI partner (per 4c)
 - Label: [WEBSEARCH — {source URL}, {date}]
 
 ### Step 5: WebSearch — tech partner confirmation

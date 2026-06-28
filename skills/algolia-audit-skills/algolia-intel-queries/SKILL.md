@@ -166,7 +166,16 @@ grep -q "Browser Audit Mapping" "$FILE" || echo "FAIL: Missing browser audit map
 echo "Verification complete. File: $FILE | Size: $SIZE bytes"
 ```
 
-If any gate fails: fix and re-verify before reporting done.
+```bash
+# Gate 4 (mechanical testability — every numbered query must be marked testable):
+# each query line must carry a "Tests:" marker so the browser auditor knows what it proves.
+SCRIPTS="$HOME/.claude/skills/algolia-search-audit/scripts"   # adjust if running from repo
+python3 "$SCRIPTS/check-claim-traceability.py" queries "$FILE"
+# Exit 0 = every numbered query has a "Tests:" marker. Exit 1 = untestable queries listed.
+```
+
+If any gate fails: fix and re-verify before reporting done. For Gate 4, add a `— Tests: <what it
+proves>` clause to any query the checker flags — do not ship a query that states no test target.
 
 ---
 

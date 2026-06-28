@@ -32,10 +32,22 @@ Read `~/.claude/skills/algolia-search-audit/AGENT-CONTEXT.md`
 
 ```bash
 python3 ~/.claude/skills/algolia-search-audit/scripts/collect-financials.py \
-  {domain} \
+  {TICKER} \
   "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/" \
-  --ticker {TICKER}
+  --company-type public
 ```
+
+The first positional arg is the TICKER; the second is the research dir.
+`--company-type public` stamps a `<!-- company_type: public -->` marker into
+`08-financial-profile.md`.
+
+**BUG-5 overwrite guard:** if `08-financial-profile.md` already exists and was written
+by the PRIVATE path (1F), the script REFUSES to overwrite it and exits 2 — this stops a
+public/private routing misclassification (or a stray re-run) from silently clobbering
+the other path's profile. If you genuinely intend to replace a private profile with a
+public one, re-run with `--force`; the script backs up the existing file to
+`08-financial-profile.private.bak` first. A same-type refresh (public over public) is
+allowed without `--force`.
 
 If Yahoo Finance MCP is NOT available: STOP. Alert: "Yahoo Finance MCP required. Configure MCP and retry."
 Do NOT use WebSearch as a substitute for financial data.

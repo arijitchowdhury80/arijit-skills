@@ -331,138 +331,47 @@ If `algolia-brand-check` is not installed, note in the output: "Brand check skip
 
 ## Update audit-data.json abx_sequence (MANDATORY after writing files)
 
-After writing all 10 campaign files, update `deliverables/{slug}-audit-data.json` to populate `abx_sequence.touches[]` with the **full content** of each touch — not a one-line summary. The SPA renders directly from this JSON; the markdown files are NOT read by the SPA.
+After writing all 10 campaign files, populate `deliverables/{slug}-audit-data.json`'s
+`abx_sequence.touches[]` with the **full content** of each touch. The SPA renders directly
+from this JSON; the markdown files are NOT read by the SPA. If `body` is empty, the SPA shows
+a blank or one-line summary.
 
-Read each campaign file and write its body into the JSON.
+**Do NOT hand-assemble this JSON.** Assembling it by hand is the failure class that leaks
+Source notes into sendable copy, drops `video_script` (blanking the Loom panel), and mislabels
+channel fields. A deterministic patcher does it correctly every time:
 
-**CRITICAL: Source notes are for internal AE prep only. They MUST NOT appear in the SPA email body.**
-The email body is ONLY the text between `**Body:**` and `**Source notes:**` (or end of file).
-When a BDR reads the email in the SPA they see clean, sendable copy — not citations and file references.
-
-```python
-# Pseudocode — execute this via Bash/Python
-import json, os, re
-
-data_path = f"{AUDIT_DIR}/{CompanyName}/deliverables/{slug}-audit-data.json"
-with open(data_path) as f:
-    data = json.load(f)
-
-def extract_email_body(content):
-    """Extract only the sendable email text — strip headers, source notes, and metadata."""
-    # Remove everything before and including **Body:** marker
-    body_match = re.search(r'\*\*Body:\*\*\s*\n(.*?)(?=\*\*Source notes:\*\*|---\s*\n\*\*Source|\Z)', 
-                           content, re.DOTALL | re.IGNORECASE)
-    if body_match:
-        return body_match.group(1).strip()
-    # Fallback: remove Source notes section if present
-    cleaned = re.split(r'\*\*Source notes:\*\*', content, flags=re.IGNORECASE)[0]
-    # Also strip file header lines (To:, Subject:, ---)
-    lines = cleaned.strip().split('\n')
-    body_lines = []
-    skip_header = True
-    for line in lines:
-        if skip_header and (line.startswith('#') or line.startswith('**To:') or 
-                            line.startswith('**Subject:') or line.strip() == '---' or
-                            line.strip() == '**Body:**' or not line.strip()):
-            continue
-        skip_header = False
-        body_lines.append(line)
-    return '\n'.join(body_lines).strip()
-
-def extract_subject(content):
-    """Extract Subject line from email file."""
-    m = re.search(r'\*\*Subject:\*\*\s*(.+)', content)
-    if m:
-        return m.group(1).strip()
-    lines = [l for l in content.split('\n') if l.strip()]
-    return lines[0].lstrip('#').strip() if lines else 'Untitled'
-
-# Map each file to the corresponding touch entry
-touch_map = {
-    1: ("email-1-hook.md", "email", "Day 1"),
-    2: ("linkedin-connect.md", "linkedin", "Day 1-2"),
-    3: ("email-2-competitor.md", "email", "Day 3-4"),
-    4: ("linkedin-followup-1.md", "linkedin", "Day 4-6"),
-    5: ("email-3-business-case.md", "email", "Day 7"),
-    6: ("loom-script.md", "video", "Day 7-14"),
-    7: ("linkedin-followup-2.md", "linkedin", "Day 10-12"),
-    8: ("email-4-social-proof.md", "email", "Day 14"),
-    9: ("email-5-breakup.md", "email", "Day 21"),
-}
-
-abx_dir = f"{AUDIT_DIR}/{CompanyName}/deliverables/abx-campaign/"
-touches = []
-for touch_num, (filename, channel, week) in touch_map.items():
-    file_path = os.path.join(abx_dir, filename)
-    if os.path.exists(file_path):
-        with open(file_path) as f:
-            raw = f.read()
-        body = extract_email_body(raw)   # Clean copy only — NO source notes, NO headers
-        subject = extract_subject(raw)
-
-        # CRITICAL: field names differ by channel — template reads different fields per type
-        if channel == "video":
-            # Loom: template reads t.video_script (NOT t.body) for the script panel
-            # Also needs t.email_body (short delivery email) and t.email_subject
-            touch_obj = {
-                "touch": touch_num,
-                "day": week,
-                "channel": channel,
-                "target": "all",
-                "video_platform": "Loom",
-                "video_duration_target": "2 min / 120 sec",
-                "video_script": body,        # ← Full timed script. Template renders this in video panel.
-                "email_subject": subject,    # ← Subject for the email delivering the Loom link
-                "email_body": "Hi [Name] — I put together a 2-minute walkthrough of what we found on your site. [Loom link] — worth 2 minutes.",
-                "body": "Hi [Name] — I put together a 2-minute walkthrough. [Loom link]",
-                "message": "Loom ready — record, upload, replace [Loom link] before sending."
-            }
-        elif channel == "linkedin":
-            # LinkedIn: strip ALL metadata headers (Timing:, Message:, ---) from body
-            linkedin_body = re.sub(r'\*\*(?:Timing|Message|Goal|Angle|Target|Note)[^*]*\*\*[^\n]*\n?', '', body)
-            linkedin_body = re.sub(r'^---+\s*$', '', linkedin_body, flags=re.MULTILINE).strip()
-            touch_obj = {
-                "touch": touch_num,
-                "day": week,
-                "channel": channel,
-                "target": "all",
-                "subject": subject,
-                "body": linkedin_body,       # ← Plain message text only. No markdown headers.
-                "message": linkedin_body[:300].strip()
-            }
-        else:
-            # Email: clean body only
-            touch_obj = {
-                "touch": touch_num,
-                "day": week,
-                "channel": channel,
-                "target": "all",
-                "subject": subject,
-                "body": body,                # ← Clean email copy. No citations. No file references.
-                "message": body[:120].strip()
-            }
-        touches.append(touch_obj)
-
-# Ensure contacts have id field for contactMap lookup
-contacts = data.get("abx_sequence", {}).get("contacts", [])
-for c in contacts:
-    if not c.get("id"):
-        c["id"] = c.get("name","").lower().replace(" ","_").replace("'","")
-
-if not data.get("abx_sequence"):
-    data["abx_sequence"] = {}
-data["abx_sequence"]["contacts"] = contacts
-data["abx_sequence"]["touches"] = touches
-data["abx_sequence"]["total_touches"] = 9
-data["abx_sequence"]["duration_days"] = 90
-data["abx_sequence"]["channels"] = ["Email", "LinkedIn", "Video"]
-
-with open(data_path, 'w') as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-print(f"✅ abx_sequence updated with {len(touches)} full-body touches")
+```bash
+# Mirror of generate-audit-data.py — extracts sendable copy from the campaign .md files
+# and writes schema-valid abx_sequence.touches[] (no Source notes, correct per-channel fields).
+SCRIPTS="$HOME/.claude/skills/algolia-search-audit/scripts"   # adjust if running from repo
+python3 "$SCRIPTS/generate-abx-json.py" {slug} "$AUDIT_DIR/{CompanyName}"
 ```
 
-**Why this matters:** The SPA renders `abx_sequence.touches[N].body` — not the markdown files. If `body` is empty, the SPA shows a blank or one-line summary. The full email content must be in the JSON.
+What the script guarantees (so you don't have to verify it by hand):
+- **Email touches:** `body` = the text between `**Body:**` and `**Source notes:**` only. Source
+  notes never reach the body (stripped even if the `**Body:**` delimiter is missing).
+- **LinkedIn touches:** `body` = the first `**Message...:**` block, plain text, with `Character count`,
+  `Target`, and other metadata headers removed.
+- **Video (Loom) touch:** the timed script goes to `video_script` (the field the SPA template reads);
+  `body` holds the SHORT delivery email, NOT the script. (Hand-built JSON routinely got this wrong —
+  putting the script in `body` and leaving `video_script` empty, which blanks the Loom panel per
+  `template_contract.py`.)
+- **Contacts:** every contact gets a snake_case `id` for the SPA contactMap lookup.
+- **Schema floors:** warns loudly if any copy is too short, contains a placeholder (`TBD`,
+  `Pending —`, …), or leaked Source notes. The output validates against `audit_data_schema.ABXSequence`.
+
+The script exits non-zero if fewer than 3 touches could be extracted (campaign incomplete). Review
+any warnings it prints before sending — they flag real copy problems, not script failures.
+
+**Email-3 financials traceability:** the revenue figure and the single ROI formula shown in
+`email-3-business-case.md` must come from the deterministic calculator, not in-LLM arithmetic. Before
+writing Email 3, run `calculate-roi.py` and quote ONE of its component figures:
+
+```bash
+python3 "$SCRIPTS/calculate-roi.py" "$AUDIT_DIR/{CompanyName}/research" | python3 -m json.tool
+# Use a single component figure from this JSON in Email 3. Do NOT re-multiply by hand.
+# Cite it in Source notes as: "{slug}-business-case.md / calculate-roi.py — Component N: <figure>".
+```
 
 ---
 
@@ -482,6 +391,8 @@ Pass conditions:
 - `collateral-schedule.md` contains Signal Tier declaration
 - Every email file contains a `Source notes:` section with at least one citation
 - `{slug}-audit-data.json` `abx_sequence.touches[]` has `body` field populated (not empty)
+- `generate-abx-json.py` exited 0 (>=3 touches) and printed no warnings — or you reviewed each warning
+- The video touch has a non-empty `video_script` (the script panel) AND a short `body` (delivery email)
 
 If any check fails: halt and report which file and which condition failed. Do not silently deliver incomplete output.
 

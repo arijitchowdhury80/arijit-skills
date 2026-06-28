@@ -39,12 +39,18 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-social.py \
 
 Known issue: LinkedIn posts actor may return 0 for some companies — document in errors, continue.
 
-**APIFY_TOKEN fallback (MANDATORY):** If `APIFY_TOKEN not set` error appears or Apify returns 0 results on BOTH platforms:
+**APIFY_TOKEN fallback (MANDATORY):** The script reports `collection_method` in its stdout
+JSON: `"apify"` (real collection) or `"apify_token_missing"` (degraded — `degraded: true`,
+loud stderr `⚠⚠ Social DEGRADED`, and a DEGRADED banner in the `.md`). An empty signal list
+under `apify_token_missing` means NOT-COLLECTED, not "no signals exist."
+
+If `collection_method == "apify_token_missing"` OR Apify returned 0 on BOTH platforms:
 1. Run WebSearch: `site:linkedin.com/posts "{CompanyName}" 2025 2026`
 2. Run WebSearch: `"{CompanyName}" CEO LinkedIn post announcement 2025 2026`
 3. Run WebSearch: `twitter.com "{CompanyName}" announcement tech investment 2025`
-4. Add any posts found with `[WEBSEARCH — url, date]` label to the MD file
+4. Add any posts found with `[OBSERVED — WebSearch url, date]` label to the MD file (amber, not `[FACT]`)
 5. Set `qualifying_signals_count` based on posts found via WebSearch
+6. Set `meta.degraded_mode = true` and `meta.collection_method` to the script's value — never drop it
 
 **Platform Notes section REQUIRED** in every 09b-social-signals.md output — even if 0 results. Document: which platforms scraped, how many posts found, any errors (e.g., "APIFY_TOKEN not set").
 
@@ -58,6 +64,7 @@ After script completes, ensure `09b-social-signals.json` has `meta` block (use `
   "meta": {
     "skill_enrichment_completed": true,
     "degraded_mode": false,
+    "collection_method": "apify|apify_token_missing",
     "collection_date": "YYYY-MM-DD"
   },
   "qualifying_signals_count": N,

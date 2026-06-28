@@ -65,6 +65,30 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-investor.py \
 - Named speaker + title + source URL + date — every quote.
 - NO anonymous sources.
 
+### MANDATORY grounding gate — verify every verbatim quote against the fetched source
+
+Injecting the source and asking for an exact quote is NOT sufficient — paraphrases dressed
+as verbatim are the classic hallucination (proven in the report-QA spike: a post-gen
+verifier is mandatory). Before any quote ships with quotation marks, run it through the
+deterministic grounding gate. It checks TWO things: (1) the quote is an EXACT substring of
+the fetched source text, and (2) the source date is **>= January 2025**.
+
+```bash
+# /tmp/quotes.json = [{"quote":"<verbatim candidate>","source_date":"2025-03-14","speaker":"..."}]
+# /tmp/source.txt  = the plaintext you WebFetched (transcript / 10-K / article)
+python3 ~/.claude/skills/algolia-search-audit/scripts/ground_quotes.py \
+  /tmp/quotes.json /tmp/source.txt
+```
+
+The script returns `{accepted, rejected, ...}` and exits non-zero if anything was rejected:
+- `accepted[]` → quote is verbatim-present AND >= Jan 2025. Ship with quotation marks + `[FACT]`.
+- `rejected[]` → each carries `_grounding.reasons`:
+  - `not_grounded` → the candidate is NOT an exact substring (paraphrase / fabrication).
+    **Do NOT ship it as a verbatim quote.** Either re-extract the exact text or drop it.
+  - `too_old` / `recency_unverified` → fails the Jan-2025 floor. **Drop it** (SKILL rule below).
+
+Never include a quote that the gate rejected. An undated "verbatim" quote fails closed.
+
 ---
 
 ---
@@ -121,7 +145,7 @@ WebSearch: "{exec_name}" "{company_name}" 2024 OR 2025 interview digital commerc
 
 For each result:
 - Confirm the URL is trade press (NOT sec.gov, fool.com, seekingalpha.com)
-- **HARD RULE: Reject any quote dated before January 2025. No exceptions.** Quotes older than 12 months are stale — executives change roles, strategies change, the quote becomes a liability not an asset. If no quotes ≥ Jan 2025 exist, leave the section empty rather than use old quotes.
+- **HARD RULE: Reject any quote dated before January 2025. No exceptions.** Quotes older than 12 months are stale — executives change roles, strategies change, the quote becomes a liability not an asset. If no quotes ≥ Jan 2025 exist, leave the section empty rather than use old quotes. **Enforce this with `ground_quotes.py` (see the grounding gate in Step 2) — its recency floor is Jan 2025 and it rejects undated quotes fail-closed.**
 - Extract the most relevant verbatim sentence containing the exec's name
   - If verbatim not possible: use *said that* notation, set `confidence: "ESTIMATE"`
 - Build a `media_quote` entry with all fields populated (including `context` and `algolia_relevance` — LLM fills these directly, not deferred)

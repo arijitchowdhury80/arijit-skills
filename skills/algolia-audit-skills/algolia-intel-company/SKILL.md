@@ -58,6 +58,25 @@ Check `scout_data` in the JSON output. For each field Scout successfully populat
 
 **Only proceed to WebSearch (Step 2b) for fields Scout could not fill.**
 
+### Scout degradation check (F1 — MANDATORY, do not skip)
+
+Scout's markdown conversion returns EMPTY (~1–4 chars) on Squarespace / JS bio-card CMSes
+even when it fetched the page fine. The script now **detects this and falls back to parsing
+`raw_html`** instead of silently returning nothing. When that happens it is LOUD:
+
+- Stderr shows `⚠⚠ Scout markdown DEGRADED on [pages] — raw_html fallback used (F1)`.
+- `01-company-context.json` carries `scout_degraded: true`, `scout_collection_method:
+  "scout_raw_html_fallback"`, and `scout_degraded_sources: [...]`.
+- Every field recovered from the raw_html fallback is labeled
+  `[OBSERVED — Scout raw_html fallback (markdown degraded), {date}]`, **not** `[FACT]`.
+
+If `scout_degraded == true`:
+1. Treat the affected fields (description, executives, social) as `[OBSERVED]`-grade, not `[FACT]`.
+2. **Re-verify them in Step 2b via WebFetch/WebSearch** — the raw_html parse is best-effort,
+   not authoritative. Prefer a clean WebFetch table of executives over the raw_html heuristic
+   when both exist (per F-scout-ab-evidence.md, WebFetch wins on Squarespace leadership pages).
+3. Keep the `scout_degraded` flag in the final JSON — never drop it. Downstream factcheck reads it.
+
 ## Step 2b: WebSearch Fallback Enrichment
 
 For any field still null after Scout, use WebSearch:

@@ -90,6 +90,32 @@ Read: $ALGOLIA_AUDIT_DIR/{CompanyName}/research/04-competitors.md  (for competit
 
 When `collection_method == "websearch_fallback"` or `skill_enrichment_required` contains `"benchmarks"`:
 
+#### MANDATORY age gate on fallback results (BUG-2 fix)
+
+The 24-month staleness rule is enforced by `collect-industry.py` ONLY on the Tavily path.
+The WebSearch fallback below has NO built-in age filter, so stale benchmarks (2020-2022
+articles dressed as "2025 trends") leak in unless you gate them. **Run every fallback
+result through the deterministic age gate before using any stat or quote from it:**
+
+```bash
+# Build a JSON array of fallback results: [{"url","title","source_date":"YYYY-MM-DD"}]
+# (source_date = the article's publication date you confirmed; null if unknown)
+python3 ~/.claude/skills/algolia-search-audit/scripts/industry_fallback_filter.py \
+  filter /tmp/fallback_results.json
+```
+
+The script returns `{kept, dropped, ...}`:
+- `dropped[]` — results older than 24 months (`age_months > 24`). **Discard these entirely.**
+- `kept[]` — usable results. Each carries `collection_method: "websearch_fallback"` and
+  `stale_unknown` (true when the date was unparseable). For any `stale_unknown: true`
+  entry, label the stat `[ESTIMATE — {Source} via WebSearch, date unverified, {url}]`
+  and never present it as a fresh `[FACT]`.
+
+This is the SAME `age_months > 24` boundary the Tavily path uses — the freshness
+guarantee now holds on BOTH paths.
+
+#### Benchmark queries
+
 Run these WebSearch queries (use locale from `primary_market`):
 
 **Locale → query mapping:**
@@ -109,12 +135,31 @@ Run these WebSearch queries (use locale from `primary_market`):
 - `"{vertical} ecommerce search expert analyst quote 2025 site:baymard.com OR site:nrf.com"`
 - `"Baymard {vertical} search user experience findings 2025"`
 
-For any stat or quote found via WebSearch: attempt WebFetch of the source URL.
+For any stat or quote found via a benchmark page (Baymard / Forrester / NRF), fetch the
+page via **Scout FIRST** (the one proven Scout win — F-evidence F3: 11.6K chars of clean
+structured markdown on Baymard vs WebFetch's thin summary), with a hard guard:
+
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/industry_fallback_filter.py \
+  scout "<benchmark_page_url>"
+```
+
+The script returns a guarded result:
+- `degraded: false` → trust `markdown`; confirm the exact figure in it, label
+  `[FACT — {Source} via Scout, {date}, {url}]`.
+- `degraded: true` (with `fallback_to_webfetch: true`) → Scout returned empty/below-threshold
+  markdown (the F1 CMS failure mode, e.g. Squarespace). **Do NOT accept the empty result.**
+  FALL BACK to `WebFetch` of the same URL and FLAG the degradation in your reasoning
+  ("Scout markdown empty — fell back to WebFetch"). Then label per the rules below.
+
+For any other (non-benchmark) URL, or after a Scout→WebFetch fallback:
 - If WebFetch succeeds and stat confirmed on page → label `[FACT — {Source} via WebFetch, {date}, {url}]`
 - If WebFetch fails or stat not found on page → label `[ESTIMATE — {Source} via WebSearch, {url}]`
 
-**Baymard fallback rule:** Baymard pages are often JS-rendered and block WebFetch.
-If WebFetch returns empty or redirect: use the snippet stat, label `[ESTIMATE — Baymard Institute via WebSearch, {url}]`. Never label Baymard stats `[FACT]` unless the exact figure was confirmed on the fetched page.
+**Baymard guard rule:** Baymard pages are JS-rendered. Prefer Scout (above). If BOTH Scout
+(degraded) and WebFetch return empty/redirect: use the snippet stat, label
+`[ESTIMATE — Baymard Institute via WebSearch, {url}]`. Never label Baymard stats `[FACT]`
+unless the exact figure was confirmed on the fetched (Scout or WebFetch) page.
 
 ### 2c. LLM enrichment tasks (always run, even after Tavily success)
 

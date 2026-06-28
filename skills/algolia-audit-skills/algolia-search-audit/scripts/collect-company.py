@@ -49,6 +49,16 @@ def merge_scout_fields(existing: dict, scout: dict) -> dict:
 	# Merge executives: append Scout-found execs only if list is currently empty
 	if not existing.get("executives") and scout.get("executives"):
 		existing["executives"] = scout["executives"]
+	# F1: carry Scout's degradation flag through to the company-context record (LOUD, not silent).
+	# When Scout's markdown was empty (Squarespace/JS CMS) and we fell back to raw_html, downstream
+	# and the SKILL must know these fields are [OBSERVED]-grade, not clean [FACT]-grade.
+	if scout.get("scout_degraded"):
+		existing["scout_degraded"] = True
+		existing["scout_degraded_sources"] = scout.get("degraded_sources", [])
+		existing["scout_collection_method"] = "scout_raw_html_fallback"
+	else:
+		existing.setdefault("scout_degraded", False)
+		existing.setdefault("scout_collection_method", "scout_markdown")
 	return existing
 
 # ── HTTP ──────────────────────────────────────────────────────────────────────
@@ -341,6 +351,11 @@ def main():
             output_data = merge_scout_fields(output_data, scout_data)
             errors["scout"] = None
             print(f"  ✓ Scout enrichment: linkedin={scout_data.get('linkedin_url')}, twitter={scout_data.get('twitter_handle')}", file=sys.stderr)
+            # F1: surface degradation LOUDLY in the collector's own output, not just scout_company's stderr.
+            if scout_data.get("scout_degraded"):
+                degraded_pages = ", ".join(s.get("page", "?") for s in scout_data.get("degraded_sources", []))
+                errors["scout_degraded"] = f"markdown empty on [{degraded_pages}] — used raw_html fallback; fields are [OBSERVED]-grade, verify"
+                print(f"  ⚠⚠ Scout markdown DEGRADED on [{degraded_pages}] — raw_html fallback used (F1). Fields downgraded to [OBSERVED].", file=sys.stderr)
         else:
             errors["scout"] = scout_data.get("error", "Scout unavailable")
             print(f"  ⚠ Scout unavailable: {errors['scout']}", file=sys.stderr)
