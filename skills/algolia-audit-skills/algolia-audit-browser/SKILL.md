@@ -201,6 +201,33 @@ Some sites use extremely aggressive WAF (e.g., Ticketmaster). Escalation:
 node audit-browser.js --company {CompanyName} --step 2a --headed
 ```
 
+### Per-site customization — parameters, NEVER a forked script
+
+`audit-browser.js` is general-purpose. When a site needs site-specific handling (a custom search
+box selector, a results-page URL pattern, a WAF that trips on keystrokes, a vertical-specific query
+set), pass PARAMETERS — do **not** copy the script into a per-company fork. (The ~20 abandoned
+forks `tnf-audit-v3.js` / `jbl-audit-stealth.js` / `hd-mx-audit-full.js` / … are quarantined in
+`scripts/_archive/` precisely because that pattern was wrong.)
+
+```bash
+# URL-mode search — for WAF/CAPTCHA sites (PerimeterX/Akamai) that block typing but allow
+# direct navigation to a results page. {q} is replaced with the URL-encoded query.
+node "$SKILL_DIR/scripts/audit-browser.js" --company "{CompanyName}" --url "{prospect-url}" \
+  --search-url-template "/search?q={q}" --mode url --audit-dir "$ALGOLIA_AUDIT_DIR"
+
+# Custom search-box selector (auto-detect failed):
+node "$SKILL_DIR/scripts/audit-browser.js" --company "{CompanyName}" --url "{prospect-url}" \
+  --search-selector "#type-ahead-site-search-desktop" --audit-dir "$ALGOLIA_AUDIT_DIR"
+
+# All per-site bits in one JSON config (searchSelector, searchUrlTemplate, mode, queries,
+# dismissSelectors for cookie/modal/CAPTCHA close buttons):
+node "$SKILL_DIR/scripts/audit-browser.js" --company "{CompanyName}" --url "{prospect-url}" \
+  --config "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/browser-config.json"
+```
+
+CLI flags override config-file values; config overrides defaults. Verify the plumbing offline with
+`node audit-browser.js --self-test` (no network).
+
 ---
 
 ## Browser Audit Resilience

@@ -43,11 +43,18 @@ $ALGOLIA_AUDIT_DIR/{CompanyName}/
 
 Before spawning agents, determine if the company is publicly traded (has a stock ticker + SEC filings). This routes to `algolia-intel-financial-public` (Yahoo Finance MCP) vs `algolia-intel-financial-private` (6-source waterfall).
 
+**Do NOT guess this from a WebSearch.** Run the deterministic classifier — it validates a real
+ticker/exchange/quote via Yahoo Finance, so the same company always routes the same way (a wrong
+call here sends the whole financial leg down the wrong skill and can clobber `08-financial-profile.md`):
+
 ```bash
-# Quick check: WebSearch "{CompanyName} stock ticker NYSE NASDAQ"
-# Public: routes to algolia-intel-financial-public --ticker {TICKER}
-# Private: routes to algolia-intel-financial-private
+python3 scripts/classify-public-private.py --company "{CompanyName}" [--ticker {TICKER}]
+# → JSON: {"company_type":"public"|"private","ticker":...,"route":"algolia-intel-financial-..."}
+# Use the "route" field verbatim. public → financial-public --ticker {ticker}; private → financial-private.
 ```
+
+If `yfinance` is unavailable or the network is blocked, the script reports `confidence:"low"` —
+only then fall back to a manual ticker lookup. Never route on an LLM guess when the script ran.
 
 ---
 

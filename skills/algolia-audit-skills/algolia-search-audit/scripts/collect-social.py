@@ -102,24 +102,37 @@ def load_ctx(output_dir):
     p = os.path.join(output_dir,'01-company-context.json')
     return json.load(open(p)) if os.path.exists(p) else {}
 
-def write_md(company, signals, li_count, tw_count, errors, output_dir):
+def write_md(company, signals, li_count, tw_count, errors, output_dir, collection_method):
     qualifying = [s for s in signals if s['score'] >= 6]
     direct = [s for s in qualifying if s['score'] >= 9]
     strong = [s for s in qualifying if 7 <= s['score'] <= 8]
     context = [s for s in qualifying if s['score'] == 6]
 
+    # Degradation discipline: without APIFY_TOKEN this module CANNOT collect posts and
+    # silently produced nothing before. Now we flag it loudly so a thin output isn't
+    # mistaken for "no signals exist".
+    degraded = collection_method != 'apify'
+
     lines = [
         f'# Social Signals — {company}',
         f'*Generated: {TODAY} via collect-social.py*',
         f'*Sources: LinkedIn Company Posts + Twitter/X via Apify*',
+        f'*collection_method: {collection_method}* {"⚠ DEGRADED — APIFY_TOKEN unset, 0 posts collectable" if degraded else ""}',
         '',
         '## Collection Summary',
         f'- LinkedIn posts scraped: {li_count} | Twitter/X scraped: {tw_count}',
         f'- Qualifying signals (score ≥6): {len(qualifying)}',
         f'- Lookback: 30 days',
         '',
-        '## 🔴 Direct Algolia Signals (Score 9-10)',
     ]
+    if degraded:
+        lines += [
+            '> ⚠ **Collection degraded:** `APIFY_TOKEN` was not set, so no LinkedIn/Twitter posts '
+            'could be collected. An empty signal list here means NOT-COLLECTED, not "no signals '
+            'exist". Set APIFY_TOKEN and re-run, or gather social signals manually.',
+            '',
+        ]
+    lines += ['## 🔴 Direct Algolia Signals (Score 9-10)']
     for s in direct:
         lines += [
             f'**{s.get("platform","Social")} — {s.get("date",TODAY)}**',
@@ -233,9 +246,14 @@ def main():
         if score >= 4:
             signals.append({'platform':'Twitter','text':text,'date':p.get('createdAt',TODAY)[:10],'author':twitter_handle,'reactions':p.get('likeCount',0),'comments':p.get('replyCount',0),'url':p.get('url','n/a'),'score':score,'category':cat,'signal_note':f'{cat} signal from Twitter post'})
 
+    # collection_method first-class field: apify = real collection; apify_token_missing = degraded.
+    collection_method = 'apify' if APIFY_TOKEN else 'apify_token_missing'
+    if not APIFY_TOKEN:
+        print("  ⚠⚠ Social DEGRADED: APIFY_TOKEN unset — 0 posts collectable (not silent).", file=sys.stderr)
+
     signals.sort(key=lambda x: x['score'], reverse=True)
-    out = write_md(company, signals, len(li_posts), len(tw_posts), errors, output_dir)
-    print(json.dumps({'status':'success' if li_posts or tw_posts else 'partial','domain':domain,'company_name':company,'output_file':out,'size_bytes':os.path.getsize(out),'qualifying_signals':len([s for s in signals if s['score']>=6]),'errors':errors},indent=2))
+    out = write_md(company, signals, len(li_posts), len(tw_posts), errors, output_dir, collection_method)
+    print(json.dumps({'status':'success' if li_posts or tw_posts else 'partial','domain':domain,'company_name':company,'output_file':out,'size_bytes':os.path.getsize(out),'qualifying_signals':len([s for s in signals if s['score']>=6]),'collection_method':collection_method,'degraded':collection_method!='apify','errors':errors},indent=2))
 
 if __name__ == '__main__':
     main()

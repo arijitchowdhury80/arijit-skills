@@ -111,3 +111,74 @@ def test_merge_scout_fills_null_fields():
 	assert result["twitter_handle"] == "@scout"
 	assert result["careers_url"] == "https://acme.com/careers"
 	assert result["website"] == "https://acme.com"
+
+
+# ── F1: Scout Squarespace empty-markdown degradation + raw_html fallback ──────
+
+def test_html_to_text_recovers_alt_text():
+	"""F1: Squarespace exec bio cards put name+title in img alt attrs; html_to_text surfaces them."""
+	html = (
+		'<html><body>'
+		'<img src="x.jpg" alt="Alan Schnaid — EVP and Chief Financial Officer">'
+		'<script>var x=1;</script>'
+		'<p>Some boilerplate paragraph that is long enough to count as real content here.</p>'
+		'</body></html>'
+	)
+	text = scout_company.html_to_text(html)
+	assert "Alan Schnaid" in text
+	assert "Chief Financial Officer" in text
+	assert "var x" not in text  # script stripped
+
+
+def test_usable_text_prefers_markdown_when_healthy():
+	res = {"markdown": "x" * 200, "raw_html": "<p>" + "y" * 2000 + "</p>", "degraded": False}
+	assert scout_company.usable_text(res).startswith("x")
+
+
+def test_usable_text_falls_back_to_raw_html_when_degraded():
+	res = {"markdown": "   ", "raw_html": "<p>" + ("real content " * 100) + "</p>", "degraded": True}
+	out = scout_company.usable_text(res)
+	assert "real content" in out
+
+
+@patch("scout_company.requests.post")
+def test_scrape_flags_degraded_on_empty_markdown(mock_post):
+	"""F1: success:true + ~4-char markdown + full raw_html → degraded=True, NOT silent."""
+	big_html = "<html><body>" + ("<div>node</div>" * 200) + "</body></html>"
+	mock_post.return_value = type('R', (), {
+		"status_code": 200,
+		"json": lambda self: {"success": True, "markdown": "   ", "raw_html": big_html, "links": []},
+	})()
+	res = scout_company.scrape_with_scout("https://petsmartcorporate.com/our-leaders")
+	assert res["success"] is True
+	assert res["degraded"] is True
+	assert len(res["raw_html"]) >= scout_company.RAW_HTML_MIN_CHARS
+
+
+@patch("scout_company.requests.post")
+def test_scrape_not_degraded_on_healthy_markdown(mock_post):
+	mock_post.return_value = type('R', (), {
+		"status_code": 200,
+		"json": lambda self: {"success": True, "markdown": "x" * 500, "raw_html": "<p>y</p>", "links": []},
+	})()
+	res = scout_company.scrape_with_scout("https://acme.com/about")
+	assert res["degraded"] is False
+
+
+def test_merge_propagates_scout_degraded_flag():
+	"""F1: degradation must surface in the company-context record (LOUD, not silent)."""
+	existing = {"description": None}
+	scout = {"description": "x", "scout_degraded": True,
+	         "degraded_sources": [{"page": "leadership", "url": "https://c.com/team"}]}
+	result = collect_company.merge_scout_fields(existing, scout)
+	assert result["scout_degraded"] is True
+	assert result["scout_collection_method"] == "scout_raw_html_fallback"
+	assert result["scout_degraded_sources"][0]["page"] == "leadership"
+
+
+def test_merge_sets_clean_method_when_not_degraded():
+	existing = {"description": None}
+	scout = {"description": "x", "scout_degraded": False}
+	result = collect_company.merge_scout_fields(existing, scout)
+	assert result["scout_degraded"] is False
+	assert result["scout_collection_method"] == "scout_markdown"

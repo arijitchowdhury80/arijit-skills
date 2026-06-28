@@ -53,6 +53,22 @@ echo "Output: $REPORT_FILE"
 
 ---
 
+## Mechanical dimensions — run the shared script FIRST
+
+Dimensions 1 (completeness), 2 (source density), 4 (data accuracy spot-check) and 5 (no fabrication)
+are mechanical and are implemented deterministically by the shared factcheck/eval engine. **Run it
+first** and read its JSON instead of re-deriving these counts by hand:
+
+```bash
+python3 ~/.claude/skills/algolia-audit-factcheck/scripts/factcheck_mechanical.py \
+  --audit-dir "$AUDIT_DIR" --company "$COMPANY_NAME"
+# JSON.dimensions.{completeness,source_density,no_fabrication,data_accuracy} feed Dims 1/2/5/4.
+```
+
+Map the script's numbers into the per-dimension formulas below (e.g. Dim 1 score =
+`completeness.passing / completeness.total × 2`; Dim 5 = `2.0` when `no_fabrication.blocking` is
+false). Dimension 3 (instruction adherence) stays an LLM judgment — it is NOT in the script.
+
 ## The 5 Evaluation Dimensions
 
 ### Dimension 1: Completeness (2 points)

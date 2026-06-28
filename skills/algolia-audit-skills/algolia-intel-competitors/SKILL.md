@@ -12,8 +12,10 @@ writes_to:
   - 04-competitors.json
 mcp_required:
   - similarweb: "similar-sites-agg, keywords-competitors-agg"
-  - builtwith: "domain-lookup per competitor"
-  - websearch: "competitor profiles, case studies"
+  - builtwith: "domain-lookup per competitor (SECONDARY signal only)"
+  - websearch: "competitor profiles, case studies (enrichment only)"
+depends_on_skill:
+  - detect-search: "canonical search-vendor oracle — per-competitor vendor verdict (primary)"
 skill_enrichment: true
 version: 1.0
 ---
@@ -49,9 +51,26 @@ The script creates the output file structure regardless.
 ## Step 2: Skill Enrichment — Competitor Identification (PRIMARY PATH)
 
 ### For each competitor identified by script:
-1. BuiltWith MCP: `domain-lookup` → detect search vendor (Layer 1 detection)
-2. WebSearch: `"{competitor}" search OR "search experience" OR Algolia OR Elasticsearch 2025`
-3. If any competitor uses Algolia → **GOLDEN ANGLE**: WebFetch algolia.com/customers/{slug} for exact metrics
+1. **Search-vendor detection — use the `detect-search` oracle, NOT LLM-from-BuiltWith.**
+   The canonical, deterministic verdict for which search vendor a competitor runs comes from
+   the `detect-search` skill (Playwright packet inspection, catches proxied first-party setups),
+   the same oracle techstack Layer 3 uses. Run it per competitor and map the verdict:
+
+   ```bash
+   node ~/.claude/skills/detect-search/detect-search.js "https://{competitor_domain}" \
+     --type-query "shoes" > /tmp/ds_comp_{competitor_slug}.json
+   python3 ~/.claude/skills/algolia-search-audit/scripts/map-detect-search.py \
+     --detect /tmp/ds_comp_{competitor_slug}.json
+   ```
+
+   Record `search_vendor` + `search_vendor_status` + `search_vendor_details` (app_id/indexes) per
+   competitor into `04-competitors.json`. BuiltWith MCP `domain-lookup` stays a **secondary** signal:
+   pass it as `--builtwith-vendor "{vendor}"` to record agreement, but the network verdict wins.
+   If `detect-search` reports `UNCONFIRMED_WAF_BLOCK` (WAF, common on e-commerce — see Scout A/B F4),
+   record the block as the finding; do NOT fall back to guessing the vendor from BuiltWith alone.
+2. WebSearch is now ENRICHMENT ONLY (case studies, public statements) — not the vendor source of truth:
+   `"{competitor}" search OR "search experience" OR Algolia OR Elasticsearch 2025`
+3. If `detect-search` confirms a competitor on Algolia → **GOLDEN ANGLE**: WebFetch algolia.com/customers/{slug} for exact metrics
 
 ### Step 2b: Algolia customer portfolio — vertical-wide lookup (MANDATORY)
 

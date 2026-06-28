@@ -20,8 +20,10 @@ Read `~/.claude/skills/algolia-search-audit/AGENT-CONTEXT.md`
 ## Module Identity
 - **Layer:** 1-Intelligence (Wave 1)
 - **Module ID:** 1H
-- **Model tier:** agent (no script dependency)
+- **Model tier:** agent for COLLECTION (careers pages vary too much to script) +
+  deterministic script `collect-hiring.py` for CLASSIFICATION (tier + ICP score + dedup)
 - **Reads from:** `01-company-context.json` (company_name, domain, careers_url)
+- **Script:** `collect-hiring.py` — `classify_roles()` does tier/ICP/dedup deterministically
 
 ---
 
@@ -70,46 +72,80 @@ Label all Layer 2 results: `[FACT — WebSearch on {source}, {date}]`
 
 ---
 
-## ICP Classification
+## ICP Classification — DETERMINISTIC (do NOT classify by hand)
 
-Classify every role found into Tier 1–4 based on title + description:
+Tier + ICP-score + cross-layer dedup are done by `collect-hiring.py`, **not** by LLM
+keyword-guessing. Your job is to *collect* roles; the script *classifies* them. This makes
+the same role tier the same way every run.
 
-**Tier 1 — Economic Buyer (score 7–10):**
-VP/SVP/Director of Digital, Ecommerce, Commerce, DTC, NDDC, Head of Digital, CDO, GM Digital, Senior Director Digital/Commerce
+**Step A — assemble the collected roles into a JSON array.** For every role found in Layer 1
+and Layer 2, emit one object. Include the `layer` (1 or 2) so the script can dedup across them
+and record where each role was seen:
 
-**Tier 2 — Technical Buyer (score 7–10):**
-Search Engineer, Platform Engineer, Lead/Senior/Staff Software Engineer (ecommerce/commerce/platform/search), Solutions Architect (ecommerce/commerce), Engineering Manager (ecommerce/platform), Technical Lead (commerce/headless)
+```json
+[
+  {"title": "VP, Digital & Ecommerce", "desc": "<2-3 sentence JD summary>",
+   "url": "https://...", "location": "City, ST", "job_id": "REQ-123",
+   "layer": 1, "source": "careers page"},
+  {"title": "Senior Software Engineer, Search", "desc": "...", "url": "https://...",
+   "location": "Remote", "layer": 2, "source": "Indeed"}
+]
+```
+Write this to `roles-raw.json` in the research dir.
 
-**Tier 3 — Champion (score 5–7):**
-Product Manager (Digital/Ecommerce/Search/Platform), UX/Product Designer (digital), Senior Manager Digital Platforms, CRO/Conversion Manager, Personalization Manager, Digital Analytics Manager/Lead
+**Step B — run the classifier:**
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/collect-hiring.py \
+  "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/roles-raw.json" \
+  "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/" \
+  --company-name "{CompanyName}"
+```
+It writes `09d-hiring-classified.json` with, per role: `tier` (1–4), `tier_name`
+(Economic Buyer / Technical Buyer / Champion / Context), `icp_score` (0–10),
+`icp_keywords`, `seen_in_layers`, `dedup_collapsed`, and a `tier_summary`.
 
-**Tier 4 — Context (score 1–4):**
-Everything else — operations, logistics, design, admin, retail associate, supply chain
+**Tier reference (what the script enforces — for your understanding, not for hand-scoring):**
+- **Tier 1 — Economic Buyer:** VP/SVP/Director Digital, Ecommerce, Commerce, DTC, NDDC, Head of Digital, CDO, GM Digital
+- **Tier 2 — Technical Buyer:** Search/Platform Engineer, Lead/Sr/Staff SWE (ecommerce/search/platform), Solutions Architect (commerce), Engineering Manager (ecommerce/platform)
+- **Tier 3 — Champion:** Product Manager (Digital/Ecommerce/Search), UX/Product Designer (digital), CRO/Conversion Manager, Personalization Manager, Digital Analytics Lead
+- **Tier 4 — Context:** everything else (operations, logistics, retail associate, supply chain)
+- Score modifiers (applied by the script): +1 per HIGH ICP keyword, +0.5 per MED keyword in the description.
 
-Score modifiers: +1 per ICP keyword in description (search, NLP, personalization, ecommerce, product discovery, Algolia, Elasticsearch, composable commerce)
+**Cross-layer dedup is automatic:** a role found in both Layer 1 and Layer 2 (same `job_id`,
+or same normalized title+location) is kept ONCE, with `seen_in_layers: [1, 2]` and the richer
+description. Do not hand-merge duplicates.
+
+Classified roles carry the label `[OBSERVED — collect-hiring.classify, {date}]`
+(`collection_method: agent_webfetch_websearch+deterministic_classify`). Only the *significance*
+call ("is this vacancy a real buying signal") stays LLM judgment.
 
 ---
 
 ## Writing the Output
 
+Read `09d-hiring-classified.json` (produced by the script in Step B). Use its `tier`,
+`icp_score`, and `seen_in_layers` fields verbatim — do NOT re-tier or re-score by hand.
+
 Write `09d-hiring-signals.md` with:
-- Collection summary (Layer 1 result, Layer 2 result, total ICP roles)
+- Collection summary (Layer 1 result, Layer 2 result, total roles in, deduped count out)
 - Tier 1–2 vacancy signals (score ≥7) with: tier, score, job ID, direct URL, location, description summary, Algolia relevance, source citation
 - Tier 3 champion signals (condensed)
 - Tier 4 context roles (list only)
-- Buying committee assessment (Economic Buyer, Technical Buyer, Champion — in-seat or vacant)
-- ICP summary table
+- Buying committee assessment (Economic Buyer, Technical Buyer, Champion — in-seat or vacant) — this is the LLM *significance* call
+- ICP summary table (from `tier_summary`)
 - Data confidence table per role
-- Layer collection notes
+- Layer collection notes (note any roles with `dedup_collapsed: true` seen in both layers)
 
-Write `09d-hiring-signals.json`:
+Write `09d-hiring-signals.json` (carry the script's classification through, add the LLM significance call):
 ```json
 {
-  "meta": {"skill_enrichment_completed": true, "layer1_count": N, "layer2_count": N},
+  "meta": {"skill_enrichment_completed": true, "layer1_count": N, "layer2_count": N,
+           "collection_method": "agent_webfetch_websearch+deterministic_classify"},
   "tier_summary": {"tier1": N, "tier2": N, "tier3": N, "tier4": N},
   "buying_committee": {"economic_buyer": "...", "technical_buyer": "..."}
 }
 ```
+`tier_summary` MUST equal the script's `tier_summary` (deterministic — no hand edits).
 
 ---
 
@@ -121,6 +157,7 @@ Pass criteria:
 - Every role has a direct URL — no role without a source link
 - All citations are `[FACT — WebFetch/WebSearch on {url}, {date}]`
 - No Apify or LinkedIn-only citations
+- `09d-hiring-classified.json` exists (script ran) and `tier_summary` in the `.md`/`.json` matches it
 - `tier_summary` has all 4 tiers
 - `buying_committee` has `economic_buyer` and `technical_buyer`
 - `meta.skill_enrichment_completed = true`
