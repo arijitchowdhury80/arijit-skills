@@ -235,8 +235,8 @@ Generate PDF report with:
 
 Stored in `.env`:
 ```
-BUILTWITH_API_KEY=***REMOVED***
-SIMILARWEB_API_KEY=***REMOVED***
+BUILTWITH_API_KEY=<your-builtwith-key>
+SIMILARWEB_API_KEY=<your-similarweb-key>
 ```
 
 ## FastAPI Backend (v2.1)
