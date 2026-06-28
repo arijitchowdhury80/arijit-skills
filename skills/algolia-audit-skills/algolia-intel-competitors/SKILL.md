@@ -38,9 +38,15 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-competitors.py \
   "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/"
 ```
 
+The script attempts SimilarWeb Competitors tab via browser session. The SW Competitors tab
+has CloudFront anti-bot protection — it will often return 0 results. This is expected.
+The script creates the output file structure regardless.
+
+**If script returns 0 competitors → proceed directly to Step 2. WebSearch is the primary path.**
+
 ---
 
-## Step 2: Skill Enrichment
+## Step 2: Skill Enrichment — Competitor Identification (PRIMARY PATH)
 
 ### For each competitor identified by script:
 1. BuiltWith MCP: `domain-lookup` → detect search vendor (Layer 1 detection)
