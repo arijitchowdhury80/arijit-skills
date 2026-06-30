@@ -43,7 +43,7 @@ $ALGOLIA_AUDIT_DIR/{CompanyName}/
 
 Before spawning agents, determine if the company is publicly traded (has a stock ticker + SEC filings). This routes to `algolia-intel-financial-public` (Yahoo Finance MCP) vs `algolia-intel-financial-private` (6-source waterfall).
 
-**Do NOT guess this from a WebSearch.** Run the deterministic classifier — it validates a real
+**Do NOT guess this from any web search (including gemini_search.py).** Run the deterministic classifier — it validates a real
 ticker/exchange/quote via Yahoo Finance, so the same company always routes the same way (a wrong
 call here sends the whole financial leg down the wrong skill and can clobber `08-financial-profile.md`):
 

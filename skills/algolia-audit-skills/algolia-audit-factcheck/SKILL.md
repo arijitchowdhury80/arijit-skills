@@ -17,7 +17,7 @@ Optional: --tier quick|standard|full (default: full) | --dim {1,4} to run specif
 |------|-----------|--------|
 | AUTHENTIC | MCP API, SEC EDGAR, official IR, official press release | Keep — cite normally |
 | WEBFETCH | Third-party article WebFetched — claim appears on page | Keep — label with source URL |
-| WEBSEARCH | Found via search — URL not WebFetch verified | Keep — amber ⚠️ warning label |
+| WEBSEARCH | Found via Gemini-grounded search (gemini_search.py) — URL citation provided but not WebFetch-verified | Keep — amber ⚠️ warning label |
 | NO_SOURCE | No verifiable source exists | **DROP — remove entirely. No hedging.** |
 
 ## ⚠️ COMPLETENESS GATE — BLOCKING CHECKS (run BEFORE all other dimensions)

@@ -11,7 +11,7 @@ writes_to:
   - 11-investor-intelligence.json
 mcp_required:
   - yahoo_finance: "get_yahoo_finance_news for news feed"
-  - websearch: "earnings call transcripts"
+  - gemini_search: "grounded Google-Search via scripts/gemini_search.py — earnings call transcripts"
 skill_enrichment: true
 version: 1.0
 ---
@@ -43,7 +43,13 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-investor.py \
 ## Step 2: Skill Enrichment — ALL Sources (not fallback chain)
 
 ### For public companies:
-1. **Earnings call transcripts** — WebSearch `"{Company}" Q4 2025 earnings call transcript`, WebFetch Motley Fool/Seeking Alpha — last 3 quarters, ANY named speaker
+1. **Earnings call transcripts** — Use `gemini_search.py` to locate transcripts:
+   ```bash
+   python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+     --system "Find verbatim executive quotes from earnings call transcripts. Cite exact sources." \
+     '"{Company}" Q4 2025 earnings call transcript'
+   ```
+   Then WebFetch the cited transcript URLs (Motley Fool / Seeking Alpha) — last 3 quarters, ANY named speaker.
    Label: `[FACT — {source} transcript WebFetch, {date}]`
 
 2. **SEC EDGAR 10-K** — WebFetch sec.gov directly (SEC EDGAR MCP does NOT exist — use direct HTTP WebFetch)
@@ -93,7 +99,7 @@ Never include a quote that the gate rejected. An undated "verbatim" quote fails 
 
 ---
 
-## Step 3: Media Quote Extraction (Tavily Signals)
+## Step 3: Media Quote Extraction (Gemini-grounded Signals)
 
 ### 3a. Run the script
 
@@ -108,8 +114,8 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-exec-media.py \
 
 Parse the JSON printed to stdout:
 - `status: "success"` with `media_quotes_collected > 0` → proceed to Step 3c
-- `status: "partial"` with `"media_quotes"` in `skill_enrichment_required` → TAVILY_API_KEY not set or no results → go to Step 3e (WebSearch fallback)
-- `media_quotes_collected: 0` → go to Step 3e (WebSearch fallback)
+- `status: "partial"` with `"media_quotes"` in `skill_enrichment_required` → Gemini-grounded search unavailable or no results → go to Step 3e (gemini_search.py fallback)
+- `media_quotes_collected: 0` → go to Step 3e (gemini_search.py fallback)
 
 ### 3c. LLM enrichment — context and algolia_relevance
 
@@ -135,13 +141,17 @@ Update `11-investor-intelligence.md`:
   - Under **Context (Algolia pitch):** → insert the enriched context sentence
   - Under **Algolia Relevance:** → insert the pipe-separated tags
 
-### 3e. WebSearch fallback (when Tavily unavailable or zero results)
+### 3e. gemini_search.py fallback (when script collection unavailable or zero results)
 
-Run the following WebSearch for each top executive (max 3, prioritize CEO/CMO/CTO):
+Run `gemini_search.py` for each top executive (max 3, prioritize CEO/CMO/CTO):
 
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find verbatim executive quotes from trade press interviews. Cite exact sources." \
+  '"{exec_name}" "{company_name}" 2024 OR 2025 interview digital commerce personalization'
 ```
-WebSearch: "{exec_name}" "{company_name}" 2024 OR 2025 interview digital commerce personalization
-```
+
+**Grounding rule (no fabrication):** use `citations[]` from the JSON output as URLs to WebFetch for verbatim text. If `"grounded": false`, leave the entry null — do not synthesize a quote from ungrounded model knowledge.
 
 For each result:
 - Confirm the URL is trade press (NOT sec.gov, fool.com, seekingalpha.com)
@@ -152,8 +162,8 @@ For each result:
 - Append to `media_quotes[]` in `11-investor-intelligence.json`
 - Append formatted quote block to `## Media Quotes (Trade Press)` section in `11-investor-intelligence.md`
 
-**Label format for WebSearch fallback:**
-`[ESTIMATE — {Publication} via WebSearch, {date}, {URL}]`
+**Label format for gemini_search.py fallback:**
+`[ESTIMATE — {Publication} via Gemini search, {date}, {URL}]`
 
 ---
 

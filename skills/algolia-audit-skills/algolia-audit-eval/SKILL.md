@@ -131,7 +131,7 @@ Check specific rules for the skill being evaluated.
 **algolia-audit-research:**
 - [ ] CHECKPOINT.md shows all 14 steps executed
 - [ ] Wave 1–4 parallel execution pattern used (not sequential)
-- [ ] MCP tools called before WebSearch fallback
+- [ ] MCP tools called before Gemini-grounded search (gemini_search.py) fallback
 - [ ] Each scratchpad file ≥2000 bytes (not stubs)
 
 **algolia-audit-report:**

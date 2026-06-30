@@ -52,7 +52,7 @@ $ALGOLIA_AUDIT_DIR/{CompanyName}/
 | SimilarWeb MCP | Steps 2, 3, 4, 6 | Yes |
 | Yahoo Finance MCP | Steps 1, 9, 12 | Public companies |
 | Apify MCP | Step 8 | Yes (live signals) |
-| WebSearch/WebFetch | Steps 5-8, 10-14 | Yes |
+| Gemini-grounded search (gemini_search.py) / WebFetch | Steps 5-8, 10-14 | Yes |
 
 ## Python Scripts (deterministic data collection)
 These scripts replace manual MCP API iteration for high-volume endpoints.
@@ -72,7 +72,7 @@ Run scripts from: `cd "$ALGOLIA_AUDIT_DIR/{CompanyName}/research" && python3 ~/.
 ## Step Reference (see REFERENCE.md for full detail)
 | Step | Output file | Key sources |
 |------|------------|-------------|
-| 1: Company Context | 01-company-context.md | Yahoo Finance MCP, BuiltWith keywords, WebSearch |
+| 1: Company Context | 01-company-context.md | Yahoo Finance MCP, BuiltWith keywords, Gemini-grounded search (gemini_search.py) |
 | 2: Tech Stack | 02-tech-stack.md | BuiltWith MCP (all 7 endpoints), SimilarWeb tech, parse-builtwith.js |
   → Run: `python3 ~/.claude/skills/algolia-search-audit/scripts/collect-techstack.py {domain} "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/"`
   → Verify: output ≥2000 bytes. If algolia_detected=true in JSON output: STOP — existing customer, abort audit.
@@ -85,13 +85,13 @@ Run scripts from: `cd "$ALGOLIA_AUDIT_DIR/{CompanyName}/research" && python3 ~/.
 | 5: Test Queries | 05-test-queries.md | vertical-query-library + company context |
 | 6: Competitor Search | 04-competitors.md (append) | BuiltWith + network inspection |
 | 6b: Competitive Gap | 04-competitors.md (append) | All Wave 1 data |
-| 7: Strategic Angles | 06-strategic-context.md | WebSearch |
+| 7: Strategic Angles | 06-strategic-context.md | Gemini-grounded search (gemini_search.py) |
 | 8: Live Signals | 07-hiring/09b-social/09c-news | Apify (LinkedIn + Twitter + Google News) |
 | 9: Financials + ROI | 08-financial-profile.md | Yahoo Finance MCP + calculations |
   → If public company: Run `python3 ~/.claude/skills/algolia-search-audit/scripts/collect-financials.py {TICKER} "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/"`
   → Then run: `python3 ~/.claude/skills/algolia-search-audit/scripts/calculate-roi.py "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/"`
   → Verify: 08-financial-profile.md ≥3000 bytes
-| 10: Trigger Events | 06-strategic-context.md (append) | WebSearch |
+| 10: Trigger Events | 06-strategic-context.md (append) | Gemini-grounded search (gemini_search.py) |
 | 11: Case Studies | 01-company-context.md (append) | WebFetch algolia.com/customers/ |
 | 12: Investor Intel | 11-investor-intelligence.md | Yahoo Finance + SEC EDGAR WebFetch + transcripts |
 | 13: Deep Hiring | 07-hiring-signals.md (append) | Apify + careers page WebFetch |

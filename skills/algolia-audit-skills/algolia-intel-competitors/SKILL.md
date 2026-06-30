@@ -13,7 +13,7 @@ writes_to:
 mcp_required:
   - similarweb: "similar-sites-agg, keywords-competitors-agg"
   - builtwith: "domain-lookup per competitor (SECONDARY signal only)"
-  - websearch: "competitor profiles, case studies (enrichment only)"
+  - gemini_search: "grounded Google-Search via scripts/gemini_search.py — competitor profiles, case studies"
 depends_on_skill:
   - detect-search: "canonical search-vendor oracle — per-competitor vendor verdict (primary)"
 skill_enrichment: true
@@ -44,7 +44,7 @@ The script attempts SimilarWeb Competitors tab via browser session. The SW Compe
 has CloudFront anti-bot protection — it will often return 0 results. This is expected.
 The script creates the output file structure regardless.
 
-**If script returns 0 competitors → proceed directly to Step 2. WebSearch is the primary path.**
+**If script returns 0 competitors → proceed directly to Step 2. Grounded search (gemini_search.py) is the primary identification path.**
 
 ---
 
@@ -68,19 +68,29 @@ The script creates the output file structure regardless.
    pass it as `--builtwith-vendor "{vendor}"` to record agreement, but the network verdict wins.
    If `detect-search` reports `UNCONFIRMED_WAF_BLOCK` (WAF, common on e-commerce — see Scout A/B F4),
    record the block as the finding; do NOT fall back to guessing the vendor from BuiltWith alone.
-2. WebSearch is now ENRICHMENT ONLY (case studies, public statements) — not the vendor source of truth:
-   `"{competitor}" search OR "search experience" OR Algolia OR Elasticsearch 2025`
+2. Use **grounded search** for enrichment (case studies, public statements) — NOT the vendor source of truth. Run the helper (WebSearch is retired):
+   ```bash
+   python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+     --system "Return only facts supported by Google Search results. Cite each fact." \
+     "{competitor} search OR 'search experience' OR Algolia OR Elasticsearch 2025"
+   ```
+   **Grounding rule:** only label a field `[FACT — <citation url>, <date>]` when `"grounded": true` and a cited source supports it. If `"grounded": false`, leave the field null — never fall back to ungrounded model knowledge.
 3. If `detect-search` confirms a competitor on Algolia → **GOLDEN ANGLE**: WebFetch algolia.com/customers/{slug} for exact metrics
 
 ### Step 2b: Algolia customer portfolio — vertical-wide lookup (MANDATORY)
 
 This is separate from competitor scanning. Even if NO direct competitor uses Algolia, search the full Algolia customer base for companies in the same vertical.
 
+Run the grounded search helper (NOT WebSearch — retired) for each query:
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Return only facts from Google Search. Cite sources." \
+  "<query>"
 ```
-WebSearch: "algolia.com/customers {vertical}" — e.g. "algolia.com/customers footwear"
-WebSearch: "algolia.com/customers {adjacent_vertical}" — e.g. "algolia.com/customers retail apparel"
+- Query 1: `"algolia.com/customers {vertical}"` — e.g. `"algolia.com/customers footwear"`
+- Query 2: `"algolia.com/customers {adjacent_vertical}"` — e.g. `"algolia.com/customers retail apparel"`
+
 WebFetch: https://www.algolia.com/customers/ — scan full list for same-industry companies
-```
 
 For each Algolia customer in the same vertical:
 - WebFetch their customer page: `https://www.algolia.com/customers/{slug}/`

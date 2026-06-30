@@ -171,7 +171,7 @@ Write 3 Algolia customer success stories comparable to the prospect's vertical i
 4. Same ecommerce platform if available
 5. If no exact match exists, use closest adjacent vertical with explicit note in `why`
 
-**Never leave `case_studies` as an empty array.** Minimum 2 entries required. If WebFetch is blocked on algolia.com/customers, use WebSearch for "[company name] algolia case study site:algolia.com".
+**Never leave `case_studies` as an empty array.** Minimum 2 entries required. If WebFetch is blocked on algolia.com/customers, use gemini_search.py for "[company name] algolia case study site:algolia.com".
 
 After writing, validate: `python3 validate-json-schema.py {slug}`
 

@@ -41,9 +41,9 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-news.py \
 Lookback: 60 days.
 
 **Collection method + degradation (read the script's stdout JSON):**
-- `collection_method: "tavily"` → `[FACT]`-grade primary (TAVILY_API_KEY set).
-- `collection_method: "google_news_rss_fallback"` + `degraded: true` → TAVILY_API_KEY was
-  unset, so articles came from the Google News RSS fallback. Their per-article labels are
+- `collection_method: "gemini_search"` → `[FACT]`-grade primary (script uses Gemini-grounded search).
+- `collection_method: "google_news_rss_fallback"` + `degraded: true` → Gemini-grounded search
+  unavailable, so articles came from the Google News RSS fallback. Their per-article labels are
   `[OBSERVED — Google News RSS fallback, {date}]`, NOT `[FACT]`. The `.md` carries a loud
   DEGRADED banner. This is a real freshness/coverage downgrade — never silent. Carry the
   `collection_method` + `degraded` flags into the JSON `meta`, and treat degraded articles
@@ -67,7 +67,7 @@ After the script runs, write `09c-news-signals.json` with this EXACT top-level s
     "skill_enrichment_completed": true,
     "domain": "{domain}",
     "company_name": "{CompanyName}",
-    "collection_method": "tavily|google_news_rss_fallback",
+    "collection_method": "gemini_search|google_news_rss_fallback",
     "degraded": false,
     "total_articles": 0
   },

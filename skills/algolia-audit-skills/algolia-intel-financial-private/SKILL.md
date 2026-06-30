@@ -10,7 +10,7 @@ writes_to:
   - 08-financial-profile.md
   - 08-financial-profile.json
 mcp_required:
-  - websearch: "ecdb.com, trade press, ranking lists"
+  - gemini_search: "grounded Google-Search via scripts/gemini_search.py — ecdb.com, trade press, ranking lists"
 skill_enrichment: true
 version: 1.0
 ---
@@ -59,13 +59,29 @@ Run all 6 sources simultaneously:
 2. **LinkedIn headcount** — WebFetch linkedin.com/company/{slug}
    Label: `[ESTIMATE — LinkedIn, {date}]`
 
-3. **CEO/founder interviews** — WebSearch + WebFetch transcripts
+3. **CEO/founder interviews** — grounded search + WebFetch transcripts (NOT WebSearch — retired)
+   ```bash
+   python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+     --system "Return only facts supported by Google Search results. Cite each fact." \
+     "{CompanyName} CEO founder interview transcript OR podcast"
+   ```
+   Use the cited URLs to WebFetch the transcripts.
    Label: `[WEBFETCH — {source}, {date}]`
 
-4. **Trade press** — WebSearch Retail Dive, WWD, TechCrunch
-   Label: `[WEBSEARCH — {source}]`
+4. **Trade press** — grounded search (NOT WebSearch — retired)
+   ```bash
+   python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+     --system "Return only facts supported by Google Search results. Cite each fact." \
+     "{CompanyName} revenue OR funding site:retaildive.com OR site:wwd.com OR site:techcrunch.com"
+   ```
+   **Grounding rule:** only use results when `"grounded": true`. Revenue figures from this source still use `[ESTIMATE — <citation url>, <date>]` — the `[ESTIMATE]` label for all private company revenue always takes precedence. If `"grounded": false`, leave the field null.
 
-5. **Inc 5000/Deloitte Fast 500** — WebSearch
+5. **Inc 5000/Deloitte Fast 500** — grounded search (NOT WebSearch — retired)
+   ```bash
+   python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+     --system "Return only facts supported by Google Search results. Cite each fact." \
+     "{CompanyName} Inc 5000 OR Deloitte Fast 500 ranking"
+   ```
    Label: `[ESTIMATE — ranking list, {date}]`
 
 6. **Job posting volume** — count from hiring signals as proxy
