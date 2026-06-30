@@ -1,6 +1,6 @@
 ---
 name: algolia-intel-techstack
-description: Layer 1B tech stack detection module. Identifies the current search vendor, ecommerce platform, analytics stack, CDN/WAF, and removed technologies using detect-search (network packet inspection, primary) and SimilarWeb technology cross-check. Produces 02-tech-stack.md and 02-tech-stack.json. Critical: determines whether this is a displacement, existing customer expansion, or greenfield audit. Run in Wave 1 alongside other independent modules.
+description: Layer 1B tech stack detection module. Identifies the current search vendor, ecommerce platform, analytics, tag manager, CDN/WAF, personalization, payment, frontend framework and hosting via detect-search --full-tech (keyless multi-page network packet inspection) with optional SimilarWeb cross-check. Produces 02-tech-stack.md and 02-tech-stack.json. Critical: determines whether this is a displacement, existing customer expansion, or greenfield audit. Run in Wave 1 alongside other independent modules.
 layer: 1-intelligence
 module_id: 1B
 script: collect-techstack.py
@@ -31,7 +31,7 @@ Read `~/.claude/skills/algolia-search-audit/AGENT-CONTEXT.md` before any action.
 
 ---
 
-## Step 1: Run Script
+## Step 1: Run Script (does the full network fingerprint itself)
 
 ```bash
 python3 ~/.claude/skills/algolia-search-audit/scripts/collect-techstack.py \
@@ -39,7 +39,20 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-techstack.py \
   "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/"
 ```
 
-Capture stdout JSON.
+This is now the WHOLE tech-stack detection — no separate manual detect-search call needed.
+The script invokes `detect-search.js --full-tech` (live **multi-page** network fingerprint:
+home → category(PLP) → product(PDP) → search-results → cart) and runs it through
+`map-detect-tech.py`, writing the COMPLETE **`02-tech-stack.json`** + `02-tech-stack.md`:
+search vendor + ecommerce platform + analytics + tag-manager + CDN/WAF + personalization +
+payment + CDP + frontend framework + hosting, each with **confidence** (`confirmed` /
+`likely` / `likely-opendb`) + evidence + the pages it was seen on. Keyless. SimilarWeb is an
+optional cross-check only (if `SIMILARWEB_API_KEY` is set).
+
+Capture stdout JSON (summary: `tech_count`, `search_vendors`, `algolia_detected`, `pages_visited`).
+The `02-tech-stack.json` is already complete — Step 2 below is interpretation, not re-collection.
+
+No fabrication. Client-side only (backend tech invisible — same as BuiltWith). No historical/
+"removed tech" — a live load sees only the current state.
 
 ---
 
