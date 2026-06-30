@@ -1,5 +1,6 @@
 ---
 name: algolia-audit-report
+version: 2.0.0
 description: Use when a company's Algolia Search Audit workspace is already fully populated (research files and browser screenshots in place) and the goal is to generate the final deliverable package: score the 10 search areas, produce the McKinsey deck, dual-view landing page, PDF book, AE pre-call playbook, and strategic signal brief. Triggers when the user says research and browser testing are done and wants to render, score, or output the full audit report and deliverables. Not for starting new audits, running browser tests, doing pre-audit research, or editing individual files.
 ---
 

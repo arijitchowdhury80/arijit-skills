@@ -1,5 +1,6 @@
 ---
 name: algolia-intel-industry
+version: 2.0.0
 description: Use for any Algolia Search Audit task involving industry-level research: collecting vertical benchmarks (Baymard, Forrester, NRF), ecommerce search conversion stats, vertical trend analysis, expert analyst quotes, and competitive search landscape for a prospect's industry. Invoke when the user explicitly runs 'algolia-intel-industry', asks for 'industry intelligence' or 'industry benchmarks' for an audit company, wants bigger-picture vertical context for a sales narrative, or needs to produce industry-intel.md. Distinct from competitor intel (specific companies) and financial profile (company financials) — this skill covers the broader vertical and what's happening across the industry.
 data_contract: v1.1
 schema_additions: 1L (industry-intel.json)

@@ -7,7 +7,7 @@ server_port: 8421
 health_check: "curl -s http://localhost:8421/health"
 start_command: "scout serve"
 requires_install: true
-version: 2.0
+version: 2.0.0
 ---
 
 # Scout

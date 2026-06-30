@@ -12,7 +12,7 @@ writes_to:
 mcp_required:
   - gemini_search: "grounded Google-Search via scripts/gemini_search.py — ecdb.com, trade press, ranking lists"
 skill_enrichment: true
-version: 1.0
+version: 2.0.0
 ---
 
 ## MANDATORY FIRST ACTION

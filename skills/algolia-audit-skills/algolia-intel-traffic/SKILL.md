@@ -12,7 +12,7 @@ writes_to:
 mcp_required:
   - similarweb: "all endpoints listed below — no skipping (demographics: attempt, skip on 403)"
 skill_enrichment: false
-version: 1.1
+version: 2.0.0
 ---
 
 ## MANDATORY FIRST ACTION
