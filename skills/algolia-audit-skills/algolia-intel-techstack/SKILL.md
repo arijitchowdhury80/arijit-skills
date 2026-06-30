@@ -9,12 +9,13 @@ reads_from:
 writes_to:
   - 02-tech-stack.md
   - 02-tech-stack.json
-mcp_required:
-  - similarweb: "get-website-content-technologies-agg (tech stack cross-check)"
+data_sources:
+  - detect-search: "detect-search.js --full-tech multi-page network fingerprint (keyless, primary)"
+  - similarweb_api: "OPTIONAL REST cross-check — api.similarweb.com /content/technologies (SIMILARWEB_API_KEY); not an MCP; skipped gracefully if unset"
 depends_on_skill:
   - detect-search: "canonical search-vendor oracle — Layer 3 network verdict (primary)"
 skill_enrichment: true
-version: 1.0
+version: 2.0.0
 ---
 
 ## MANDATORY FIRST ACTION
@@ -60,8 +61,8 @@ No fabrication. Client-side only (backend tech invisible — same as BuiltWith).
 
 This is the critical enrichment step. Search vendor detection uses TWO mandatory layers:
 
-### Layer 1: SimilarWeb technology cross-check
-- MCP call: `get-website-content-technologies-agg(domain="{domain}")`
+### Layer 1: SimilarWeb technology cross-check (OPTIONAL — the pipeline is keyless without it)
+- REST API: `api.similarweb.com/v1/website/{domain}/content/technologies` (`SIMILARWEB_API_KEY`); skipped gracefully if unset. Not an MCP.
 - Records ecommerce platform, analytics, CDN/WAF, and any detected search vendor tags
 - A tag detected here = `TAG_ONLY` (may not be active in production — Layer 2 is the truth)
 
