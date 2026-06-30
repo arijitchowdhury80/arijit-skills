@@ -10,7 +10,7 @@ runs the pipeline end-to-end, not just chats over the output.
 
 **Suite version: `2.0.0` (Gemini-grounded release).** Per-skill versions live in each `SKILL.md`
 frontmatter; `algolia-intel-hiring` is ahead at `3.0.0` (full source redesign). `algolia-intel-techstack`
-is mid-rebuild and not part of this release.
+was rebuilt on keyless `detect-search --full-tech` multi-page fingerprinting (BuiltWith fully retired).
 
 ---
 
@@ -48,7 +48,7 @@ algolia-search-audit  ── full-pipeline orchestrator (entry point)
 ├─ Phase 1 · Research        algolia-audit-research  (kicks off Wave 1)
 │   └─ Wave 1 intel modules (read 01-company-context first):
 │      algolia-intel-company    (1A · run first, all downstream read it)
-│      algolia-intel-techstack   (1B · search vendor / platform)   [mid-rebuild]
+│      algolia-intel-techstack   (1B · search vendor / full tech stack)
 │      algolia-intel-traffic     (1C · SimilarWeb traffic)
 │      algolia-intel-competitors (1D · competitor search tech)
 │      algolia-intel-financial-public / -private (1E/1F · revenue)
@@ -85,7 +85,7 @@ Each skill has its own `README.md` with inputs, outputs, data sources, and how P
 
 ### Wave 1 intel modules
 - **algolia-intel-company** — company context, vertical, execs, key URLs (run first).
-- **algolia-intel-techstack** — search vendor + ecommerce platform (detect-search + SimilarWeb). *Mid-rebuild; excluded from v2.0.0.*
+- **algolia-intel-techstack** — full tech stack + search vendor via keyless `detect-search --full-tech` (multi-page network fingerprint); optional SimilarWeb REST cross-check.
 - **algolia-intel-traffic** — full SimilarWeb traffic profile.
 - **algolia-intel-competitors** — competitor set + each one's search tech (Golden Angle: any on Algolia).
 - **algolia-intel-financial-public** — public-company financials (Yahoo Finance).
