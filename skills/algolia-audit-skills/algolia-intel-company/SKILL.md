@@ -10,10 +10,9 @@ writes_to:
   - 01-company-context.md
   - 01-company-context.json
 mcp_required:
-  - builtwith: "keywords-api for SEO meta"
   - gemini_search: "grounded Google-Search via scripts/gemini_search.py — executives, HQ, founding, vertical"
 skill_enrichment: true
-version: 1.0
+version: 2.0.0
 ---
 
 ## MANDATORY FIRST ACTION
@@ -27,7 +26,7 @@ Read `~/.claude/skills/algolia-search-audit/AGENT-CONTEXT.md` before any action.
 - **Model tier:** data_enrichment (claude-haiku-4-5 per platform.config.json)
 - **Reads from:** nothing — this is always the first module
 - **Writes to:** `01-company-context.md` + `01-company-context.json`
-- **Script:** `collect-company.py` (handles BuiltWith API + website WebFetch)
+- **Script:** `collect-company.py` (handles website WebFetch via Scout)
 
 ---
 

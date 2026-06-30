@@ -1,5 +1,6 @@
 ---
 name: algolia-campaign-abx
+version: 2.0.0
 description: ABX campaign package for Algolia Search Audit. Creates complete multi-touch outreach package: 5-email sequence, LinkedIn connection + follow-up messages, Loom video script, and collateral schedule. All personalized using audit findings, investor quotes, competitor evidence. Calls algolia-email, algolia-brief, algolia-social for brand-validated output. Output: abx-campaign/ folder.
 ---
 
@@ -123,7 +124,7 @@ All emails must be written in plain Markdown. No HTML. No tables inside email bo
 
 **Two plays — choose based on `04-competitors.md`:**
 
-**Golden Angle play** (use ONLY if BuiltWith confirmed a named competitor uses Algolia):
+**Golden Angle play** (use ONLY if detect-search confirmed a named competitor uses Algolia):
 - Competitor name + what they changed
 - The measurable result (cite source)
 - The implication for the prospect
@@ -134,9 +135,9 @@ All emails must be written in plain Markdown. No HTML. No tables inside email bo
 - Algolia as the solution
 
 **Rules:**
-- NEVER speculate about competitor technology. Only cite what BuiltWith confirmed.
+- NEVER speculate about competitor technology. Only cite what detect-search confirmed.
 - If `04-competitors.md` shows no Golden Angle, use the Defensive play without mentioning Golden Angle.
-- Source notes must identify which competitor and which BuiltWith endpoint confirmed the finding.
+- Source notes must identify which competitor and which detect-search network inspection confirmed the finding.
 
 ---
 
@@ -405,7 +406,7 @@ If any check fails: halt and report which file and which condition failed. Do no
 | Specificity mandate | Every email must reference a specific audit finding (query + result), not a generic search problem |
 | Source citation mandate | Every factual claim across all 10 files must cite its scratchpad file or external URL |
 | Screenshot existence check | Every screenshot referenced in the Loom script must exist in `deliverables/screenshots/` before being named |
-| No fabricated competitors | Golden Angle only used when BuiltWith confirmed. Defensive play used otherwise. |
+| No fabricated competitors | Golden Angle only used when detect-search confirmed. Defensive play used otherwise. |
 | No fabricated financials | Only figures sourced from `08-financial-profile.md`, Yahoo Finance, or SEC |
 | No fabricated case studies | Only verified case studies with WebFetch-confirmed URLs |
 | LinkedIn character limits | Connection request ≤ 300 chars. Character count included in file. |

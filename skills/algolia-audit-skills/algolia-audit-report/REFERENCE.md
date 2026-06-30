@@ -410,7 +410,7 @@ The `positioning_matrix` is a sales tool. Its purpose: what the prospect can't d
 3. **Row content must be sales-useful.** `prospect_today` = what they lack with evidence. Competitor columns = what each competitor has. `prospect_with_algolia` = what Algolia delivers. `algolia_delta` = the business outcome (not just feature name).
 
 4. **Do not include the prospect as a column.** The SPA already adds "DSW today" and "DSW with Algolia" columns. Adding the prospect name as a matrix column creates confusing duplication.
-| `golden_angle` | `04-competitors.md` | Competitors confirmed using Algolia via BuiltWith + Shoe Carnival footwear case study if applicable |
+| `golden_angle` | `04-competitors.md` | Competitors confirmed using Algolia via detect-search + Shoe Carnival footwear case study if applicable |
 | `ae_fields` | `12-icp-priority-mapping.md` + AE info | Urgency level, talk track opener, CTA |
 | `next_steps` | `12-icp-priority-mapping.md` | 3 specific action steps with title + description |
 | `bibliography` | ALL scratchpad files | Every URL cited, numbered sequentially |
@@ -619,7 +619,7 @@ Generated: {date}
 - ROLE: "{job title}" URL: {careers page url} SIGNAL: {interpretation}
 
 ### Competitive Landscape
-- COMPETITOR: {name} SEARCH VENDOR: {vendor} METHOD: {BuiltWith + Network / BuiltWith only} USES ALGOLIA: {Yes/No}
+- COMPETITOR: {name} SEARCH VENDOR: {vendor} METHOD: {detect-search (network) / detect-search (WAF-blocked)} USES ALGOLIA: {Yes/No}
 
 ### ICP-to-Priority Mapping
 - THEIR PRIORITY: "{exec quote}" → ALGOLIA: {product} → QUESTION: "{discovery question}"
@@ -704,7 +704,7 @@ echo "========================================"
 ```
 ✅ Gate 5 PASSED — all deliverables verified.
 Recommended next step: /algolia-audit-factcheck {company-slug}
-(Standard tier — re-calls SimilarWeb/BuiltWith APIs, verifies source URLs, checks quote attribution)
+(Standard tier — re-calls SimilarWeb APIs and re-runs detect-search, verifies source URLs, checks quote attribution)
 ```
 
 ### Gate 6: Statistic Source Verification (BLOCKING)

@@ -1,5 +1,6 @@
 ---
 name: algolia-search-audit
+version: 2.0.0
 description: Full-pipeline Algolia Sales Audit orchestrator. Use when given a prospect domain and asked to produce everything: company research, browser testing, scoring, factcheck, and all 6 sales deliverables (SPA, AE brief, battle card, leave-behind, PDF, signal brief) in a single end-to-end run. The entry point for requests like 'run an audit on X.com', 'all phases all deliverables', 'enterprise pitch prep', 'complete search intelligence before AE call', or any full audit. If only one phase is requested (research, browser, report), invoke the specific sub-skill directly instead.
 ---
 
@@ -108,7 +109,7 @@ Progress log (run when starting and completing):
 | 7 | `algolia-intel-hiring` | Haiku | `{domain}` | `09d-hiring-signals.md/.json` | Pure Python script (collect-hiring.py) |
 | 8 | `algolia-intel-social` | Haiku | `{domain}` | `09b-social-signals.md/.json` | Pure Python script (collect-social.py) |
 | 9 | `algolia-intel-news` | Haiku | `{domain}` | `09c-news-signals.md/.json` | Pure Python script (collect-news.py) |
-| 10 | `algolia-intel-partner` | Sonnet | `{domain}` | `07-partner-intel.md/.json` | BuiltWith cross-ref + SI research |
+| 10 | `algolia-intel-partner` | Sonnet | `{domain}` | `07-partner-intel.md/.json` | Gemini-grounded SI research |
 | 11 | `algolia-intel-industry` | Opus | `{domain}` | `06-industry-intel.md/.json` | Reads Baymard/Forrester research articles |
 
 **Note:** Run 5a OR 5b based on public/private determination. Not both.

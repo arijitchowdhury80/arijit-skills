@@ -1,5 +1,6 @@
 ---
 name: algolia-intel-partner
+version: 2.0.0
 description: Use when the user asks to run partner intelligence, partner discovery, or find co-sell/ecosystem partners for an Algolia audit prospect. Triggers when: mapping which platforms in Algolia's tech partner network a prospect uses (Adobe, Salesforce, Shopify, SAP, commercetools), identifying SI or consulting firms with existing C-suite relationships at the target company (Accenture, EPAM, Deloitte Digital, Publicis Sapient, Slalom, etc.), querying Crossbeam for account overlap, or generating a missing partner-intel.md audit file. Use for any Algolia Search Audit prospect where you need to map the partner landscape for co-sell or relationship-based sales motions.
 ---
 
@@ -252,7 +253,7 @@ Example format:
 ## Sources
 | # | URL | Type | Date | Used In |
 |---|---|---|---|---|
-| 1 | [URL] | [Crossbeam / Gemini-Search / WebFetch / BuiltWith] | [date] | [Section A/B/C] |
+| 1 | [URL] | [Crossbeam / Gemini-Search / WebFetch] | [date] | [Section A/B/C] |
 ```
 
 ---
