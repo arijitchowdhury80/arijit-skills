@@ -12,7 +12,7 @@ skill_enrichment: true
 mcp_required:
   - scout: "Layer 1 — scrape the company's OWN careers/jobs page (POST {SCOUT_URL}/scrape)"
   - gemini_search: "Layer 2 — grounded Google-Search via scripts/gemini_search.py for the same roles on third-party job boards"
-version: 3.0
+version: 3.0.0
 ---
 
 ## MANDATORY FIRST ACTION

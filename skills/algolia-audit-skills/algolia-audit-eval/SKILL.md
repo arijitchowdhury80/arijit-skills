@@ -1,5 +1,6 @@
 ---
 name: algolia-audit-eval
+version: 2.0.0
 description: Use when asked to eval or score the output of an Algolia Search Audit skill or module. Triggers when someone wants to know if a module output is good enough, meets the pass threshold, or needs more work — specifically scoring across the 5 quality dimensions (completeness, source density, instruction adherence, data accuracy, no fabrication). Also invoke after shipping a fix or building a new audit sub-skill to confirm quality before declaring it production-ready. Covers all algolia-audit-* modules: research, report, browser, factcheck, financials, live-signals, and others.
 ---
 

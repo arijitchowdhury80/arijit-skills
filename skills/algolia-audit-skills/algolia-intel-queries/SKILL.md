@@ -1,5 +1,6 @@
 ---
 name: algolia-intel-queries
+version: 2.0.0
 description: Use this skill to create the search query test set for an Algolia browser audit. Invoke when someone asks to: generate the queries to run on a company's website, create or regenerate the test-queries.md file for an audit workspace, decide what to search for during site search testing, or build a query mix (NLP/conversational, typo tolerance, synonym handling, brand, zero-results) tailored to a specific company and retail vertical. This is the query-preparation step that happens before browser test execution — not during active browser testing and not for broader research phases.
 ---
 

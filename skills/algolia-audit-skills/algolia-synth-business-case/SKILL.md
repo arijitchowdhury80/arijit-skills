@@ -1,5 +1,6 @@
 ---
 name: algolia-synth-business-case
+version: 2.0.0
 description: Use when asked to generate, build, or run an Algolia search ROI business case for a specific prospect company. Invoke for requests like 'build the ROI model', 'generate the business case', 'run synth-business-case', or 'give me the component-level breakdown' for an Algolia pitch or AE sales call. Breaks search revenue opportunity into 6 components — conversion lift, AOV increase, bounce reduction, no-results recovery, speed gain, long-tail discovery — with formulas pre-filled from audit research data. Outputs {slug}-business-case.md with conservative + moderate scenarios and fill-in-the-blank prompts for AE/BDR to replace estimates with prospect's actual numbers. Distinct from: audit reports (scoring + findings), AE playbooks (talking points + objection handling), and one-pagers (executive summaries).
 ---
 

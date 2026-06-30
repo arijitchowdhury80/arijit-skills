@@ -13,7 +13,7 @@ mcp_required:
   - yahoo_finance: "get_yahoo_finance_news for news feed"
   - gemini_search: "grounded Google-Search via scripts/gemini_search.py — earnings call transcripts"
 skill_enrichment: true
-version: 1.0
+version: 2.0.0
 ---
 
 ## MANDATORY FIRST ACTION

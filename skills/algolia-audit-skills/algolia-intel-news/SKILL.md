@@ -12,7 +12,7 @@ writes_to:
 mcp_required:
   - apify: "data_xplorer/google-news-scraper-fast"
 skill_enrichment: false
-version: 1.0
+version: 2.0.0
 ---
 
 ## MANDATORY FIRST ACTION
