@@ -101,6 +101,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:patchright@^1.59.4",
         "npm:playwright-extra@^4.3.6",
         "npm:playwright@^1.42.0",
         "npm:puppeteer-extra-plugin-stealth@^2.11.2"
