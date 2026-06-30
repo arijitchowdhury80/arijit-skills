@@ -38,7 +38,7 @@ Verification gate: both files exist, `competitive_scenario` is not null, at leas
 
 | Source | Provides | Method |
 |---|---|---|
-| SimilarWeb MCP | Initial competitor list (`similar-sites-agg`, `keywords-competitors-agg`) | Script calls SimilarWeb Competitors tab — CloudFront anti-bot may return 0; grounded search is the primary path when this happens |
+| SimilarWeb browser session (`collect-similarweb-browser.js`) | Initial competitor list from SimilarWeb Competitors tab | Browser automation (`--mode competitors-discovery`) — NOT an API/MCP; replaces dead API calls; CloudFront anti-bot frequently returns 0; grounded search (gemini_search.py) is the primary path when this happens |
 | `detect-search` skill | Canonical search-vendor verdict per competitor (vendor name, app ID, index names) | `detect-search.js` Playwright packet inspection + `map-detect-search.py` mapper; `UNCONFIRMED_WAF_BLOCK` recorded as-is, no LLM fallback |
 | Gemini-grounded Google Search (`gemini_search.py`) | Competitor enrichment (public case studies, press statements on search tech) | `gemini_search.py` — `grounded: true` required; field stays null otherwise |
 | WebFetch | Algolia customer case study pages (`algolia.com/customers/{slug}`) | Direct URL fetch for verbatim metrics and outcomes |

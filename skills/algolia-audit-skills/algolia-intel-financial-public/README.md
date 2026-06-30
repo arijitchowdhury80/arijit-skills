@@ -59,6 +59,6 @@ PRISM invokes this skill via the claude-cli executor in Wave 1, after `algolia-i
 ## Notes
 
 - `roi_formula_shown` must always be present in JSON — set `true` if the MD file shows a gross margin % calculation, `false` otherwise; never omit.
-- `margin_zone`: GREEN = gross margin >40%, YELLOW = 20–40%, RED = <20%.
+- `margin_zone`: GREEN = EBITDA margin >20%, YELLOW = 10–20%, RED = ≤10% (computed from `info.ebitdaMargins` by `collect-financials.py` — not gross margin).
 - `revenue_fy*` fields and `margin_zone` must be top-level JSON keys — never nested inside `financials` or `margins`.
 - Do not use grounded search as a substitute for financial data that yfinance cannot return — if yfinance returns no data for a field, record blank and continue.

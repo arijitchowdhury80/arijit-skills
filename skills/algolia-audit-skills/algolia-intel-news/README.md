@@ -6,7 +6,7 @@
 
 ## What it does
 
-Runs `collect-news.py` with three targeted queries covering digital/ecommerce/tech news, executive/leadership changes, and launches/expansion/AI initiatives. The primary collection method is Gemini-grounded search, which returns `[FACT]`-grade articles. If Gemini-grounded search is unavailable, the script falls back to a Google News RSS feed — articles from the fallback are labeled `[OBSERVED]` and carry a DEGRADED banner in the output, so downstream synthesis knows the confidence level. Category classification of articles is fully deterministic. The lookback window is 60 days.
+Runs `collect-news.py` with three targeted queries covering digital/ecommerce/tech news, executive/leadership changes, and launches/expansion/AI initiatives. The primary source is **Google News RSS** — keyless keyword search returning dated, sourced articles labeled `[FACT — Google News, {date}]`. The company's own RSS/newsroom feeds supplement it. No external search API key is required (Tavily and Apify are not used). Category classification is fully deterministic. The lookback window is 60 days; zero articles is a real null result, never padded.
 
 ## When to use
 
@@ -22,26 +22,25 @@ Runs `collect-news.py` with three targeted queries covering digital/ecommerce/te
 
 Files written to `$ALGOLIA_AUDIT_DIR/{CompanyName}/research/`:
 
-- `09c-news-signals.md` — categorized news articles with relevance signals; DEGRADED banner if RSS fallback was used.
-- `09c-news-signals.json` — structured output with exact top-level shape: `meta` (domain, company_name, collection_method, degraded, total_articles), `lookback_days: 60` (top-level, not nested in meta), `collection_date` (top-level), `articles[]` (title, url, date, source, category, relevance_signal).
+- `09c-news-signals.md` — categorized news articles with relevance signals; an explicit "no articles found" note if the 60-day window is empty.
+- `09c-news-signals.json` — structured output with exact top-level shape: `meta` (domain, company_name, collection_method, total_articles), `lookback_days: 60` (top-level, not nested in meta), `collection_date` (top-level), `articles[]` (title, url, date, source, category, relevance_signal).
 
 ## Data sources
 
 | Source | Provides | Method |
 |---|---|---|
-| Gemini-grounded search (via `collect-news.py`) | News articles across 3 query categories; returns `[FACT]`-grade results when `grounded: true` | Primary — `collection_method: "gemini_search"` in script output |
-| Google News RSS feed | News articles when Gemini-grounded search is unavailable | Fallback — `collection_method: "google_news_rss_fallback"`; labels become `[OBSERVED — Google News RSS fallback, {date}]`; carries `degraded: true` flag |
+| Google News RSS (`collect-news.py`) | Dated, sourced news articles across 3 query categories | Primary — keyless keyword search; `collection_method: "google_news_rss"`; labels `[FACT — Google News, {date}]` |
+| Company RSS/newsroom feeds | Headlines from the company's own `/press`, `/newsroom`, `/news`, `/blog` | Supplementary — direct HTTP; labels `[FACT — {domain} newsroom, {date}]` |
 
 ## How PRISM runs it
 
-PRISM (the Hermes instance on the VPS) invokes this skill via the claude-cli executor in Wave 1 alongside other intel modules, after `algolia-intel-company` has completed. The script is called with the domain and research directory; it runs all three queries, writes `09c-news-signals.json` (JSON structure is fixed — deviations fail the verification gate), and the module writes `09c-news-signals.md`. The `collection_method` and `degraded` flags are carried through to the audit report to signal article confidence to downstream modules.
+PRISM (the Hermes instance on the VPS) invokes this skill via the claude-cli executor in Wave 1 alongside other intel modules, after `algolia-intel-company` has completed. The script is called with the domain and research directory; it runs all three queries, writes `09c-news-signals.json` (JSON structure is fixed — deviations fail the verification gate), and the module writes `09c-news-signals.md`. Because the source is keyless, no credentials need to be provisioned on the executor for this module.
 
 ## Dependencies
 
 - **Script:** `collect-news.py`
-- **MCP servers:** Apify (`data_xplorer/google-news-scraper-fast`) — listed as required in frontmatter
-- **Env keys:** Gemini API credentials (for primary Gemini-grounded search path in the script)
-- **Abort conditions:** None — if Gemini-grounded search is unavailable, the script falls back to RSS rather than aborting.
+- **Env keys:** none — Google News RSS and company newsroom feeds are keyless.
+- **Abort conditions:** None. Zero articles in the 60-day window is a valid result (recorded as an explicit null), not an error.
 
 ## Notes
 

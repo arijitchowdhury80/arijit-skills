@@ -1,7 +1,7 @@
 ---
 name: algolia-campaign-abx
 version: 2.0.0
-description: ABX campaign package for Algolia Search Audit. Creates complete multi-touch outreach package: 5-email sequence, LinkedIn connection + follow-up messages, Loom video script, and collateral schedule. All personalized using audit findings, investor quotes, competitor evidence. Calls algolia-email, algolia-brief, algolia-social for brand-validated output. Output: abx-campaign/ folder.
+description: ABX campaign package for Algolia Search Audit. Creates complete multi-touch outreach package: 5-email sequence, LinkedIn connection + follow-up messages, Loom video script, and collateral schedule. All personalized using audit findings, investor quotes, competitor evidence. Calls algolia-brand-check for brand validation. Output: abx-campaign/ folder.
 ---
 
 ## MANDATORY FIRST ACTION

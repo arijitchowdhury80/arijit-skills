@@ -1,6 +1,6 @@
 ---
 name: algolia-intel-news
-description: Layer 1J news signals module. Scrapes Google News via Apify (3 targeted queries) and company RSS/newsroom feeds. Catches leadership changes, funding events, tech investments, product launches in the last 60 days. Produces 09c-news-signals.md and 09c-news-signals.json.
+description: Layer 1J news signals module. Collects news via Google News RSS (primary — 3 keyword queries, keyless, dated articles) plus the company's own RSS/newsroom feeds. No external search API key required. Catches leadership changes, funding events, tech investments, product launches in the last 60 days. Produces 09c-news-signals.md and 09c-news-signals.json.
 layer: 1-intelligence
 module_id: 1J
 script: collect-news.py
@@ -10,7 +10,7 @@ writes_to:
   - 09c-news-signals.md
   - 09c-news-signals.json
 mcp_required:
-  - apify: "data_xplorer/google-news-scraper-fast"
+  - none: "keyless — Google News RSS (primary) + company newsroom feeds; no MCP, no API key"
 skill_enrichment: false
 version: 2.0.0
 ---
@@ -40,14 +40,12 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/collect-news.py \
 3 queries run: digital/ecommerce/tech | executive/leadership | launch/expansion/AI
 Lookback: 60 days.
 
-**Collection method + degradation (read the script's stdout JSON):**
-- `collection_method: "gemini_search"` → `[FACT]`-grade primary (script uses Gemini-grounded search).
-- `collection_method: "google_news_rss_fallback"` + `degraded: true` → Gemini-grounded search
-  unavailable, so articles came from the Google News RSS fallback. Their per-article labels are
-  `[OBSERVED — Google News RSS fallback, {date}]`, NOT `[FACT]`. The `.md` carries a loud
-  DEGRADED banner. This is a real freshness/coverage downgrade — never silent. Carry the
-  `collection_method` + `degraded` flags into the JSON `meta`, and treat degraded articles
-  as amber when downstream synthesis cites them.
+**Collection method (read the script's stdout JSON):**
+- `collection_method: "google_news_rss"` → keyless primary. Google News RSS returns dated,
+  sourced articles; each carries a `[FACT — Google News, {date}]` label plus its URL. Company
+  newsroom feeds supplement it (`[FACT — {domain} newsroom, {date}]`).
+- Tavily and Apify are NOT used — news is keyless. Zero articles is a real null result; the `.md`
+  says so explicitly. Never fabricate signals to fill an empty result.
 
 ---
 
@@ -67,8 +65,7 @@ After the script runs, write `09c-news-signals.json` with this EXACT top-level s
     "skill_enrichment_completed": true,
     "domain": "{domain}",
     "company_name": "{CompanyName}",
-    "collection_method": "gemini_search|google_news_rss_fallback",
-    "degraded": false,
+    "collection_method": "google_news_rss",
     "total_articles": 0
   },
   "lookback_days": 60,

@@ -1,6 +1,6 @@
 ---
 name: algolia-intel-traffic
-description: Layer 1C traffic and engagement module. Collects full traffic profile via SimilarWeb MCP — visits, bounce rate, device split, marketing channels, geography, keywords (Search 3.0 v4), referrals (incoming + outgoing), demographics, popular pages. Run in Wave 1 alongside other independent modules. Produces 03-traffic-data.md and 03-traffic-data.json.
+description: Layer 1C traffic and engagement module. Collects full traffic profile via SimilarWeb REST API (direct HTTPS calls, SIMILARWEB_API_KEY required — not an MCP) — visits, bounce rate, device split, marketing channels, geography, keywords (Search 3.0 v4), referrals (incoming + outgoing), demographics, popular pages. Run in Wave 1 alongside other independent modules. Produces 03-traffic-data.md and 03-traffic-data.json.
 layer: 1-intelligence
 module_id: 1C
 script: collect-traffic.py
@@ -9,8 +9,8 @@ reads_from:
 writes_to:
   - 03-traffic-data.md
   - 03-traffic-data.json
-mcp_required:
-  - similarweb: "all endpoints listed below — no skipping (demographics: attempt, skip on 403)"
+data_sources:
+  - similarweb_api: "SimilarWeb REST API v1/v4 via collect-traffic.py — SIMILARWEB_API_KEY env var required; direct HTTPS requests (Python requests library); not an MCP; ~15 endpoints (visits, channels, v4 keywords, referrals, geo, demographics_v2, rank)"
 skill_enrichment: false
 version: 2.0.0
 ---

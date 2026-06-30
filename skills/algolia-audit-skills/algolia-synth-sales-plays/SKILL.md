@@ -1,7 +1,7 @@
 ---
 name: algolia-synth-sales-plays
 version: 2.0.0
-description: Use to generate AE/BDR sales playbooks for specific Algolia prospects. Invoke when the user wants to: build a playbook (AE playbook, BDR playbook, sales playbook), run synth-sales-plays or the sales plays generator, create pre-call talking points grounded in the prospect's own exec language from earnings calls, map MEDDPICC gaps, write SPIN-structured discovery Q&A trees, draft objection handling scripts, or prepare personalized cold outreach angles for a named company. All sections are grounded in audit research files and executive quotes — not templates. Output: {company}-playbook.md with BLUF header, top 5 talking points, discovery questions, MEDDPICC table, objection responses, and power map.
+description: Use to generate AE/BDR sales playbooks for specific Algolia prospects. Invoke when the user wants to: build a playbook (AE playbook, BDR playbook, sales playbook), run synth-sales-plays or the sales plays generator, create pre-call talking points grounded in the prospect's own exec language from earnings calls, map MEDDPICC gaps, write SPIN-structured discovery Q&A trees, draft objection handling scripts, or prepare personalized cold outreach angles for a named company. All sections are grounded in audit research files and executive quotes — not templates. Output: {company}-playbook.md with BLUF header, top 5 talking points, discovery questions, MEDDPICC table, objection responses, power map, and partner angles.
 ---
 
 ## MANDATORY FIRST ACTION
