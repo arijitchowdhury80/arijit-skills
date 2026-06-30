@@ -50,7 +50,7 @@ public one, re-run with `--force`; the script backs up the existing file to
 allowed without `--force`.
 
 If Yahoo Finance MCP is NOT available: STOP. Alert: "Yahoo Finance MCP required. Configure MCP and retry."
-Do NOT use WebSearch as a substitute for financial data.
+Do NOT use grounded search as a substitute for financial data.
 
 ---
 
@@ -83,7 +83,14 @@ If the 10-K does NOT break out digital revenue separately: state this explicitly
 Label: `[FACT — SEC EDGAR 10-K WebFetch, {date}, {URL}]`
 
 **Source C — Earnings call transcripts (exec language on tech investment):**
-- WebSearch: `"{Company}" Q4 2025 earnings call transcript` — try last 3 quarters
+- Run the grounded search helper (NOT WebSearch — retired) to locate transcript sources:
+  ```bash
+  python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+    --system "Return only facts supported by Google Search results. Cite each fact." \
+    "{Company} Q4 2025 earnings call transcript"
+  ```
+  Use the cited URLs from the JSON output to WebFetch the transcripts. Try last 3 quarters.
+  **Grounding rule:** only label a quote `[FACT — <citation url>, <date>]` when `"grounded": true` and a cited source supports it. If `"grounded": false`, do not include the quote.
 - WebFetch: Motley Fool / Seeking Alpha / company IR
 - Look specifically for: exec comments on search/digital/platform investments, technology spend, digital revenue guidance
 - Extract verbatim quotes from ANY named speaker about these topics

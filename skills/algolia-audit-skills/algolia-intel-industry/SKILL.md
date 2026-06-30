@@ -48,8 +48,8 @@ METHOD=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin
 **Routing:**
 - `status: "success"` → proceed to Step 2 (LLM enrichment)
 - `status: "partial"` → proceed to Step 2; check `skill_enrichment_required[]` for missing fields
-- `status: "failed"` → `TAVILY_API_KEY` not set; go directly to Step 2b (WebSearch fallback)
-- `collection_method: "websearch_fallback"` → go directly to Step 2b
+- `status: "failed"` → Gemini API unavailable; go directly to Step 2b (gemini_search.py fallback)
+- `collection_method: "gemini_search_fallback"` → go directly to Step 2b
 
 ### What the script writes
 
@@ -57,10 +57,10 @@ METHOD=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin
 |-------|--------|------------|
 | `vertical` | upstream `01-company-context.json` or `--vertical` flag | No |
 | `primary_market` | upstream `01-company-context.json` | No |
-| `collection_method` | `tavily_advanced` or `websearch_fallback` | No |
-| `benchmarks[]` | Tavily Query 1 (benchmark stats) | Partial — `context` if null |
-| `trends_2025_2026[]` | Tavily Query 2 (trend data) | No |
-| `expert_quotes[]` | Tavily Query 3 (analyst quotes) | Partial — `speaker` if null |
+| `collection_method` | `gemini_search` or `gemini_search_fallback` | No |
+| `benchmarks[]` | Gemini-grounded Query 1 (benchmark stats) | Partial — `context` if null |
+| `trends_2025_2026[]` | Gemini-grounded Query 2 (trend data) | No |
+| `expert_quotes[]` | Gemini-grounded Query 3 (analyst quotes) | Partial — `speaker` if null |
 | `trend_headline` | Derived from top trend with stat | No |
 | `trend_source_url` | First trend entry | No |
 | `trend_source_label` | First trend entry | No |
@@ -68,14 +68,14 @@ METHOD=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin
 | `competitor_search_landscape` | `null` with `[COLLECT_VIA_SKILL]` | **YES — Step 2** |
 
 **Staleness rule (enforced by script):** Results where `age_months > 24` are excluded at collection time.
-**Confidence rule:** `"FACT"` when Tavily returned `raw_content` (full page text); `"ESTIMATE"` when snippet-only.
+**Confidence rule:** `"FACT"` when Gemini-grounded search returns `grounded: true` with citations; `"ESTIMATE"` when `grounded: false` or citation-only.
 
 ---
 
 ## Step 2: SKILL LLM Enrichment
 
 After the script runs, read both output files and perform LLM enrichment.
-Do this regardless of `collection_method` — even Tavily results need contextualizing.
+Do this regardless of `collection_method` — even Gemini-grounded results need contextualizing.
 
 ### 2a. Read script outputs
 
@@ -86,14 +86,14 @@ Read: $ALGOLIA_AUDIT_DIR/{CompanyName}/research/01-company-context.json  (for co
 Read: $ALGOLIA_AUDIT_DIR/{CompanyName}/research/04-competitors.md  (for competitor search landscape, if exists)
 ```
 
-### 2b. WebSearch fallback — when Tavily unavailable
+### 2b. gemini_search.py fallback — when script collection unavailable
 
-When `collection_method == "websearch_fallback"` or `skill_enrichment_required` contains `"benchmarks"`:
+When `collection_method == "gemini_search_fallback"` or `skill_enrichment_required` contains `"benchmarks"`:
 
 #### MANDATORY age gate on fallback results (BUG-2 fix)
 
-The 24-month staleness rule is enforced by `collect-industry.py` ONLY on the Tavily path.
-The WebSearch fallback below has NO built-in age filter, so stale benchmarks (2020-2022
+The 24-month staleness rule is enforced by `collect-industry.py` ONLY on the Gemini-grounded path.
+The gemini_search.py fallback below has NO built-in age filter, so stale benchmarks (2020-2022
 articles dressed as "2025 trends") leak in unless you gate them. **Run every fallback
 result through the deterministic age gate before using any stat or quote from it:**
 
@@ -106,17 +106,25 @@ python3 ~/.claude/skills/algolia-search-audit/scripts/industry_fallback_filter.p
 
 The script returns `{kept, dropped, ...}`:
 - `dropped[]` — results older than 24 months (`age_months > 24`). **Discard these entirely.**
-- `kept[]` — usable results. Each carries `collection_method: "websearch_fallback"` and
+- `kept[]` — usable results. Each carries `collection_method: "gemini_search_fallback"` and
   `stale_unknown` (true when the date was unparseable). For any `stale_unknown: true`
-  entry, label the stat `[ESTIMATE — {Source} via WebSearch, date unverified, {url}]`
+  entry, label the stat `[ESTIMATE — {Source} via Gemini search, date unverified, {url}]`
   and never present it as a fresh `[FACT]`.
 
-This is the SAME `age_months > 24` boundary the Tavily path uses — the freshness
+This is the SAME `age_months > 24` boundary the Gemini-grounded path uses — the freshness
 guarantee now holds on BOTH paths.
 
 #### Benchmark queries
 
-Run these WebSearch queries (use locale from `primary_market`):
+Run these queries via `gemini_search.py` (use locale from `primary_market`):
+
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Return only facts supported by Google Search results. Cite each fact." \
+  "<query>"
+```
+
+**Grounding rule (no fabrication):** label `[FACT — <citation url>, <date>]` only when `"grounded": true`; if `"grounded": false`, leave the field **null** — never fall back to ungrounded model knowledge.
 
 **Locale → query mapping:**
 
@@ -154,14 +162,14 @@ The script returns a guarded result:
 
 For any other (non-benchmark) URL, or after a Scout→WebFetch fallback:
 - If WebFetch succeeds and stat confirmed on page → label `[FACT — {Source} via WebFetch, {date}, {url}]`
-- If WebFetch fails or stat not found on page → label `[ESTIMATE — {Source} via WebSearch, {url}]`
+- If WebFetch fails or stat not found on page → label `[ESTIMATE — {Source} via Gemini search, {url}]`
 
 **Baymard guard rule:** Baymard pages are JS-rendered. Prefer Scout (above). If BOTH Scout
 (degraded) and WebFetch return empty/redirect: use the snippet stat, label
-`[ESTIMATE — Baymard Institute via WebSearch, {url}]`. Never label Baymard stats `[FACT]`
+`[ESTIMATE — Baymard Institute via Gemini search, {url}]`. Never label Baymard stats `[FACT]`
 unless the exact figure was confirmed on the fetched (Scout or WebFetch) page.
 
-### 2c. LLM enrichment tasks (always run, even after Tavily success)
+### 2c. LLM enrichment tasks (always run, even after Gemini-grounded collection success)
 
 **Task 1 — Fill null benchmark `context` fields:**
 For each `benchmark` entry where `context` is null or generic:
@@ -208,7 +216,7 @@ The complete `industry-intel.md` structure after Step 2 enrichment:
 ```markdown
 # Industry Intelligence — {Company} / {Vertical}
 *Generated: {date} via collect-industry.py | Vertical: {vertical} | Market: {primary_market}*
-*Collection method: tavily_advanced | websearch_fallback*
+*Collection method: gemini_search | gemini_search_fallback*
 
 ## Vertical Overview
 [2-3 sentences: what defines this vertical's search/discovery challenges and why they matter]
@@ -223,15 +231,15 @@ The complete `industry-intel.md` structure after Step 2 enrichment:
 | Cart abandonment from failed search | 34% | [NRF](https://nrf.com/...) | 8mo | ESTIMATE | NO |
 
 ### Benchmark Source Labels
-- [FACT — Baymard Institute via Tavily WebFetch, 2024-11-01, https://baymard.com/blog/...]
-- [ESTIMATE — NRF via Tavily snippet, 2025-02-15, https://nrf.com/...]
+- [FACT — Baymard Institute via Gemini-grounded search, 2024-11-01, https://baymard.com/blog/...]
+- [ESTIMATE — NRF via Gemini search, 2025-02-15, https://nrf.com/...]
 
 ## 2025-2026 Trends
 
 1. **76% of US footwear retailers investing in personalization in 2026**
    [Description sentence from content]
    Source: [https://nrf.com/...](https://nrf.com/...) | Date: 2025-11-01 | FACT
-   [FACT — NRF via Tavily WebFetch, 2025-11-01, https://nrf.com/...]
+   [FACT — NRF via Gemini-grounded search, 2025-11-01, https://nrf.com/...]
 
 2. **AI-powered search adoption accelerating across mid-market retail**
    [Description...]
@@ -248,7 +256,7 @@ Source: https://nrf.com/...
 | "Shoppers who use site search convert at 3x the rate..." | Jamie Smith | Baymard Institute | [link](https://baymard.com/...) | 2024-11-01 | FACT |
 
 ### Expert Quote Labels
-- [FACT — Baymard Institute via Tavily WebFetch, 2024-11-01, https://baymard.com/...]
+- [FACT — Baymard Institute via Gemini-grounded search, 2024-11-01, https://baymard.com/...]
 
 ## Algolia Vertical Positioning
 
@@ -260,8 +268,8 @@ What is table stakes? What differentiates leaders?}
 
 ## Sources
 
-- [Baymard Institute](https://baymard.com/blog/...) — Tavily advanced search
-- [NRF](https://nrf.com/...) — Tavily advanced search
+- [Baymard Institute](https://baymard.com/blog/...) — Gemini-grounded search
+- [NRF](https://nrf.com/...) — Gemini-grounded search
 ```
 
 ---
@@ -303,7 +311,7 @@ sys.exit(0 if all(checks.values()) else 1)
 - `_meta` present in JSON
 
 **If gate fails:**
-- Missing `benchmarks[]` → run Step 2b WebSearch fallback queries manually and populate
+- Missing `benchmarks[]` → run Step 2b gemini_search.py fallback queries manually and populate
 - `algolia_angle` still null → complete Step 2c Task 2 before proceeding
 - File too small → check script errors in stdout JSON `errors[]` field
 
@@ -329,7 +337,7 @@ fi
 ## Expert Quote Rules (unchanged from v1.0)
 
 - **Named sources only**: Every quote MUST have a named speaker with title and organization. Anonymous quotes are NOT permitted — omit them entirely.
-- **Verbatim if Tavily WebFetch / WebFetched**: Use quotation marks and label `[FACT]`.
+- **Verbatim if Gemini grounded / WebFetched**: Use quotation marks and label `[FACT]`.
 - **No quotation marks on snippet-only**: Use *said that* notation and label `[ESTIMATE]`.
 - **Maximum age enforced by script**: `age_months > 24` excluded at collection time.
 - **Historical context exception**: Quotes 18-24 months old → place in a "Historical Context" subsection.
@@ -338,7 +346,7 @@ fi
 
 ## Article Date Verification
 
-The script enforces `age_months <= 24` at collection time. In Step 2 WebSearch fallback:
+The script enforces `age_months <= 24` at collection time. In Step 2 gemini_search.py fallback:
 
 Before including any trend or benchmark, state the article date explicitly in your reasoning.
 - If article date cannot be confirmed → label `[ESTIMATE]` and note "date unverified"

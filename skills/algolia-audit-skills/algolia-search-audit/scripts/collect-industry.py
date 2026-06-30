@@ -30,7 +30,9 @@ Env:   TAVILY_API_KEY
 import sys, os, json, re, math
 sys.path.insert(0, os.path.dirname(__file__))
 from platform_utils import (
-    tavily_search, tavily_available, load_upstream,
+    gemini_search_results as tavily_search,
+    gemini_available as tavily_available,
+    load_upstream,
     normalize_domain, build_summary, base_meta
 )
 from datetime import date, timedelta

@@ -11,7 +11,7 @@ writes_to:
   - 01-company-context.json
 mcp_required:
   - builtwith: "keywords-api for SEO meta"
-  - websearch: "executives, HQ, founding, vertical"
+  - gemini_search: "grounded Google-Search via scripts/gemini_search.py — executives, HQ, founding, vertical"
 skill_enrichment: true
 version: 1.0
 ---
@@ -45,7 +45,7 @@ Capture stdout JSON. If `status == "failed"` → alert user and stop.
 
 ---
 
-## Step 2: Scout Direct-Fetch Enrichment (PRIMARY — runs before WebSearch)
+## Step 2: Scout Direct-Fetch Enrichment (PRIMARY — runs before grounded search)
 
 The script already invokes `scout_company.py` automatically (Step 4 in `collect-company.py`), which scrapes:
 - `/about` or `/about-us` → `description`, `linkedin_url`, `twitter_handle`
@@ -56,7 +56,7 @@ The script already invokes `scout_company.py` automatically (Step 4 in `collect-
 Check `scout_data` in the JSON output. For each field Scout successfully populated, label it:
 `[FACT — Scout scrape {url}, {date}]`
 
-**Only proceed to WebSearch (Step 2b) for fields Scout could not fill.**
+**Only proceed to grounded search (Step 2b) for fields Scout could not fill.**
 
 ### Scout degradation check (F1 — MANDATORY, do not skip)
 
@@ -72,41 +72,50 @@ even when it fetched the page fine. The script now **detects this and falls back
 
 If `scout_degraded == true`:
 1. Treat the affected fields (description, executives, social) as `[OBSERVED]`-grade, not `[FACT]`.
-2. **Re-verify them in Step 2b via WebFetch/WebSearch** — the raw_html parse is best-effort,
-   not authoritative. Prefer a clean WebFetch table of executives over the raw_html heuristic
-   when both exist (per F-scout-ab-evidence.md, WebFetch wins on Squarespace leadership pages).
+2. **Re-verify them in Step 2b via grounded search** (`gemini_search.py`) — the raw_html parse
+   is best-effort, not authoritative. Prefer a grounded answer with citation URLs over the
+   raw_html heuristic when both exist (the grounded result carries a source you can label `[FACT]`).
 3. Keep the `scout_degraded` flag in the final JSON — never drop it. Downstream factcheck reads it.
 
-## Step 2b: WebSearch Fallback Enrichment
+## Step 2b: Gemini-Grounded Search Fallback Enrichment
 
-For any field still null after Scout, use WebSearch:
+For any field still null after Scout, use the **grounded search helper** — NOT
+WebSearch (WebSearch is ungrounded and is no longer used in this pipeline). The
+helper returns Google-Search-grounded answers with citation URIs.
+
+Helper (run via Bash):
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Return only facts supported by Google Search results. Cite each fact." \
+  "<query>"
+```
+Output JSON: `{"answer": "...", "citations": ["https://..."], "queries": [...], "grounded": <bool>}`.
+
+**Grounding rule (no fabrication):** only label a field `[FACT — <citation url>, <date>]`
+when `"grounded": true` AND a cited source supports it. If `"grounded": false`, leave
+the field **null** — never fall back to ungrounded model knowledge.
 
 ### hq, founded, employee_count, public_private
-- Tool: WebSearch
 - Query: `"{CompanyName}" headquarters founded employees public OR private`
-- Label: `[FACT — source URL, date]` if confirmed | `[ESTIMATE — source, date]` if inferred
+- Label: `[FACT — citation url, date]` if grounded | `[ESTIMATE — citation, date]` if inferred
 
 ### vertical, business_model
-- Tool: WebSearch + classify from description
-- Query: `"{CompanyName}" ecommerce retail vertical industry`
-- Label: `[FACT — company website, date]`
+- Query: `"{CompanyName}" ecommerce retail vertical industry` (classify from grounded answer)
+- Label: `[FACT — citation url, date]`
 
 ### twitter_handle (if Scout returned null)
-- Tool: WebSearch
 - Query: `"{CompanyName}" Twitter OR X.com official account`
-- Label: `[FACT — Twitter/X, date]` if confirmed
+- Label: `[FACT — citation url, date]` if grounded
 
 ### executives (if Scout returned empty or incomplete list)
-- Tool: WebSearch
 - Query: `"{CompanyName}" CEO CTO CDO "VP Digital" "VP Commerce" executives 2025 2026`
-- For each named executive: confirm name + title + LinkedIn URL
-- Label: `[FACT — source URL, date]`
-- RULE: Named sources only. No "a spokesperson said."
+- For each named executive: confirm name + title + LinkedIn URL from the grounded answer + citations
+- Label: `[FACT — citation url, date]`
+- RULE: Named sources only. No "a spokesperson said." No uncited names.
 
 ### ir_url (public companies only, if Scout returned null)
-- Tool: WebSearch
 - Query: `"{CompanyName}" investor relations IR page`
-- Label: `[FACT — direct URL, date]`
+- Label: `[FACT — citation url, date]`
 
 After enrichment: update BOTH `01-company-context.md` AND `01-company-context.json` with all filled fields.
 Set `meta.skill_enrichment_completed = true` in the JSON.
@@ -115,12 +124,18 @@ Set `meta.skill_enrichment_completed = true` in the JSON.
 
 ## Step 3: Portfolio / Sub-brand Detection
 
-This is an LLM-only step — no Python script. Uses Tavily search + WebFetch to identify parent entities and sibling brands.
+This is an LLM-only step — no collector script. Uses grounded search + direct WebFetch to identify parent entities and sibling brands.
 
-### 3a. Tavily Search
-Run a Tavily search with `search_depth="advanced"` and `include_raw_content=True`:
+### 3a. Grounded Search
+Run the grounded search helper (NOT Tavily/WebSearch — both are retired here):
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Identify the parent/holding company and sibling brands. Return only grounded, cited facts." \
+  "<query>"
+```
 - Query 1: `"{CompanyName}" brands portfolio subsidiary owned by`
 - Query 2: `"{ParentEntity}" brands` (if a parent entity was mentioned in Step 2 enrichment)
+- Use the `citations[]` URIs from the JSON output as the source for every `[FACT]` label. If `grounded` is false, record `null`, not a guess.
 
 ### 3b. WebFetch Direct Pages
 Attempt to fetch these URLs (in order, stop on first 200):
@@ -130,7 +145,7 @@ Attempt to fetch these URLs (in order, stop on first 200):
 
 ### 3c. Extract and Classify
 
-From the Tavily results and WebFetch content, extract:
+From the grounded-search results and WebFetch content, extract:
 
 **`parent_entity`** — Name of the holding company if the audit domain is owned by a larger entity.
 - Example: DSW → `"Designer Brands Inc."`. Coach → `null` (Tapestry IS the holding entity being pitched).
@@ -138,7 +153,7 @@ From the Tavily results and WebFetch content, extract:
 
 **`parent_entity_source`** — URL where parent entity ownership is confirmed.
 
-**`parent_entity_label`** — `[FACT — {source_domain} via Tavily, {date}]` or `null`.
+**`parent_entity_label`** — `[FACT — {source_domain} via grounded search, {date}]` or `null`.
 
 **`is_conglomerate`** — Boolean:
 - `true` = the company being audited IS the holding entity (e.g., Tapestry is pitched directly as the conglomerate owning Coach/Kate Spade/Stuart Weitzman)
@@ -149,7 +164,7 @@ From the Tavily results and WebFetch content, extract:
 - For conglomerates (`is_conglomerate: true`): list all owned operating brands
 - For operating brands with a parent (`is_conglomerate: false`): list sibling brands under the same parent entity
 - For single-brand companies with no parent: set to `[]`
-- Each entry: `{ "name": string, "domain": string, "is_audit_target": boolean, "source": "[FACT — URL via Tavily, date]" }`
+- Each entry: `{ "name": string, "domain": string, "is_audit_target": boolean, "source": "[FACT — URL via grounded search, date]" }`
 - Set `is_audit_target: true` ONLY for the brand whose domain matches the audit domain
 - Minimum domain confidence: must be a real domain (.com/.net/.co.uk etc.), not a guess
 
@@ -163,20 +178,20 @@ Add these fields to `01-company-context.json`:
 "primary_market": "US",
 "parent_entity": "Designer Brands Inc.",
 "parent_entity_source": "https://www.designerbrands.com/",
-"parent_entity_label": "[FACT — designerbrands.com via Tavily, 2026-03-23]",
+"parent_entity_label": "[FACT — designerbrands.com via grounded search, 2026-03-23]",
 "is_conglomerate": false,
 "portfolio_brands": [
   {
     "name": "DSW",
     "domain": "dsw.com",
     "is_audit_target": true,
-    "source": "[FACT — designerbrands.com/brands via Tavily, 2026-03-23]"
+    "source": "[FACT — designerbrands.com/brands via grounded search, 2026-03-23]"
   },
   {
     "name": "Vince Camuto",
     "domain": "vincecamuto.com",
     "is_audit_target": false,
-    "source": "[FACT — designerbrands.com/brands via Tavily, 2026-03-23]"
+    "source": "[FACT — designerbrands.com/brands via grounded search, 2026-03-23]"
   }
 ]
 ```

@@ -45,12 +45,24 @@ loud stderr `⚠⚠ Social DEGRADED`, and a DEGRADED banner in the `.md`). An em
 under `apify_token_missing` means NOT-COLLECTED, not "no signals exist."
 
 If `collection_method == "apify_token_missing"` OR Apify returned 0 on BOTH platforms:
-1. Run WebSearch: `site:linkedin.com/posts "{CompanyName}" 2025 2026`
-2. Run WebSearch: `"{CompanyName}" CEO LinkedIn post announcement 2025 2026`
-3. Run WebSearch: `twitter.com "{CompanyName}" announcement tech investment 2025`
-4. Add any posts found with `[OBSERVED — WebSearch url, date]` label to the MD file (amber, not `[FACT]`)
-5. Set `qualifying_signals_count` based on posts found via WebSearch
-6. Set `meta.degraded_mode = true` and `meta.collection_method` to the script's value — never drop it
+
+Run the following three queries via `gemini_search.py` (WebSearch is retired here — use the grounded helper):
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find recent LinkedIn company posts and announcements. Return only grounded results with citation URLs." \
+  'site:linkedin.com/posts "{CompanyName}" 2025 2026'
+
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find recent executive announcements and company posts. Return only grounded results with citation URLs." \
+  '"{CompanyName}" CEO LinkedIn post announcement 2025 2026'
+
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find recent company social media announcements and tech investment posts. Return only grounded results with citation URLs." \
+  'twitter.com "{CompanyName}" announcement tech investment 2025'
+```
+1. Add any posts found with `[OBSERVED — <citation url from gemini_search.py>, date]` label when `grounded: true`; skip if `grounded: false` — never use ungrounded model knowledge (amber, not `[FACT]`)
+2. Set `qualifying_signals_count` based on posts found via gemini_search.py
+3. Set `meta.degraded_mode = true` and `meta.collection_method` to the script's value — never drop it
 
 **Platform Notes section REQUIRED** in every 09b-social-signals.md output — even if 0 results. Document: which platforms scraped, how many posts found, any errors (e.g., "APIFY_TOKEN not set").
 

@@ -82,19 +82,27 @@ Referring industries (category groupings of referral sources) are NOT available 
 
 ---
 
-## Step 2: WebSearch Fallback (when sources_succeeded < 3)
+## Step 2: Gemini-Grounded Search Fallback (when sources_succeeded < 3)
 
 If the script produces `sources_succeeded < 3` or `monthly_visits_raw = null`:
 
 1. Check the script output for errors (403 = API plan limitation, 404 = domain not indexed)
-2. Run WebSearch: `site:similarweb.com "{domain}" monthly traffic visits 2025 2026`
-3. Run WebSearch: `"{CompanyName}" monthly website traffic visitors 2025 SimilarWeb Semrush`
-4. If estimates found: add to 03-traffic-data.md with `[ESTIMATE — WebSearch, {url}, {date}]` label
-5. Update `03-traffic-data.json` to include:
+2. Run `gemini_search.py` (WebSearch is retired here — use the grounded helper):
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find traffic statistics for this website from SimilarWeb or similar sources. Return only grounded results with citation URLs." \
+  'site:similarweb.com "{domain}" monthly traffic visits 2025 2026'
+
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find monthly website visitor estimates from reputable analytics sources. Return only grounded results with citation URLs." \
+  '"{CompanyName}" monthly website traffic visitors 2025 SimilarWeb Semrush'
+```
+3. If estimates found (and `grounded: true`): add to 03-traffic-data.md with `[ESTIMATE — <citation url from gemini_search.py>, {date}]` label; if `grounded: false`, leave field null — never use ungrounded model knowledge
+4. Update `03-traffic-data.json` to include:
    - `meta.skill_enrichment_completed = true`
    - `meta.degraded_mode = true` (if SimilarWeb MCP failed)
    - `monthly_visits_raw` with estimate if found (as string like "~500K/month [ESTIMATE]")
-   - `monthly_visits_source` = "WebSearch fallback — SimilarWeb MCP returned 0 endpoints"
+   - `monthly_visits_source` = "gemini_search.py fallback — SimilarWeb MCP returned 0 endpoints"
 
 **MANDATORY — Write `03-traffic-data.json` after every run (full OR degraded):**
 
@@ -108,8 +116,8 @@ If the script produces `sources_succeeded < 3` or `monthly_visits_raw = null`:
     "degraded_mode": true,
     "degraded_reason": "SimilarWeb MCP: 0/14 endpoints succeeded (403/404)"
   },
-  "monthly_visits_raw": "~500K/month [ESTIMATE — WebSearch, {url}, {date}]",
-  "monthly_visits_source": "WebSearch fallback",
+  "monthly_visits_raw": "~500K/month [ESTIMATE — <citation url from gemini_search.py>, {date}]",
+  "monthly_visits_source": "gemini_search.py fallback",
   "bounce_rate": null,
   "device_split": {"mobile": null, "desktop": null},
   "top_channels": []

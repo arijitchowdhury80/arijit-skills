@@ -85,6 +85,94 @@ def tavily_available():
     """Return True if TAVILY_API_KEY is set."""
     return bool(TAVILY_API_KEY)
 
+
+# ── Gemini-grounded search (Tavily replacement) ───────────────────────────────
+# The platform's web/news search now routes through Gemini + Google-Search grounding
+# instead of Tavily/WebSearch — every returned item is backed by a live Google Search
+# (no ungrounded model knowledge). gemini_search_results() is a DROP-IN for
+# tavily_search(): same call signature, same result shape
+# [{title, url, content, published_date, score}, ...].
+#
+# No-fabrication gate: if Gemini's response carries NO grounding citations, the call
+# is treated as ungrounded and returns [] — a blank stays blank, never a guess.
+#
+# API key: GEMINI_API_KEY env var (the paid key the platform already uses).
+
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+
+
+def gemini_available():
+    """Return True if GEMINI_API_KEY is set."""
+    return bool(GEMINI_API_KEY)
+
+
+def gemini_search_results(query, topic='general', max_results=10, days=60,
+                          include_answer=False, search_depth='advanced'):
+    """Grounded web/news search via Gemini google_search. Drop-in for tavily_search.
+
+    Returns the SAME shape as tavily_search: [{title, url, content, published_date,
+    score}, ...]. Callers (collect-industry, collect-exec-media) parse stats/quotes
+    out of each result's ``content`` — so this returns the grounded answer text as the
+    result content, with the grounding citation URLs attached.
+
+    Why prose, not structured JSON: Gemini's google_search grounding tool cannot be
+    combined with JSON/structured-output mode — when grounding is active the model
+    narrates. So we take the grounded prose (every claim backed by a live search) as
+    ``content`` and let the existing extractors mine it, exactly as they mined Tavily's
+    ``content`` field. One result is emitted per grounding citation (same content,
+    distinct source URL) so a caller can attribute and the staleness gate still runs.
+
+    No-fabrication gate: if the response carries NO grounding citations it is treated as
+    ungrounded and returns [] — a blank stays blank, never a guess. ``published_date``
+    is left "" (Google grounding does not return per-source dates); is_stale(None) keeps
+    such items but flags them "date unknown" — it never invents a date.
+
+    Args mirror tavily_search (topic/days honored best-effort via the prompt;
+    search_depth/include_answer/max_results accepted for signature compatibility).
+    Returns [] on missing key, ungrounded response, or any error (callers degrade).
+    """
+    if not GEMINI_API_KEY:
+        return []
+
+    recency = ''
+    if topic == 'news':
+        recency = f' Focus on sources published within roughly the last {days} days.'
+    system = (
+        'You are a grounded research backend. Use Google Search. Answer the query with '
+        'specific, factual statements, quoting any key statistic, figure, or quote '
+        'VERBATIM with its source. State only facts supported by the search results; if '
+        'the search does not support a claim, say so rather than guessing.'
+    )
+
+    try:
+        import sys as _sys
+        _here = os.path.dirname(os.path.abspath(__file__))
+        if _here not in _sys.path:
+            _sys.path.insert(0, _here)
+        import gemini_search as _gs
+        out = _gs.search(query + recency, system, 0.1, 4096, _gs.DEFAULT_MODEL, GEMINI_API_KEY)
+    except Exception:
+        return []
+
+    citations = out.get('citations') or []
+    answer = (out.get('answer') or '').strip()
+    # No grounding citations -> ungrounded -> nothing (no fabrication).
+    if not out.get('grounded') or not answer:
+        return []
+
+    # Emit a SINGLE result: the grounded answer is one synthesized body, and callers
+    # extract one stat/quote per result — one-result-per-citation would duplicate the
+    # same stat N times. The primary citation is the source URL; the rest are kept in
+    # `citations` for the caller that wants them.
+    return [{
+        'title': query.strip()[:120],
+        'url': citations[0] if citations else '',
+        'content': answer,
+        'published_date': '',
+        'score': 1.0,
+        'citations': citations,
+    }]
+
 # ── Config ────────────────────────────────────────────────────────────────────
 
 PLATFORM_CONFIG_PATH = Path(__file__).parent.parent / 'platform.config.json'

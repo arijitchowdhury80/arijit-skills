@@ -66,10 +66,10 @@ Do NOT iterate through a predetermined list of SI names. Crossbeam tells you whi
 
 Detect via:
 1. Crossbeam MCP — pull ALL SI partners with overlap at this account (primary source)
-2. WebSearch: "[company] implementation partner" — broad search, not SI-name-specific
-3. WebSearch: "[company] digital transformation partner 2024 2025"
-4. WebSearch: "[company] [technology] implementation" — using tech stack as the bridge (e.g., "[company] Salesforce Commerce Cloud implementation partner")
-5. "[company] annual report" — sometimes lists strategic implementation partners by name
+2. `gemini_search.py`: `"{company}" implementation partner` — broad search, not SI-name-specific
+3. `gemini_search.py`: `"{company}" digital transformation partner 2024 2025`
+4. `gemini_search.py`: `"{company}" {technology} implementation` — using tech stack as the bridge (e.g., `"{company}" Salesforce Commerce Cloud implementation partner`)
+5. `"{company}" annual report` — sometimes lists strategic implementation partners by name (fetch via WebFetch)
 
 Sales motion (fill in from Crossbeam result): "[SI partner from Crossbeam] already has a relationship at [Company] — engage them to co-sell and get a warm introduction to the decision-maker."
 
@@ -87,14 +87,14 @@ Query Crossbeam for account overlap data on the prospect domain.
 Capture: which Algolia tech partners show account overlap.
 Label all data: [FACT — Crossbeam MCP, {date}]
 
-If Crossbeam MCP is unavailable or returns no data: note "No Crossbeam data available — relying on tech stack + WebSearch" and proceed.
+If Crossbeam MCP is unavailable or returns no data: note "No Crossbeam data available — relying on tech stack + gemini_search.py" and proceed.
 
 ### Step 3: Crossbeam MCP — SI partner overlap
 Query Crossbeam for SI/implementation partner overlap on the prospect domain.
 Capture: which SI/agency partners show account overlap.
 Label all data: [FACT — Crossbeam MCP, {date}]
 
-### Step 4: WebSearch — SI partner relationships (GENUINELY DYNAMIC — derive candidates, do not hardcode names)
+### Step 4: Gemini-Grounded Search — SI partner relationships (GENUINELY DYNAMIC — derive candidates, do not hardcode names)
 
 The SI that matters is whichever firm actually has a relationship at THIS account — that changes per
 prospect. So the candidate firms must be **derived from this prospect's own signals**, never baked into
@@ -103,17 +103,37 @@ Accenture/IBM list) — that makes every SI outside those ~5 names structurally 
 contradicts the "discovered DYNAMICALLY" principle stated above.
 
 **Step 4a — Open discovery (name-free queries; let the prospect's signals surface the firm):**
-Run these (all required). None hardcodes an SI name — the SI name comes OUT of the result, not INTO the query:
-1. `"{company}" implementation partner` (broad — whatever firm is named is a candidate)
-2. `"{company}" digital transformation partner {current_year-1} OR {current_year}`
-3. `"{company}" systems integrator OR consulting partner`
-4. `"{company}" annual report implementation partner` (10-K/annual reports sometimes name SIs)
+Run these (all required) via `gemini_search.py` (WebSearch is retired here — use the grounded helper). None hardcodes an SI name — the SI name comes OUT of the result, not INTO the query:
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find implementation partners for this company. Return only grounded results with source citations." \
+  '"{company}" implementation partner'
+
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find digital transformation partners or consulting firms working with this company. Return only grounded results with source citations." \
+  '"{company}" digital transformation partner {current_year-1} OR {current_year}'
+
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find systems integrators or consulting partners working with this company. Return only grounded results with source citations." \
+  '"{company}" systems integrator OR consulting partner'
+
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find implementation partners mentioned in company annual reports or 10-K filings. Return only grounded results with source citations." \
+  '"{company}" annual report implementation partner'
+```
 
 **Step 4b — Tech-stack-bridged discovery (use THIS prospect's detected stack as the bridge):**
 For each platform detected in `02-tech-stack.md` (Step 1) — e.g. Salesforce Commerce Cloud, Adobe
-Commerce, SAP, commercetools — run:
-- `"{company}" {detected_platform} implementation partner`
-- `"{company}" {detected_platform} systems integrator`
+Commerce, SAP, commercetools — run via `gemini_search.py`:
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find implementation partners for this company's specific platform. Return only grounded results with source citations." \
+  '"{company}" {detected_platform} implementation partner'
+
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Find systems integrators working with this company's platform. Return only grounded results with source citations." \
+  '"{company}" {detected_platform} systems integrator'
+```
 This surfaces the SI that did THIS prospect's actual platform work, whoever they are.
 
 **Step 4c — Reference registry (for recognition only, NOT for querying):**
@@ -125,12 +145,16 @@ absent from this list but named in the prospect's own results is still a valid, 
 
 For each firm that surfaces in 4a/4b with evidence of an SI relationship:
 - Record: SI name, evidence summary, source URL, recency, and whether it is a known Algolia SI partner (per 4c)
-- Label: [WEBSEARCH — {source URL}, {date}]
+- Label: `[GEMINI_SEARCH — <citation url from gemini_search.py>, {date}]` (only when `grounded: true`; skip if `grounded: false`)
 
-### Step 5: WebSearch — tech partner confirmation
+### Step 5: Gemini-Grounded Search — tech partner confirmation
 If a tech partner was detected in the stack but not confirmed via Crossbeam, run:
-`"{company}" {partner name} implementation OR integration OR "powered by"`
-Record confirmation evidence with source URL.
+```bash
+python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \
+  --system "Confirm whether this company uses this technology partner. Return only grounded results with source citations." \
+  '"{company}" {partner name} implementation OR integration OR "powered by"'
+```
+Record confirmation evidence with source URL from `citations[]`. Only record when `grounded: true`.
 
 ### Step 6: Write partner-intel.md
 Write the full output file to: `$ALGOLIA_AUDIT_DIR/{CompanyName}/research/partner-intel.md`
@@ -150,7 +174,7 @@ If file is missing or under 2000 bytes: STOP and alert user. Do not proceed.
 
 ```markdown
 # Partner Intelligence — {Company}
-*Generated: {date} | Sources: Crossbeam MCP + tech-stack analysis + WebSearch*
+*Generated: {date} | Sources: Crossbeam MCP + tech-stack analysis + gemini_search.py*
 
 ---
 
@@ -172,7 +196,7 @@ Partners showing account overlap in Crossbeam for this prospect.
 |---|---|---|---|
 | [partner] | [Customer / Prospect / Partner] | [match confidence] | [FACT — Crossbeam MCP, date] |
 
-*If Crossbeam unavailable: "Crossbeam data unavailable — relying on tech stack analysis and WebSearch."*
+*If Crossbeam unavailable: "Crossbeam data unavailable — relying on tech stack analysis and gemini_search.py."*
 
 ### A3. Not in Stack (Future Opportunity)
 Algolia tech partners NOT currently detected — relevant if prospect migrates or adds this platform.
@@ -186,11 +210,11 @@ Algolia tech partners NOT currently detected — relevant if prospect migrates o
 ## SECTION B: SI / Implementation Partners (Relationship Access)
 
 ### B1. High-Confidence SI Relationships
-Confirmed via Crossbeam MCP data or corroborated WebSearch evidence (≥1 source URL).
+Confirmed via Crossbeam MCP data or corroborated gemini_search.py evidence (≥1 grounded citation URL).
 
 | SI Partner | Evidence | Likely C-Suite Access | Sales Action | Source |
 |---|---|---|---|---|
-| [firm] | [what evidence: press release, case study, RFP award, etc.] | [CTO / CDO / VP Digital / CMO] | [specific action: "Request warm intro via EPAM account team"] | [WEBFETCH/WEBSEARCH — URL, date] |
+| [firm] | [what evidence: press release, case study, RFP award, etc.] | [CTO / CDO / VP Digital / CMO] | [specific action: "Request warm intro via EPAM account team"] | [WEBFETCH/GEMINI_SEARCH — URL, date] |
 
 *If none found: "No high-confidence SI relationships identified via available sources."*
 
@@ -221,14 +245,14 @@ Example format:
 ---
 
 ## SECTION D: Data Quality Notes
-[Note any gaps: Crossbeam unavailable, no WebSearch evidence found for specific SIs, tech-stack data incomplete, etc.]
+[Note any gaps: Crossbeam unavailable, no gemini_search.py grounded evidence found for specific SIs, tech-stack data incomplete, etc.]
 
 ---
 
 ## Sources
 | # | URL | Type | Date | Used In |
 |---|---|---|---|---|
-| 1 | [URL] | [Crossbeam / WebSearch / WebFetch / BuiltWith] | [date] | [Section A/B/C] |
+| 1 | [URL] | [Crossbeam / Gemini-Search / WebFetch / BuiltWith] | [date] | [Section A/B/C] |
 ```
 
 ---
@@ -237,7 +261,7 @@ Example format:
 All data in partner-intel.md MUST carry one of these labels:
 - `[FACT — Crossbeam MCP, {date}]` — direct Crossbeam account overlap data
 - `[FACT — 02-tech-stack.md, {date}]` — derived from tech stack scratchpad
-- `[WEBSEARCH — {source URL}, {date}]` — found via WebSearch, not yet fetched
+- `[GEMINI_SEARCH — <citation url>, {date}]` — found via gemini_search.py (grounded: true required); only include when `"grounded": true` in the JSON output — never use ungrounded model knowledge
 - `[WEBFETCH — {source URL}, {date}]` — primary source URL fetched and verified
 - `[ESTIMATE]` — inferred/logical conclusion, no direct evidence (use sparingly, must explain basis)
 
