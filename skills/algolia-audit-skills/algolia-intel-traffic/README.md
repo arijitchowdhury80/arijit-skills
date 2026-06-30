@@ -34,7 +34,7 @@ Verification gate: both files exist; `03-traffic-data.md` ≥1000 bytes; `meta.s
 
 | Source | Provides | Method |
 |---|---|---|
-| SimilarWeb MCP | All traffic metrics — visits, bounce rate, device split, channels, v4 keywords, referrals (desktop + mobile), outgoing traffic, geography, demographics, popular pages | `collect-traffic.py` calls all endpoints; 403 = plan limitation (logged, not a data point); demographics 403 = graceful skip |
+| SimilarWeb REST API (`collect-traffic.py`) | All traffic metrics — visits, bounce rate, device split, channels, v4 keywords, referrals (desktop + mobile), outgoing traffic, geography, demographics, popular pages | Direct HTTPS calls via Python `requests` library; `SIMILARWEB_API_KEY` required; not an MCP; ~15 endpoints (v1 + v4); 403 = plan limitation (logged, not a data point); demographics 403 = graceful skip |
 | Gemini-grounded Google Search (`gemini_search.py`) | Traffic estimate when SimilarWeb returns `sources_succeeded < 3` or `monthly_visits_raw = null` | `gemini_search.py` with SimilarWeb/Semrush-targeted queries; used only when `grounded: true`; labeled `[ESTIMATE]`; null otherwise |
 
 No-fabrication gate: fallback estimates from `gemini_search.py` used only when `"grounded": true`. If `"grounded": false`, field stays null. Referring industries are not available via SimilarWeb API (UI only) — the `referrals.top_referring_industries` field is always set to the fixed string noting this limitation; do not attempt API collection.

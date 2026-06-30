@@ -15,7 +15,7 @@ Runs a structured 5-dimension eval against the output files of any `algolia-audi
 - After each wave of fixes during a standardisation run (to confirm fixes worked)
 - Before any integration test between audit phases
 
-Covers all `algolia-audit-*` modules: research, browser, report, factcheck, financials, live-signals, and others.
+Covers any `algolia-audit-*` or `algolia-intel-*` module output: research, browser, report, factcheck, financial profiles, live signals (social/news), and others.
 
 ## Inputs (upstream)
 

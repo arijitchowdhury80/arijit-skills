@@ -10,8 +10,9 @@ reads_from:
 writes_to:
   - 04-competitors.md
   - 04-competitors.json
+data_sources:
+  - similarweb_browser: "SimilarWeb Competitors tab via browser session (collect-similarweb-browser.js --mode competitors-discovery) — NOT an API/MCP; session-based; CloudFront may return 0 competitors"
 mcp_required:
-  - similarweb: "similar-sites-agg, keywords-competitors-agg"
   - gemini_search: "grounded Google-Search via scripts/gemini_search.py — competitor profiles, case studies"
 depends_on_skill:
   - detect-search: "canonical search-vendor oracle — per-competitor vendor verdict (primary)"

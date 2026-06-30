@@ -6,7 +6,7 @@
 
 ## What it does
 
-Runs `collect-company.py` against the prospect's domain to produce the foundational company context file that every downstream module reads. Scout scrapes the company's own site first (about page, leadership pages, careers, investor relations). For any field Scout cannot fill, the module falls back to Gemini-grounded Google Search to fill gaps — never inventing data. A third step (portfolio detection) identifies parent entities, holding companies, and sibling brands via grounded search and direct WebFetch.
+Runs `collect-company.py` against the prospect's domain to produce the foundational company context file that every downstream module reads. The script first fetches the company's website directly via HTTP (about page meta description, page title) and attempts LinkedIn (best-effort, often blocked). Scout then enriches specific fields the script couldn't populate (linkedin_url, twitter_handle, careers_url, website, executives). For any field neither source filled, the skill falls back to Gemini-grounded Google Search — never inventing data. A third step (portfolio detection) identifies parent entities, holding companies, and sibling brands via grounded search and direct WebFetch.
 
 ## When to use
 
@@ -34,7 +34,9 @@ Verification gate: both files must exist; JSON must have `meta.skill_enrichment_
 
 | Source | Provides | Method |
 |---|---|---|
-| Scout (`localhost:8421`) | Description, LinkedIn URL, Twitter handle, executive list, careers URL, IR URL + PDF links | Scout direct-fetch of `/about`, `/leadership`, `/careers`, `/investors` pages; JS-rendered + stealth |
+| Direct WebFetch (`collect-company.py`) | Company description (from meta tag), about page title — primary source for `description` field | HTTP GET of `/about`, `/about-us`, `/company`, `/our-story` pages; runs first, before Scout |
+| LinkedIn WebFetch (`collect-company.py`) | `linkedin_accessible` flag (whether page is reachable) | Best-effort HTTP GET of `linkedin.com/company/{slug}`; usually blocked; provides accessibility flag only |
+| Scout (`localhost:8421`) | LinkedIn URL, Twitter handle, careers URL, website, IR URL + PDF links; executive list (when list is empty); description (fallback when direct WebFetch returns no meta) | Scout direct-fetch of `/about`, `/leadership`, `/careers`, `/investors` pages; JS-rendered + stealth; fills nulls only — never overwrites values the script already collected |
 | Gemini-grounded Google Search (`gemini_search.py`) | HQ, founded, employee count, public/private status, vertical, executives (when Scout returns empty or degraded) | `gemini_search.py` — returns `{answer, citations, grounded}`; used only when `grounded: true`; null otherwise |
 | WebFetch | Parent company and sibling brand pages (`/brands`, `/about/brands`, `/our-brands`) | Direct URL fetch |
 

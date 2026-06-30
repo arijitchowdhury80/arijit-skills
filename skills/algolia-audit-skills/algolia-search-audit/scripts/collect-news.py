@@ -6,27 +6,27 @@ Part of the Algolia Search Audit modular intelligence pipeline.
 Reads from:  {output_dir}/01-company-context.json  (company_name, domain)
 Produces:    {output_dir}/09c-news-signals.md
 
-Sources (ALL attempted — not fallback):
-  1. Google News RSS — 3 queries × 10 items (free, no API key, keyword search)
+Sources (keyless — no API key, no Tavily, no Apify):
+  1. Google News RSS — 3 keyword queries × 10 items (free, keyword search, dated)
      URL: https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en
-  2. RSS feeds: {domain}/press, /newsroom, /news (direct HTTP)
+  2. Company RSS/newsroom feeds: {domain}/press, /newsroom, /news (direct HTTP)
   3. Lookback: 60 days
 
-Note: The Apify data_xplorer/google-news-scraper-fast actor no longer supports keyword search
-(changed API: only accepts topic category enums like BUSINESS, TECHNOLOGY). Replaced with
-direct Google News RSS which is free, always available, and supports keyword search.
+History: Apify (data_xplorer/google-news-scraper-fast) was abandoned — its API
+dropped keyword search (topic-enum only). Tavily was retired in the Gemini-grounded
+migration; news kept Google News RSS as its primary because RSS returns structured,
+dated, keyless article items (the right shape for news) where Gemini-grounded search
+returns prose. No external search API key is required.
 
 Usage: python3 collect-news.py <domain> <output-dir> [--company-name "Name"]
-Env:   APIFY_TOKEN
 """
 
-import sys, os, json, requests, re, time
+import sys, os, json, requests, re
 from datetime import date, timedelta
+from email.utils import parsedate
 
 TODAY = date.today().isoformat()
 CUTOFF = (date.today() - timedelta(days=60)).isoformat()
-APIFY_TOKEN = os.environ.get('APIFY_TOKEN', '')
-APIFY_BASE = 'https://api.apify.com/v2'
 
 CATEGORIES = {
     'LEADERSHIP_CHANGE': ['hired','appointed','named','joins as','new CEO','new CTO','new CDO','new VP'],
@@ -45,26 +45,36 @@ def categorize(title, summary=''):
             return cat
     return 'GENERAL'
 
-def apify_run(actor_id, input_data, max_wait=60):
-    if not APIFY_TOKEN: return None, 'APIFY_TOKEN not set'
+def fetch_google_news(query):
+    """Primary source: Google News RSS — keyless keyword search, returns dated items."""
+    articles, err = [], None
     try:
-        r = requests.post(f'{APIFY_BASE}/acts/{actor_id}/runs?token={APIFY_TOKEN}', json=input_data, timeout=30)
-        r.raise_for_status()
-        run_id = r.json()['data']['id']
-    except Exception as e: return None, str(e)
-    elapsed, status = 0, 'RUNNING'
-    while elapsed < max_wait and status not in ('SUCCEEDED','FAILED','ABORTED'):
-        time.sleep(5); elapsed += 5
-        try: status = requests.get(f'{APIFY_BASE}/actor-runs/{run_id}?token={APIFY_TOKEN}',timeout=10).json()['data']['status']
-        except Exception: pass
-    if status != 'SUCCEEDED': return None, f'Actor: {status}'
-    try:
-        ir = requests.get(f'{APIFY_BASE}/actor-runs/{run_id}/dataset/items?token={APIFY_TOKEN}&clean=true',timeout=30)
-        ir.raise_for_status(); return ir.json(), None
-    except Exception as e: return None, str(e)
+        rss_url = f'https://news.google.com/rss/search?q={requests.utils.quote(query)}&hl=en-US&gl=US&ceid=US:en'
+        r = requests.get(rss_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        if r.status_code != 200:
+            return [], f'Google News RSS "{query[:40]}": HTTP {r.status_code}'
+        items_xml = re.findall(r'<item>(.*?)</item>', r.text, re.DOTALL)
+        for item_xml in items_xml[:10]:
+            title_m = re.search(r'<title><!\[CDATA\[(.+?)\]\]>|<title>([^<]+)</title>', item_xml)
+            link_m  = re.search(r'<link>([^<]+)</link>', item_xml)
+            date_m  = re.search(r'<pubDate>([^<]+)</pubDate>', item_xml)
+            title = (title_m.group(1) or title_m.group(2) or '').strip() if title_m else ''
+            url   = (link_m.group(1) or '').strip() if link_m else 'n/a'
+            pub_date = TODAY
+            if date_m:
+                parsed = parsedate(date_m.group(1))
+                if parsed:
+                    pub_date = f'{parsed[0]}-{parsed[1]:02d}-{parsed[2]:02d}'
+            if pub_date >= CUTOFF and title:
+                articles.append({'title': title, 'url': url, 'date': pub_date,
+                                 'source': f'[FACT — Google News, {pub_date}]',
+                                 'category': categorize(title, '')})
+    except Exception as e:
+        err = f'Google News RSS "{query[:40]}": {e}'
+    return articles, err
 
 def fetch_rss(domain):
-    """Try company RSS/newsroom feeds."""
+    """Supplementary: company's own RSS/newsroom feeds."""
     articles = []
     for path in ['/press','/newsroom','/news','/blog']:
         try:
@@ -74,7 +84,8 @@ def fetch_rss(domain):
                 for h in headlines[:5]:
                     title = (h[0] or h[1]).strip()
                     if title and domain.lower() not in title.lower()[:30]:
-                        articles.append({'title':title,'url':f'https://www.{domain}{path}','date':TODAY,'source':'RSS/Newsroom WebFetch','category':categorize(title)})
+                        articles.append({'title':title,'url':f'https://www.{domain}{path}','date':TODAY,
+                                         'source':f'[FACT — {domain} newsroom, {TODAY}]','category':categorize(title)})
                 if articles: break
         except Exception:
             continue
@@ -84,29 +95,19 @@ def load_ctx(output_dir):
     p = os.path.join(output_dir,'01-company-context.json')
     return json.load(open(p)) if os.path.exists(p) else {}
 
-def write_md(company, articles, errors, output_dir, collection_method):
+def write_md(company, articles, errors, output_dir):
     immediate = [a for a in articles if a['category'] in ('LEADERSHIP_CHANGE','FUNDING_EVENT')]
     strategic = [a for a in articles if a['category'] in ('TECH_INVESTMENT','DIGITAL_INITIATIVE','INTERNATIONAL')]
     context_  = [a for a in articles if a['category'] in ('PRODUCT_LAUNCH','COMPETITIVE','GENERAL')]
 
-    # Degradation discipline: Tavily is the [FACT]-grade primary; the RSS path is a
-    # fallback whose freshness/coverage is weaker, so flag it (not silent) and downgrade
-    # per-article labels accordingly (each article already carries its own source label).
-    degraded = collection_method != 'tavily'
-    method_note = {
-        'tavily': '[FACT-grade] Tavily news search (primary)',
-        'google_news_rss_fallback': '[OBSERVED — degraded] Google News RSS fallback (TAVILY_API_KEY unset)',
-    }.get(collection_method, collection_method)
-
     lines = [
         f'# News Signals — {company}',
         f'*Generated: {TODAY} via collect-news.py*',
-        f'*Sources: Tavily (primary) / Google News RSS (fallback) / RSS/Newsroom WebFetch | Lookback: 60 days*',
-        f'*collection_method: {collection_method}* {"⚠ DEGRADED FALLBACK" if degraded else ""}',
+        f'*Sources: Google News RSS (primary) + {company} newsroom feeds | Lookback: 60 days | keyless*',
         '',
         f'## Collection Summary',
         f'- Total articles: {len(articles)} | Lookback cutoff: {CUTOFF}',
-        f'- Collection method: {method_note}',
+        f'- Collection method: Google News RSS (keyword search) + company newsroom RSS',
         '',
         '## 🔴 Immediate Action Signals (Leadership + Funding)',
     ]
@@ -137,14 +138,13 @@ def write_md(company, articles, errors, output_dir, collection_method):
         '## Summary (last 60 days)',
         '*(Pattern synthesis populated by algolia-intel-news SKILL)*',
         '',
-        f'*Sourcing: {method_note}, {TODAY}*',
+        f'*Sourcing: Google News RSS + company newsroom, {TODAY}*',
     ]
-    if degraded:
+    if not articles:
         lines += [
             '',
-            '> ⚠ **Collection degraded:** Tavily was unavailable; articles came from the Google '
-            'News RSS fallback. Freshness/coverage is weaker — treat as `[OBSERVED]`, not `[FACT]`, '
-            'and re-verify any signal you act on.',
+            '> ⚠ **No articles found** in the last 60 days via Google News RSS or the company '
+            'newsroom. This is a real null result — do not fabricate signals to fill it.',
         ]
     if errors: lines += ['','## Collection Errors'] + [f'- {e}' for e in errors]
 
@@ -176,69 +176,14 @@ def main():
         f'"{company}" launch OR expansion OR international OR AI',
     ]
 
+    # Primary: Google News RSS (keyless keyword search, dated structured items).
     articles = []
-    use_tavily = bool(os.environ.get('TAVILY_API_KEY', ''))
-    # collection_method is a first-class field: tavily = [FACT]-grade primary;
-    # google_news_rss_fallback = degraded amber path (freshness/coverage weaker).
-    collection_method = 'tavily' if use_tavily else 'google_news_rss_fallback'
-
     for q in queries:
-        if use_tavily:
-            # Primary: Tavily news search — AI-optimised, returns clean extracted text,
-            # supports date filtering natively, no actor schema drift risk.
-            # No layering needed here: Tavily returns structured data directly,
-            # keyword classifier handles categorisation — no LLM required.
-            try:
-                from tavily import TavilyClient
-                client = TavilyClient(api_key=os.environ['TAVILY_API_KEY'])
-                response = client.search(
-                    query=q,
-                    topic='news',
-                    days=60,
-                    max_results=10,
-                )
-                for item in response.get('results', []):
-                    pub_date = (item.get('published_date') or TODAY)[:10]
-                    if pub_date >= CUTOFF and item.get('title'):
-                        articles.append({
-                            'title': item['title'],
-                            'url': item.get('url', 'n/a'),
-                            'date': pub_date,
-                            'source': f'[FACT — Tavily news search, {pub_date}]',
-                            'category': categorize(item['title'], item.get('content', '')),
-                        })
-            except Exception as e:
-                errors.append(f'Tavily query "{q[:40]}": {e}')
-                # Fall through to RSS fallback below
-        else:
-            # Fallback: Google News RSS (free, no key, keyword search works)
-            try:
-                rss_url = f'https://news.google.com/rss/search?q={requests.utils.quote(q)}&hl=en-US&gl=US&ceid=US:en'
-                r = requests.get(rss_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
-                if r.status_code == 200:
-                    items_xml = re.findall(r'<item>(.*?)</item>', r.text, re.DOTALL)
-                    for item_xml in items_xml[:10]:
-                        title_m = re.search(r'<title><!\[CDATA\[(.+?)\]\]>|<title>([^<]+)</title>', item_xml)
-                        link_m  = re.search(r'<link>([^<]+)</link>', item_xml)
-                        date_m  = re.search(r'<pubDate>([^<]+)</pubDate>', item_xml)
-                        title = (title_m.group(1) or title_m.group(2) or '').strip() if title_m else ''
-                        url   = (link_m.group(1) or '').strip() if link_m else 'n/a'
-                        pub_date = TODAY
-                        if date_m:
-                            from email.utils import parsedate
-                            parsed = parsedate(date_m.group(1))
-                            if parsed:
-                                pub_date = f'{parsed[0]}-{parsed[1]:02d}-{parsed[2]:02d}'
-                        if pub_date >= CUTOFF and title:
-                            # Amber label: RSS fallback freshness is unverified (degraded path).
-                            articles.append({'title': title, 'url': url, 'date': pub_date,
-                                             'source': f'[OBSERVED — Google News RSS fallback, {pub_date}]',
-                                             'category': categorize(title, '')})
-                else:
-                    errors.append(f'Google News RSS query "{q[:40]}": HTTP {r.status_code}')
-            except Exception as e:
-                errors.append(f'Google News RSS query "{q[:40]}": {e}')
-    # RSS fallback
+        found, err = fetch_google_news(q)
+        articles.extend(found)
+        if err: errors.append(err)
+
+    # Supplementary: the company's own newsroom/RSS feeds.
     rss = fetch_rss(domain)
     if rss:
         articles.extend(rss)
@@ -253,8 +198,10 @@ def main():
         if key not in seen: seen.add(key); unique.append(a)
     unique.sort(key=lambda x: x.get('date',''), reverse=True)
 
-    out = write_md(company, unique, errors, output_dir, collection_method)
-    print(json.dumps({'status':'success' if unique else 'partial','domain':domain,'company_name':company,'output_file':out,'size_bytes':os.path.getsize(out),'total_articles':len(unique),'collection_method':collection_method,'degraded':collection_method!='tavily','errors':errors},indent=2))
+    out = write_md(company, unique, errors, output_dir)
+    print(json.dumps({'status':'success' if unique else 'partial','domain':domain,'company_name':company,
+                      'output_file':out,'size_bytes':os.path.getsize(out),'total_articles':len(unique),
+                      'collection_method':'google_news_rss','errors':errors},indent=2))
 
 if __name__ == '__main__':
     main()

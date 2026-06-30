@@ -19,18 +19,24 @@ is mid-rebuild and not part of this release.
 The defining change in this release: **the right tool for each job**, and no fabrication — a field
 with no grounded source stays blank.
 
+Sources are **not uniform** across skills — each module's collector script is the source of truth.
+The table below is the suite-wide map; per-skill READMEs give the exact source each module uses.
+
 | Source | Role | Used for |
 |--------|------|----------|
-| **Scout** (`localhost:8421`) | Acquire the **target's own** data | About page, executive team, careers/jobs page, investor relations, PDF decks. JS-rendered + stealth + PDF extraction. |
-| **Gemini-grounded Google search** (`scripts/gemini_search.py`) | **Open-web** research | Industry benchmarks, analyst quotes, third-party news, competitor tech, external estimates. Returns `{answer, citations, queries, grounded}`; ungrounded → empty. |
-| **detect-search** | Search-vendor / platform detection | Network packet inspection to identify the live search stack and ecommerce platform. |
-| **SimilarWeb MCP** | Traffic + tech cross-check | Visits, bounce, channels, geography, keywords, referrals; technology signals. |
-| **Yahoo Finance MCP** | Public financials | 3-year revenue, EBITDA, analyst consensus (`collect-financials.py`). |
-| **Apify MCP** | Live social/news signals | LinkedIn posts, Twitter/X, Google News. |
-| **WebFetch** | Direct known-URL fetch | Earnings-call / interview transcripts at a known URL. |
+| **Scout** (`localhost:8421`) | Acquire the **target's own** data | Executive team, careers/jobs page, investor relations, PDF decks; field-level enrichment of the company profile. JS-rendered + stealth + PDF extraction. |
+| **Gemini-grounded Google search** (`scripts/gemini_search.py`) | **Open-web** research | Industry benchmarks (`collect-industry.py`), exec-media quotes (`collect-exec-media.py`), private-company estimates. Returns `{answer, citations, queries, grounded}`; ungrounded → empty. |
+| **detect-search** | Search-vendor / platform detection | Network packet inspection (`map-detect-search.py`) — live search stack + ecommerce platform; competitor search tech. |
+| **SimilarWeb REST API** (`SIMILARWEB_API_KEY`) + **browser session** | Traffic + competitor discovery | Direct HTTPS calls (`collect-traffic.py`, v1/v4 endpoints); competitor discovery runs a browser subprocess (`collect-similarweb-browser.js`). **Not an MCP.** |
+| **yfinance library** (`collect-financials.py`) | Public-company financials | 3-year revenue, EBITDA margin, analyst consensus. Python lib, not an MCP. |
+| **Yahoo Finance MCP** | Investor news feed | `get_yahoo_finance_news` via the `algolia-intel-investor` orchestrator. |
+| **Apify** (`APIFY_TOKEN`) | Live social + news signals | LinkedIn posts + Twitter/X (`collect-social.py`); Google News in the research live-signals step. REST API, not an MCP. |
+| **Tavily** (`TAVILY_API_KEY`) + **Google News RSS** | Company news | `algolia-intel-news` primary = Tavily news search; keyless Google News RSS is the fallback. |
+| **WebFetch** | Direct known-URL fetch | Earnings-call / interview transcripts, SEC EDGAR, company LinkedIn. |
 
-**Retired:** ~~BuiltWith~~ (→ detect-search + SimilarWeb), ~~WebSearch / Tavily~~ (→ Gemini-grounded
-Google search).
+**Retired:** ~~BuiltWith~~ (→ detect-search + SimilarWeb), ~~WebSearch~~ (→ Gemini-grounded Google
+search). **Tavily** was intended to be retired but is still the primary source in `algolia-intel-news`
+(`collect-news.py`) — a known migration gap, not yet reconciled.
 
 ---
 
