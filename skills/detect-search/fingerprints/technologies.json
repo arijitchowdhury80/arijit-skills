@@ -1,0 +1,33 @@
+{
+  "jQuery": {
+    "cats": ["JavaScript Library"],
+    "website": "https://jquery.com",
+    "scriptSrc": ["jquery[.-]([\\d.]*\\d)[^/]*\\.js\\;version:\\1"],
+    "html": ["<script[^>]+src=\"[^\"]*jquery[^\"]*\\.js"],
+    "js": ["jQuery.fn.jquery"]
+  },
+  "WordPress": {
+    "cats": ["CMS"],
+    "website": "https://wordpress.org",
+    "url": ["/wp-content/", "/wp-includes/"],
+    "html": ["<meta name=\"generator\" content=\"WordPress [^\"]+\"\\;version:\\1"]
+  },
+  "Lodash": {
+    "cats": ["JavaScript Library"],
+    "website": "https://lodash.com",
+    "scriptSrc": ["lodash(?:\\.min)?\\.js"],
+    "html": ["window\\._\\.VERSION"]
+  },
+  "Bootstrap": {
+    "cats": ["UI Framework"],
+    "website": "https://getbootstrap.com",
+    "scriptSrc": ["bootstrap(?:\\.bundle)?(?:\\.min)?\\.js"],
+    "html": ["class=\"[^\"]*(?:btn-(?:primary|secondary|danger)|navbar-expand|container-fluid)"]
+  },
+  "Intercom": {
+    "cats": ["Live Chat"],
+    "website": "https://intercom.com",
+    "url": ["widget\\.intercom\\.io", "api-iam\\.intercom\\.io"],
+    "html": ["window\\.Intercom\\s*=|IntercomBootScrap"]
+  }
+}
