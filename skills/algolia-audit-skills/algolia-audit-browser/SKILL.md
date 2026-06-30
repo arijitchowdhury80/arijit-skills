@@ -1,5 +1,6 @@
 ---
 name: algolia-audit-browser
+version: 2.0.0
 description: Use when the goal is live browser-based search testing on a prospect's website: visiting the site with a real browser, typing queries to observe autocomplete/SAYT behavior, NLP/semantic understanding (e.g., 'black yoga pants under 100'), typo tolerance, zero-results handling, federated search, intent detection, personalization, and recommendations, then capturing screenshots of each finding as evidence. This is the Phase 2 hands-on browser phase of an Algolia search audit and requires Phase 1 research to be complete first. Works around WAF/bot detection (Akamai, Cloudflare, Imperva) using Playwright stealth mode. Produces a screenshots folder and browser-findings document.
 ---
 
@@ -453,7 +454,7 @@ Read `04-competitors.md`. For each competitor marked "search vendor: Unknown / P
 5. Append to `04-competitors.md` under each competitor's entry
 6. Update the competitor table: `Search Provider: {vendor} (confirmed Phase 2)`
 
-This is the ONLY reliable way to detect search vendors. BuiltWith tag detection alone is insufficient — it misses headless implementations, CDN-cached tags, and multi-vendor setups.
+This is the ONLY reliable way to detect search vendors. Passive tag detection alone is insufficient — it misses headless implementations, CDN-cached tags, and multi-vendor setups.
 
 **Why**: Competitor search vendor data drives the capability matrix in the business case. "Unknown" vendors make the entire competitive analysis section useless. This step turns unknowns into facts.
 

@@ -1,5 +1,6 @@
 ---
 name: algolia-audit-research
+version: 2.0.0
 description: Use when kicking off an Algolia Search Audit and need to gather pre-audit intelligence on a prospect company before any browser testing. Covers company profile, tech stack, web traffic, competitor landscape, hiring signals, financial data, investor/executive quotes from earnings calls, and strategic angles. Triggers for: 'start research phase for [company]', 'prep pre-audit dossier on [company]', 'gather background intel before discovery call', 'run phase 1 on [domain]', 'build all context files before browser tests', 'kick off audit research on [site]'. Produces all research scratchpad files required before Phase 2 browser testing begins.
 ---
 
@@ -48,7 +49,6 @@ $ALGOLIA_AUDIT_DIR/{CompanyName}/
 ## MCP Servers Required
 | MCP | Used in | Required? |
 |-----|---------|-----------|
-| BuiltWith MCP | Steps 1, 2, 6 | Yes |
 | SimilarWeb MCP | Steps 2, 3, 4, 6 | Yes |
 | Yahoo Finance MCP | Steps 1, 9, 12 | Public companies |
 | Apify MCP | Step 8 | Yes (live signals) |
@@ -61,7 +61,7 @@ The skill calls them explicitly — they always execute all required API calls.
 | Script | Step | What it does |
 |--------|------|-------------|
 | `collect-traffic.py` | Step 3 | All 11 SimilarWeb endpoints → 03-traffic-data.md |
-| `collect-techstack.py` | Step 2 | BuiltWith 660KB filtered → 02-tech-stack.md |
+| `collect-techstack.py` | Step 2 | Tech stack detection via detect-search + SimilarWeb → 02-tech-stack.md |
 | `collect-competitors.py` | Step 4 | SimilarWeb similar-sites → 04-competitors.md |
 | `collect-financials.py` | Step 9 | All Yahoo Finance endpoints → 08-financial-profile.md |
 | `calculate-roi.py` | Step 9 | ROI formula → appended to 08-financial-profile.md |
@@ -72,8 +72,8 @@ Run scripts from: `cd "$ALGOLIA_AUDIT_DIR/{CompanyName}/research" && python3 ~/.
 ## Step Reference (see REFERENCE.md for full detail)
 | Step | Output file | Key sources |
 |------|------------|-------------|
-| 1: Company Context | 01-company-context.md | Yahoo Finance MCP, BuiltWith keywords, Gemini-grounded search (gemini_search.py) |
-| 2: Tech Stack | 02-tech-stack.md | BuiltWith MCP (all 7 endpoints), SimilarWeb tech, parse-builtwith.js |
+| 1: Company Context | 01-company-context.md | Yahoo Finance MCP, Gemini-grounded search (gemini_search.py) |
+| 2: Tech Stack | 02-tech-stack.md | detect-search (network packet inspection), SimilarWeb tech |
   → Run: `python3 ~/.claude/skills/algolia-search-audit/scripts/collect-techstack.py {domain} "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/"`
   → Verify: output ≥2000 bytes. If algolia_detected=true in JSON output: STOP — existing customer, abort audit.
 | 3: Traffic | 03-traffic-data.md | SimilarWeb MCP (all 11 endpoints) |
@@ -83,7 +83,7 @@ Run scripts from: `cd "$ALGOLIA_AUDIT_DIR/{CompanyName}/research" && python3 ~/.
   → Run: `python3 ~/.claude/skills/algolia-search-audit/scripts/collect-competitors.py {domain} "$ALGOLIA_AUDIT_DIR/{CompanyName}/research/"`
   → Verify: output ≥1000 bytes, ≥3 competitors found
 | 5: Test Queries | 05-test-queries.md | vertical-query-library + company context |
-| 6: Competitor Search | 04-competitors.md (append) | BuiltWith + network inspection |
+| 6: Competitor Search | 04-competitors.md (append) | detect-search network inspection |
 | 6b: Competitive Gap | 04-competitors.md (append) | All Wave 1 data |
 | 7: Strategic Angles | 06-strategic-context.md | Gemini-grounded search (gemini_search.py) |
 | 8: Live Signals | 07-hiring/09b-social/09c-news | Apify (LinkedIn + Twitter + Google News) |

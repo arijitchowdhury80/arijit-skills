@@ -18,7 +18,6 @@
   "mcp_available": {
     "_comment": "Set false only if MCP is not installed/configured for this user.",
     "similarweb":    true,
-    "builtwith":     true,
     "yahoo_finance": true,
     "apify":         true,
     "crossbeam":     true
@@ -26,7 +25,6 @@
 
   "api_keys": {
     "_comment": "Read from environment variables. Never set values here.",
-    "BUILTWITH_API_KEY":   "${env:BUILTWITH_API_KEY}",
     "APIFY_TOKEN":         "${env:APIFY_TOKEN}",
     "SIMILARWEB_API_KEY":  "${env:SIMILARWEB_API_KEY}",
     "TAVILY_API_KEY":      "${env:TAVILY_API_KEY}"

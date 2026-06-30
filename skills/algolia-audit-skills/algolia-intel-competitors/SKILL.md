@@ -1,6 +1,6 @@
 ---
 name: algolia-intel-competitors
-description: Layer 1D competitor intelligence module. Identifies who competes with the prospect, what search technology each uses (BuiltWith + network verification), whether any use Algolia (Golden Angle), and which Algolia case studies apply. Run in Wave 1 — depends only on company context. Produces 04-competitors.md and 04-competitors.json.
+description: Layer 1D competitor intelligence module. Identifies who competes with the prospect, what search technology each uses (detect-search + network verification), whether any use Algolia (Golden Angle), and which Algolia case studies apply. Run in Wave 1 — depends only on company context. Produces 04-competitors.md and 04-competitors.json.
 layer: 1-intelligence
 module_id: 1D
 script: collect-competitors.py
@@ -12,12 +12,11 @@ writes_to:
   - 04-competitors.json
 mcp_required:
   - similarweb: "similar-sites-agg, keywords-competitors-agg"
-  - builtwith: "domain-lookup per competitor (SECONDARY signal only)"
   - gemini_search: "grounded Google-Search via scripts/gemini_search.py — competitor profiles, case studies"
 depends_on_skill:
   - detect-search: "canonical search-vendor oracle — per-competitor vendor verdict (primary)"
 skill_enrichment: true
-version: 1.0
+version: 2.0.0
 ---
 
 ## MANDATORY FIRST ACTION
@@ -51,7 +50,7 @@ The script creates the output file structure regardless.
 ## Step 2: Skill Enrichment — Competitor Identification (PRIMARY PATH)
 
 ### For each competitor identified by script:
-1. **Search-vendor detection — use the `detect-search` oracle, NOT LLM-from-BuiltWith.**
+1. **Search-vendor detection — use the `detect-search` oracle, NOT LLM pattern-matching.**
    The canonical, deterministic verdict for which search vendor a competitor runs comes from
    the `detect-search` skill (Playwright packet inspection, catches proxied first-party setups),
    the same oracle techstack Layer 3 uses. Run it per competitor and map the verdict:
@@ -64,10 +63,9 @@ The script creates the output file structure regardless.
    ```
 
    Record `search_vendor` + `search_vendor_status` + `search_vendor_details` (app_id/indexes) per
-   competitor into `04-competitors.json`. BuiltWith MCP `domain-lookup` stays a **secondary** signal:
-   pass it as `--builtwith-vendor "{vendor}"` to record agreement, but the network verdict wins.
+   competitor into `04-competitors.json`.
    If `detect-search` reports `UNCONFIRMED_WAF_BLOCK` (WAF, common on e-commerce — see Scout A/B F4),
-   record the block as the finding; do NOT fall back to guessing the vendor from BuiltWith alone.
+   record the block as the finding; do NOT fall back to LLM guessing.
 2. Use **grounded search** for enrichment (case studies, public statements) — NOT the vendor source of truth. Run the helper (WebSearch is retired):
    ```bash
    python3 ~/.claude/skills/algolia-search-audit/scripts/gemini_search.py \

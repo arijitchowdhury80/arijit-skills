@@ -50,7 +50,7 @@ Every fact, stat, quote, and data point must be classified into one of three evi
 ### Tier 1 — Data Source Verified ✅
 **Definition**: Confirmed via a structured data source (MCP API, SEC filing, official company IR page, official press release at original URL).
 
-**Accepted sources**: SimilarWeb MCP, BuiltWith MCP, Yahoo Finance MCP, SEC EDGAR, official company press release (press.{company}.com), Crunchbase API data, Bloomberg Terminal.
+**Accepted sources**: SimilarWeb MCP, Yahoo Finance MCP, SEC EDGAR, official company press release (press.{company}.com), Crunchbase API data, Bloomberg Terminal.
 
 **Action**: Cite normally. No warning label needed.
 
@@ -112,7 +112,7 @@ The fact-check MUST follow this priority order — no exceptions:
 
 1. **Validate the information itself (90% of the job)**:
    - **Follow every bibliography link** in the book, report, scratchpad, and all deliverables. WebFetch each URL. Verify the specific claim attributed to that source actually exists on that page.
-   - **Re-call MCP APIs** (SimilarWeb, BuiltWith, Yahoo Finance) to independently verify traffic, tech stack, and financial data. Compare fresh API values to audit claims.
+   - **Re-call MCP APIs** (SimilarWeb, Yahoo Finance) and re-run detect-search to independently verify traffic, tech stack, and financial data. Compare fresh values to audit claims.
    - **Verify every quote** by fetching the source URL and confirming the exact quote text appears there.
    - **Verify every case study** link opens (not 404/hallucinated) AND is relevant to the prospect's business (e.g., a retailer audit should cite retail case studies, not media companies).
    - **Verify financials** are correct (revenue, margins, ROI math).
@@ -309,13 +309,12 @@ Spawn with `subagent_type: general-purpose`, `name: "api-verifier"`.
 
 #### Verification Steps
 
-**Quick tier**: Read-only. Cross-reference scratchpad values against claim registry. Check that API endpoint names match expected sources (e.g., traffic data should cite SimilarWeb, tech stack should cite BuiltWith). Flag any data point with no clear API source attribution. **Flag if scratchpad mixes multiple data sources for the same category** (e.g., SimilarWeb for bounce rate but Semrush for session duration).
+**Quick tier**: Read-only. Cross-reference scratchpad values against claim registry. Check that API endpoint names match expected sources (e.g., traffic data should cite SimilarWeb, tech stack should cite detect-search or SimilarWeb technologies). Flag any data point with no clear API source attribution. **Flag if scratchpad mixes multiple data sources for the same category** (e.g., SimilarWeb for bounce rate but Semrush for session duration).
 
 **Standard tier** (in addition to Quick):
 - Read `03-traffic-data.md` to identify exact sources and parameters used
 - Re-call SimilarWeb `get-websites-traffic-and-engagement` with the SAME `web_source`, `country`, and date range as the audit
 - Re-call SimilarWeb `get-websites-demographics-agg` for the prospect domain
-- Re-call BuiltWith `domain-lookup` for the prospect domain
 - Compare fresh values to audit values:
   - If within ±15% → `[PASS]` (normal monthly drift)
   - If drift 15-30% → `[STALE]` with drift %
@@ -325,10 +324,9 @@ Spawn with `subagent_type: general-purpose`, `name: "api-verifier"`.
 
 **Full tier** (in addition to Standard):
 - Re-call SimilarWeb for each competitor (traffic-and-engagement) — use the SAME `web_source` as the audit
-- Re-call BuiltWith `domain-lookup` for each competitor
 - Verify competitor search provider assignments still match
 
-**Tolerance Band**: 15% for all SimilarWeb metrics. SimilarWeb data is estimated and shifts monthly — this is normal, not an error. BuiltWith tech presence is binary (present/absent) — changes here ARE significant.
+**Tolerance Band**: 15% for all SimilarWeb metrics. SimilarWeb data is estimated and shifts monthly — this is normal, not an error.
 
 **Output**: Write to `dim-4-api-results.md`.
 
@@ -877,7 +875,7 @@ Read all 5 dimension result files. Aggregate scores. Generate 4 output files.
 | Agent | Quick | Standard | Full |
 |-------|-------|----------|------|
 | 1 (Registry + Dims 1-3) | Read all files, full analysis | Same | Same |
-| 2 (API Data) | Read-only cross-ref | + SimilarWeb + BuiltWith re-calls | + competitor APIs |
+| 2 (API Data) | Read-only cross-ref | + SimilarWeb re-calls | + competitor APIs |
 | 3 (Citations + Quotes) | Read-only URL scan | + WebFetch 10-15 URLs + transcripts | + all URLs + all transcripts |
 | 4 (Browser) | Read-only scratchpad check | + screenshot file verification | + Chrome MCP re-tests |
 | 5 (Patterns) | Full analysis of dim results | Same | Same |
@@ -948,7 +946,7 @@ DATE: 2026-03-18
 ## TOP 3 FINDINGS FOR USER
 1. All 10 scoring area values verified against browser findings — no discrepancies
 2. ROI math verified: $97M × 5% = $4.85M confirmed correct
-3. Nike and Asics BuiltWith verification confirmed — golden angle data is solid
+3. Nike and Asics detect-search network confirmation verified — golden angle data is solid
 ```
 
 ### Example FACTCHECK_GATE.md (blocked):

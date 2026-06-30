@@ -15,19 +15,18 @@ Downstream consumers of 01-company-context.json:
   algolia-intel-queries SKILL → reads: vertical, company_name
 
 Sources (ALL attempted — not fallback):
-  1. BuiltWith keywords-api — SEO meta, company description (requires BUILTWITH_API_KEY)
-  2. Company website WebFetch: /about, /company, /about-us (direct HTTP)
-  3. LinkedIn company page WebFetch (best-effort — may require auth)
-  4. Scout enrichment — linkedin_url, twitter_handle, careers_url, website (fills nulls only)
+  1. Company website WebFetch: /about, /company, /about-us (direct HTTP)
+  2. LinkedIn company page WebFetch (best-effort — may require auth)
+  3. Scout enrichment — linkedin_url, twitter_handle, careers_url, website (fills nulls only)
 
-Note: Fields requiring WebSearch/MCP (executives, HQ, founded, vertical classification)
-are marked as null in JSON output and populated by the algolia-intel-company SKILL.
+Note: BuiltWith removed from pipeline (2026-06-29). No BUILTWITH_API_KEY required.
+      Fields requiring WebSearch/MCP (executives, HQ, founded, vertical classification)
+      are marked as null in JSON output and populated by the algolia-intel-company SKILL.
 
 Usage:
   python3 collect-company.py <domain> <output-dir> [--company-name "Name"] [--ticker TICKER]
 
 Environment:
-  BUILTWITH_API_KEY — BuiltWith API key (optional, improves meta extraction)
   SCOUT_URL — Scout server URL (default: http://localhost:8421)
   SCOUT_API_KEY — Scout API key (default: dev-key)
 """
@@ -36,7 +35,6 @@ import sys, os, json, requests, re
 from datetime import date
 
 TODAY = date.today().isoformat()
-BUILTWITH_API_KEY = os.environ.get('BUILTWITH_API_KEY', '')
 
 # ── Scout Integration ─────────────────────────────────────────────────────────
 
@@ -80,30 +78,6 @@ def web_get(url, timeout=20):
     except Exception as e:
         return None, str(e)
 
-# ── Source: BuiltWith keywords-api ───────────────────────────────────────────
-
-def builtwith_keywords(domain):
-    """Call BuiltWith keywords-api. Returns (data_dict, error)."""
-    if not BUILTWITH_API_KEY:
-        return None, 'BUILTWITH_API_KEY not configured'
-    url = f'https://api.builtwith.com/kw1/api.json?KEY={BUILTWITH_API_KEY}&LOOKUP={domain}'
-    try:
-        r = requests.get(url, timeout=30)
-        r.raise_for_status()
-        return r.json(), None
-    except Exception as e:
-        return None, str(e)
-
-def extract_bw_meta(bw_data):
-    """Extract company description from BuiltWith keywords response."""
-    if not bw_data:
-        return None
-    results = bw_data.get('Results', [])
-    if not results:
-        return None
-    kw = results[0].get('Keywords', {})
-    return kw.get('MetaDescription') or kw.get('Description')
-
 # ── Source: Company website ───────────────────────────────────────────────────
 
 def extract_meta_description(html):
@@ -143,24 +117,18 @@ def fetch_company_website(domain):
 def collect(domain):
     """Run all sources. Returns structured results dict."""
     results = {
-        'builtwith': {'data': None, 'error': None},
         'website':   {'url': None, 'description': None, 'title': None, 'error': None},
         'linkedin':  {'url': None, 'accessible': False, 'error': None},
     }
 
-    # Source 1: BuiltWith
-    bw_data, bw_err = builtwith_keywords(domain)
-    results['builtwith']['data'] = bw_data
-    results['builtwith']['error'] = bw_err
-
-    # Source 2: Company website
+    # Source 1: Company website
     ws_url, ws_desc, ws_title, ws_err = fetch_company_website(domain)
     results['website']['url'] = ws_url
     results['website']['description'] = ws_desc
     results['website']['title'] = ws_title
     results['website']['error'] = ws_err
 
-    # Source 3: LinkedIn (best-effort)
+    # Source 2: LinkedIn (best-effort)
     company_slug = re.sub(r'[^a-z0-9-]', '-', domain.replace('.com', '').replace('.', '-').lower())
     li_url = f'https://www.linkedin.com/company/{company_slug}/'
     li_html, li_err = web_get(li_url)
@@ -181,13 +149,11 @@ def build_json_record(domain, company_name_override, ticker, results):
     Build the canonical JSON record consumed by downstream scripts.
     Fields that require WebSearch/MCP are set to null — populated by SKILL orchestrator.
     """
-    # Best available description
-    desc = results['website']['description'] or extract_bw_meta(results['builtwith']['data'])
+    # Best available description (website WebFetch only — BuiltWith removed from pipeline)
+    desc = results['website']['description']
     desc_source = None
     if results['website']['description']:
         desc_source = f"website WebFetch {results['website']['url']}"
-    elif extract_bw_meta(results['builtwith']['data']):
-        desc_source = 'BuiltWith keywords-api'
 
     # Infer display name
     display_name = company_name_override or results['website'].get('title', '').split('|')[0].split('-')[0].strip() or domain
@@ -231,10 +197,9 @@ def build_json_record(domain, company_name_override, ticker, results):
         # ── Collection metadata ──
         'collected_at': TODAY,
         'collection_script': 'collect-company.py',
-        'sources_attempted': ['builtwith_keywords_api', 'website_webfetch', 'linkedin_webfetch'],
+        'sources_attempted': ['website_webfetch', 'linkedin_webfetch'],
         'sources_succeeded': [
             s for s, r in [
-                ('builtwith_keywords_api', results['builtwith']['data'] is not None),
                 ('website_webfetch', results['website']['description'] is not None),
                 ('linkedin_webfetch', results['linkedin']['accessible']),
             ] if r

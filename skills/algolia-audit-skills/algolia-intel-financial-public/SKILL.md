@@ -1,6 +1,6 @@
 ---
 name: algolia-intel-financial-public
-description: Layer 1E financial intelligence for PUBLIC companies. Collects 3-year revenue trend, EBITDA margin, analyst consensus via Yahoo Finance MCP (all endpoints). Complemented by earnings call transcripts via WebFetch for executive quotes. Produces 08-financial-profile.md and 08-financial-profile.json. Only for companies with SEC filings and a stock ticker.
+description: Layer 1E financial intelligence for PUBLIC companies. Collects 3-year revenue trend, EBITDA margin, analyst consensus via yfinance (public Yahoo Finance, via collect-financials.py). Complemented by earnings call transcripts via WebFetch for executive quotes. Produces 08-financial-profile.md and 08-financial-profile.json. Only for companies with SEC filings and a stock ticker.
 layer: 1-intelligence
 module_id: 1E
 script: collect-financials.py
@@ -9,10 +9,10 @@ reads_from:
 writes_to:
   - 08-financial-profile.md
   - 08-financial-profile.json
-mcp_required:
-  - yahoo_finance: "ALL endpoints — get_stock_info, get_financial_statement (4 variants), get_recommendations (2), get_historical_stock_prices, get_yahoo_finance_news"
+data_sources:
+  - yfinance: "public Yahoo Finance Python library via collect-financials.py — NOT an MCP; no key required"
 skill_enrichment: true
-version: 1.0
+version: 2.0.0
 ---
 
 ## MANDATORY FIRST ACTION
@@ -49,8 +49,7 @@ public one, re-run with `--force`; the script backs up the existing file to
 `08-financial-profile.private.bak` first. A same-type refresh (public over public) is
 allowed without `--force`.
 
-If Yahoo Finance MCP is NOT available: STOP. Alert: "Yahoo Finance MCP required. Configure MCP and retry."
-Do NOT use grounded search as a substitute for financial data.
+If yfinance returns no data for any field, record blank and continue — no fabrication. Do NOT use grounded search as a substitute for financial data.
 
 ---
 
@@ -96,7 +95,7 @@ Label: `[FACT — SEC EDGAR 10-K WebFetch, {date}, {URL}]`
 - Extract verbatim quotes from ANY named speaker about these topics
 - Label: `[FACT — {source} transcript WebFetch, {date}]`
 
-All three sources (Yahoo Finance MCP, SEC EDGAR 10-K, earnings transcripts) are required. None substitutes for another.
+All three sources (yfinance, SEC EDGAR 10-K, earnings transcripts) are required. None substitutes for another.
 
 ---
 
@@ -141,4 +140,4 @@ Write `08-financial-profile.json` with this EXACT top-level structure. **No devi
 
 ## Verification Gate
 
-Pass: Both files ≥5000 bytes, `revenue_fy2025` at **top level** in JSON (not null), at least 3 `[FACT — Yahoo Finance MCP` labels, `meta.skill_enrichment_completed = true`, `margin_zone` and `roi_formula_shown` at top level.
+Pass: Both files ≥5000 bytes, `revenue_fy2025` at **top level** in JSON (not null), at least 3 `[FACT — yfinance` labels, `meta.skill_enrichment_completed = true`, `margin_zone` and `roi_formula_shown` at top level.

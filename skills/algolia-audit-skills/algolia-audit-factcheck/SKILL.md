@@ -1,5 +1,6 @@
 ---
 name: algolia-audit-factcheck
+version: 2.0.0
 description: Use to validate Algolia Search Audit deliverables before sharing with a prospect or AE. Triggers when you need to: check whether stats in the deck match the main report, verify source citations are live links, confirm investor quotes against original transcripts, catch cross-file inconsistencies across the 6 deliverable files, or get a PROCEED/WARN/BLOCKED gate verdict before a pitch or handoff. Run this after the audit is complete — it's the quality gate step that tells you if the audit is safe to share. Not for running the audit itself, generating reports, or checking individual files in isolation.
 ---
 
@@ -86,7 +87,7 @@ are NOT in the script. If the script says BLOCKED, the gate is BLOCKED regardles
 | Tier | Time | External calls | What runs |
 |------|------|---------------|-----------|
 | Quick | ~3-5 min | 0 | Dims 1-3: consistency + math + reference data only |
-| Standard | ~15 min | ~15-20 | + SimilarWeb/BuiltWith re-calls + WebFetch sample URLs |
+| Standard | ~15 min | ~15-20 | + SimilarWeb re-calls + WebFetch sample URLs |
 | Full (default) | ~30-40 min | ~30-40 | + all source URLs + competitor APIs + browser re-tests |
 
 **External verification is 90% of the job. Cross-file consistency is 10%.**

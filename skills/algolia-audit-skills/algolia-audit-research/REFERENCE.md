@@ -84,11 +84,11 @@ Before marking any step as DONE in CHECKPOINT.md:
 | Step | Min sources | Key sources |
 |------|------------|-------------|
 | 1 Company Context | 3 | IR page, Yahoo Finance, WebSearch |
-| 2 Tech Stack | 2 | BuiltWith URL, SimilarWeb tech URL |
+| 2 Tech Stack | 2 | detect-search verdict URL, SimilarWeb tech URL |
 | 3 Traffic | 1 | SimilarWeb API (auto-cited by MCP) |
 | 4 Competitors | 2 | SimilarWeb per competitor |
 | 5 Test Queries | 0 | (derived from context, no external source needed) |
-| 6 Competitor Search | 3 | BuiltWith per competitor |
+| 6 Competitor Search | 3 | detect-search per competitor |
 | 7 Strategic Angles | 2 | WebSearch articles with dates |
 | 8 Hiring | 2 | LinkedIn/careers page URLs |
 | 9 Financials | 2 | Yahoo Finance + SEC/IR source |
@@ -109,9 +109,9 @@ These rules apply to ALL steps, ALL scratchpad files, with NO exceptions.
 Every data point written to a scratchpad file MUST have a clickable hyperlink to its source:
 - Financial figures → Yahoo Finance or SEC EDGAR URL
 - Traffic stats → SimilarWeb URL
-- Technology claims → BuiltWith URL
+- Technology claims → detect-search network verdict or SimilarWeb technologies URL
 - Industry benchmarks → Baymard, Forrester, or source study URL
-- Competitor data → BuiltWith per competitor + SimilarWeb
+- Competitor data → detect-search per competitor + SimilarWeb
 - Hiring signals → Careers page URL or job posting URL
 - Investor quotes → Earnings transcript, 10-K, 10-Q, or investor presentation URL
 - Case studies → Algolia customer page URL
@@ -168,7 +168,7 @@ Every data point collected in Phase 1 must come from the highest-tier source ava
 
 | Tier | Sources | Accuracy | Use For |
 |------|---------|----------|---------|
-| **Tier 1** | MCP APIs: BuiltWith, SimilarWeb, Yahoo Finance MCP; SEC filings via WebFetch on sec.gov | 95–100% | Tech stack, traffic, financials, search vendors, demographics |
+| **Tier 1** | MCP APIs: SimilarWeb, Yahoo Finance MCP; detect-search network inspection; SEC filings via WebFetch on sec.gov | 95–100% | Tech stack, traffic, financials, search vendors, demographics |
 | **Tier 2** | Primary sources: WebFetch on company IR pages, press releases, official blog, careers page | 90–95% | Executive quotes (must WebFetch source), case study metrics (must WebFetch case study URL) |
 | **Tier 3** | Secondary sources: WebSearch for narrative context, Wikipedia, news articles | 60–80% | Company overview narrative, hiring signals, strategic angle context ONLY |
 
@@ -188,8 +188,8 @@ Every data point collected in Phase 1 must come from the highest-tier source ava
 
 | Agent | Steps | Tools | Output |
 |-------|-------|-------|--------|
-| Agent A | Step 1: Company context + financials | Yahoo Finance MCP, BuiltWith `keywords-api`, WebSearch | `01-company-context.md` |
-| Agent B | Step 2: Tech stack deep dive | BuiltWith MCP (6 endpoints) + SimilarWeb `get-website-content-technologies-agg` | `02-tech-stack.md` |
+| Agent A | Step 1: Company context + financials | Yahoo Finance MCP, WebSearch | `01-company-context.md` |
+| Agent B | Step 2: Tech stack deep dive | detect-search + SimilarWeb `get-website-content-technologies-agg` | `02-tech-stack.md` |
 | Agent C | Step 3: Traffic & engagement | SimilarWeb MCP (11 endpoints) | `03-traffic-data.md` |
 | Agent D | Step 4: Competitor identification | SimilarWeb MCP (2 endpoints) | `04-competitors.md` |
 
@@ -290,7 +290,6 @@ Created: {ISO datetime}
 Gather comprehensive company intelligence:
 
 - **Company overview** (WebSearch): What they do, industry, founding year, employee count, store/warehouse count, recent news
-- **SEO keywords** (BuiltWith `keywords-api`): Meta keywords, page titles — reveals brand positioning and SEO focus
 - **Financial data (3-year trends)** via **Yahoo Finance MCP** (public companies):
   - **Ticker resolution**: Use WebSearch `"{company name}" stock ticker symbol NYSE NASDAQ"` first — Yahoo Finance MCP has no search tool
   - `get_stock_info(ticker)` — sector, industry, employee count, market cap, current price, 52-week range
@@ -317,21 +316,10 @@ Gather comprehensive company intelligence:
 
 ### Step 2: Technology Stack Deep Dive
 
-Use BuiltWith MCP comprehensively:
+Run `collect-techstack.py` first (see SKILL.md Step 2 → detect-search + SimilarWeb). Then enrich:
 
-- `domain-lookup` — Current search provider, e-commerce platform, analytics, personalization, recommendations
-- `relationships-api` — Sister/related sites
-- `recommendations-api` — Technology gaps and recommendations
-- `financial-api` — Revenue estimates, employee count, funding data (cross-reference Yahoo Finance)
-- `social-api` — Social profile URLs (LinkedIn, Twitter, Facebook — useful for executive research)
-- `trust-api` — Domain trust score, domain age (credibility signal)
-- **Parse "removed" technologies** → displacement signals (e.g., "RichRelevance REMOVED" = vacuum for Algolia Recommend)
-- **Parse "added" technologies in last 6 months** → if search competitor added recently, flag as ⚠️ NEGATIVE SIGNAL
-- Match any detected vendor to displacement quotes in `buyer-persona-reference.md` Section 3
-- Fallback: If BuiltWith credits exhausted, use SimilarWeb `get-website-content-technologies-agg`
-
-**MANDATORY — Search Vendor Cross-Check (SimilarWeb Technologies API)**:
-In ADDITION to BuiltWith, you MUST call SimilarWeb `get-website-content-technologies-agg` for the prospect domain. BuiltWith may return empty (CAPTCHA-blocked, credit-exhausted, or miscategorized). SimilarWeb Technologies is the authoritative fallback.
+**MANDATORY — SimilarWeb Technologies API (primary tech stack source)**:
+Call SimilarWeb `get-website-content-technologies-agg` for the prospect domain. This is the primary source for ecommerce platform, analytics, CDN/WAF, and adjacent tech signals.
 
 Filter results for search-related technologies. If ANY enterprise search platform is detected:
 - **Constructor, Constructor.io** → Direct Algolia competitor
@@ -447,11 +435,11 @@ Based on the company's vertical from Step 1:
 
 For each of the top 3-5 competitors identified in Step 4:
 
-> **DATA SOURCE RULE**: Search provider detection MUST use Tier 1 sources (BuiltWith MCP + network inspection). WebSearch (Tier 3) finds only public announcements — it cannot detect live tech installations and has a ~33% error rate for vendor attribution. Do NOT use WebSearch to determine a competitor's search provider.
+> **DATA SOURCE RULE**: Search provider detection MUST use Tier 1 sources (detect-search network inspection). WebSearch (Tier 3) finds only public announcements — it cannot detect live tech installations and has a ~33% error rate for vendor attribution. Do NOT use WebSearch to determine a competitor's search provider.
 
-a. **MANDATORY — BuiltWith `domain-lookup`** for each competitor domain. Record detected search provider or "not detected" explicitly.
+a. **MANDATORY — detect-search network inspection** for each competitor domain. Run detect-search per-competitor (see algolia-intel-competitors SKILL.md Step 2 for the exact command). Record detected search provider or "not detected" explicitly.
 
-b. **MANDATORY — Network request analysis** (most definitive method): Use Chrome MCP to visit each competitor's site, run a search query, then inspect network requests via `get_network_request` or `list_network_requests`. Look for API calls to known search vendor domains:
+b. **MANDATORY — Additional network request analysis** (most definitive method): Use Chrome MCP to visit each competitor's site, run a search query, then inspect network requests via `get_network_request` or `list_network_requests`. Look for API calls to known search vendor domains:
    - Algolia: `*.algolia.net`, `*.algolia.io`, `*.algolianet.com`
    - Coveo: `*.cloud.coveo.com`, `*.coveo.com`
    - Bloomreach: `*.bloomreach.com`, `brsrvr.com`, `*.brconnector.com`
@@ -459,7 +447,6 @@ b. **MANDATORY — Network request analysis** (most definitive method): Use Chro
    - Searchspring: `*.searchspring.io`, `*.searchspring.net`
    - Lucidworks: `*.lucidworks.com`
    - Elasticsearch/Elastic: `*.elastic.co`
-   - If network requests show Vendor A but BuiltWith shows Vendor B → trust network requests. Document discrepancy.
 
 c. SimilarWeb `get-websites-traffic-and-engagement` for each competitor (quick check — monthly visits and bounce rate)
 
@@ -471,17 +458,17 @@ f. Create competitor matrix:
    ```
    | Competitor | Search Provider | Detection Method | Monthly Traffic | Bounce Rate | Uses Algolia? |
    ```
-   Record "BuiltWith + Network" or "BuiltWith only" or "Network only" in Detection Method column.
+   Record "detect-search (network)" or "Network only" or "Undetected" in Detection Method column.
 
 → Append to `04-competitors.md`. Update CHECKPOINT.md: Step 6 DONE.
 
 **GATE 1.6 — Competitor Search Provider Verification (BLOCKING)**
 
 Before proceeding to Step 7, verify:
-- [ ] BuiltWith `domain-lookup` called for EACH competitor (not optional, not skippable)
+- [ ] detect-search run for EACH competitor (not optional, not skippable)
 - [ ] Network request analysis performed for at least the top 2 competitors
-- [ ] Each competitor has a search provider entry that is either VERIFIED (BuiltWith + network match) or DETECTED (one source only, labeled as such) — never UNKNOWN without attempted BuiltWith call
-- [ ] If BuiltWith returns no data AND network inspection is inconclusive: label as "Search provider: Undetected — requires manual verification"
+- [ ] Each competitor has a search provider entry that is either VERIFIED (detect-search ACTIVE) or DETECTED (network only, labeled as such) — never UNKNOWN without attempted detect-search run
+- [ ] If detect-search returns UNDETECTED and network inspection is inconclusive: label as "Search provider: Undetected — requires manual verification"
 
 **Failure mode**: If this gate is skipped and an AE walks in with wrong competitive intel, the entire strategic positioning of the audit is invalidated.
 
@@ -515,9 +502,9 @@ Create comparison table:
 
 | Company | Est. Search Score | Search Provider | Detection Method | Advantage Over {Prospect} |
 |---------|------------------|-----------------|------------------|------------------------|
-| Competitor A | 8.5/10 | Algolia | BuiltWith + Network | +4.1 points (projected) |
+| Competitor A | 8.5/10 | Algolia | detect-search (network) | +4.1 points (projected) |
 | {Prospect} | 4.4/10 | {Current Vendor} | — | — |
-| Competitor B | 5.5/10 | Platform Native | BuiltWith only | +1.1 points (projected) |
+| Competitor B | 5.5/10 | Platform Native | detect-search (network) | +1.1 points (projected) |
 ```
 
 **6b-3: Build Strategic Positioning Matrix**
@@ -708,7 +695,7 @@ For every news article cited as a "timing signal" or "trigger event":
 Select best case studies for this prospect:
 - Match prospect vertical to `buyer-persona-reference.md` Section 2
 - Select primary + secondary case study
-- If BuiltWith detected a specific competitor vendor, select matching displacement quote from Section 3
+- If detect-search detected a specific competitor vendor, select matching displacement quote from Section 3
 
 **MANDATORY**: WebFetch each selected case study URL NOW. Do not wait until Phase 4.
 - Extract the EXACT metric from the live page (not from memory, not from a description)
@@ -867,7 +854,7 @@ f. **Industry/Analyst Coverage**:
 ### Technology Investment Signals
 - **Engineering Team Size**: {X engineers} (LinkedIn, {date})
 - **Key Hires (Last 12 months)**: {notable tech hires}
-- **Tech Stack Indicators**: {from job postings, blog, BuiltWith}
+- **Tech Stack Indicators**: {from job postings, blog, SimilarWeb tech}
 - **Digital Initiatives**: {from press releases, interviews}
 
 ### Strategic Priorities (from public statements)
@@ -1009,7 +996,7 @@ Pass criteria:
 
 **If 03-traffic-data.md fails**: Re-call `get-websites-traffic-and-engagement` with `country: "ww"` (not `"us"`). If still fails, note limitation and proceed — do NOT block Phase 2 for private companies or low-traffic sites.
 
-### Gate 1.3 — BuiltWith Tech Stack Quality
+### Gate 1.3 — Tech Stack Quality
 
 Check that `02-tech-stack.md` contains at least one confirmed technology in each of: search, e-commerce platform, analytics:
 
@@ -1020,9 +1007,9 @@ grep -E "search|platform|analytics|commerce" {{CompanyName}}/research/02-tech-st
 Pass criteria:
 - Search vendor field is populated (even if "None detected" is a valid answer — but it must be explicitly stated, not missing)
 - E-commerce platform identified (Shopify, Salesforce, SAP, Magento, custom, etc.)
-- If BuiltWith returned empty: SimilarWeb `get-website-content-technologies-agg` was used as fallback (required)
+- SimilarWeb `get-website-content-technologies-agg` was called and recorded as source
 
-**If 02-tech-stack.md fails**: Re-call `mcp__builtwith__domain-lookup` for the domain. If still empty, call `get-website-content-technologies-agg` from SimilarWeb and note which source was used.
+**If 02-tech-stack.md fails**: Re-run `detect-search` for the domain and call `get-website-content-technologies-agg` from SimilarWeb. Note which source was used.
 
 ### Gate 1.4 — Citation Count
 
@@ -1054,7 +1041,7 @@ After running all checks, write a Gate 1 summary block to CHECKPOINT.md:
 ## Gate 1 Results
 Gate 1.1 File Completeness: PASS / FAIL ({N} files, all >500B)
 Gate 1.2 SimilarWeb Quality: PASS / FAIL / WAIVED (private/low-traffic)
-Gate 1.3 BuiltWith Quality: PASS / FAIL / FALLBACK-USED
+Gate 1.3 Tech Stack Quality: PASS / FAIL
 Gate 1.4 Citation Count: PASS / FAIL ({N} citations found, required: 15+)
 Gate 1.5 Core Metrics: PASS / ACCEPTABLE (private co)
 
