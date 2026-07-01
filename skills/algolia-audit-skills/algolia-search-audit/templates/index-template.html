@@ -4529,7 +4529,7 @@ function renderGoldenAngleCard(ga) {
 
   if (!ga) return '';
 
-  const gaComps = ga.competitors_using_algolia || [];
+  const gaComps = (Array.isArray(ga.competitors_using_algolia)?ga.competitors_using_algolia:[]);
 
   if (!gaComps.length && !ga.talk_track) return '';
 
@@ -9594,7 +9594,7 @@ function sectionCompetitiveSynthesis(D) {
 
   const matrix = cs.positioning_matrix || [];
 
-  if (!tiers.length && !matrix.length && !ga.talk_track && !(ga.competitors_using_algolia||[]).length) return '';
+  if (!tiers.length && !matrix.length && !ga.talk_track && !((Array.isArray(ga.competitors_using_algolia)?ga.competitors_using_algolia:[])).length) return '';
 
   const cap = (v) => {
     if (v === true)  return '<span class="cap-yes" title="Confirmed">✓</span>';
@@ -9618,7 +9618,7 @@ function sectionCompetitiveSynthesis(D) {
 
   const builtWithUrls = {};
 
-  (ga.competitors_using_algolia||[]).forEach(c => { builtWithUrls[c.name] = c.source_url || `https://builtwith.com/${c.domain||''}`; });
+  ((Array.isArray(ga.competitors_using_algolia)?ga.competitors_using_algolia:[])).forEach(c => { builtWithUrls[c.name] = c.source_url || `https://builtwith.com/${c.domain||''}`; });
 
 
 
@@ -9658,7 +9658,7 @@ function sectionCompetitiveSynthesis(D) {
       <div style="${T.semi13};color:white;line-height:1.5;">${escHtml(D.meta?.company||'This company')} is the only major player in its vertical without AI-native search. Every direct competitor has at least partial capability. The gap is quantified below.</div>
     </div>` : ''}
 
-    ${ga.talk_track || (ga.competitors_using_algolia||[]).length ? `<div style="margin-bottom:20px;">${renderGoldenAngleCard(ga)}</div>` : ''}
+    ${ga.talk_track || ((Array.isArray(ga.competitors_using_algolia)?ga.competitors_using_algolia:[])).length ? `<div style="margin-bottom:20px;">${renderGoldenAngleCard(ga)}</div>` : ''}
 
 
 
@@ -11248,7 +11248,7 @@ function sectionStatBar(D) {
   const roiVal = roi ? escHtml(roi) : '—';
 
   // Stat 3: Competitive signal
-  const compUsing = (ga.competitors_using_algolia || [])[0];
+  const compUsing = ((Array.isArray(ga.competitors_using_algolia)?ga.competitors_using_algolia:[]))[0];
   const compVal = compUsing ? escHtml(compUsing.name) : (ga.talk_track ? 'See analysis' : '—');
   const compDesc = compUsing ? 'Direct competitor uses Algolia' : (ga.talk_track ? 'Competitive advantage' : 'No confirmed golden angle');
 
