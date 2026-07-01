@@ -172,7 +172,8 @@ following structure. This is what Claude outputs during every audit run.
   "financials": {
     "ticker": "string",
     "market_cap": "string",
-    "revenue_3y": [{ "year": "string", "revenue": "string" }],
+    "revenue_3y": [{ "year": "string e.g. 'FY2024'", "revenue": "string '$88.4B'", "gross_profit": "string '$21.1B'", "ebitda": "string '$8.9B'", "operating_income": "string '$5.9B'", "net_income": "string '$3.4B'", "net_margin": "string '3.8%'" }],
+    "//revenue_3y_RULES": "MANDATORY. (1) The financial chart+table read these PER-YEAR fields off each row. year+revenue ONLY leaves Gross Profit / EBITDA / Op Income / Net Income / margin rows EMPTY ('—' and blank bars) even though the numbers exist elsewhere. Pull gross_profit, ebitda, operating_income, net_income (and net_margin) for EVERY year from collect-financials.py's 3-year output. (2) ORDER ASCENDING: oldest year FIRST, latest year LAST. The renderer treats the last element as the latest year; descending order inverts every YoY arrow (revenue that rose shows as a fall).",
     "total_digital_revenue": "string — formatted e.g. '$14.2B'",
     "ecommerce_revenue_est": "string — formatted e.g. '$4.2B'",
     "search_roi_est": "string — formatted e.g. '$210M/yr'",
