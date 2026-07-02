@@ -30,8 +30,9 @@ WHAT IT PATCHES (deterministic extraction, always correct):
   - score.breakdown_labels      → {canonical_key: display_name}
   - score.overall               → recalculated from weighted formula
   - score.verdict               → derived from overall score
-  - score.critical_count        → counted from severity
-  - score.moderate_count        → counted from severity
+  - score.critical_count        → counted from breakdown_severity (10-scoring-matrix.md HIGH)
+  - score.moderate_count        → counted from breakdown_severity (10-scoring-matrix.md MEDIUM)
+  - score.low_count             → counted from breakdown_severity (10-scoring-matrix.md LOW)
   - competitors[]               → [{name,domain,search_vendor,traffic,uses_algolia}]
   - intelligence_signals[]      → appends media_quote entries from 11-investor-intelligence.json
   - intelligence_signals[].urgency_score  → deterministic score by signal type + keyword boost
@@ -45,6 +46,10 @@ WHAT IT PATCHES (deterministic extraction, always correct):
   - financials.margins          → gross/EBITDA/operating/net margins from 08-financial-profile.json
   - financials.balance_sheet    → assets/debt/cash from 08-financial-profile.json
   - financials.digital_revenue  → latest FY estimate from 08-financial-profile.json
+  - financials.roi_scenarios.{conservative,moderate}.value/value_num → re-derived
+    from authoritative roi_conservative/roi_moderate strings (was: LLM hand-typed
+    value could drop the leading digit, e.g. "8.4M" vs authoritative "$18.4M/year")
+  - financials.total_digital_revenue → re-derived from authoritative d2c_digital_revenue
   - tech_stack.ai_search_gap    → NikeAI-type signal from 02-tech-stack.json
   - tech_stack.data_acquisitions → company acquisitions from 02-tech-stack.json
   - tech_stack.architecture_notes → frontend+cloud context from 02-tech-stack.json
@@ -134,6 +139,37 @@ def read_file(path):
 
 def log(msg):
     print(f'  [generate-audit-data] {msg}', flush=True)
+
+
+def parse_money_amount(raw):
+    """Extract (display_value, numeric_value) from an authoritative money string,
+    e.g. '$18.4M/year' -> ('18.4M', 18400000), '$182M (jbl.com, 2024)' -> ('182M', 182000000).
+
+    Root-cause fix for the leading-digit-drop bug (JBL 2026-07-01): a hand-written/
+    LLM-written roi_scenarios.*.value ("8.4M") silently lost its first digit relative
+    to the authoritative source string ("$18.4M/year"). Never trust the hand-written
+    value — always regex-capture the FULL number (all leading digits) + unit from the
+    source-of-truth string. This is intentionally NOT a strip-then-parseFloat: the
+    capture group anchors on the digit/decimal run before the unit letter, so a
+    leading "$" or trailing "/year" / "(jbl.com, 2024)" never eats into the number.
+
+    Returns (None, None) if `raw` isn't a string or no $-amount pattern is found.
+    """
+    if not isinstance(raw, str):
+        return None, None
+    m = re.search(r'\$?\s*([0-9][0-9,]*\.?[0-9]*)\s*([BMK])\b', raw, re.IGNORECASE)
+    if not m:
+        return None, None
+    num_str = m.group(1).replace(',', '')
+    unit = m.group(2).upper()
+    try:
+        num = float(num_str)
+    except ValueError:
+        return None, None
+    mult = {'B': 1e9, 'M': 1e6, 'K': 1e3}[unit]
+    value_num = int(round(num * mult))
+    value = f'{num_str}{unit}'
+    return value, value_num
 
 
 # ── TECH STACK parser ─────────────────────────────────────────────────────────
@@ -614,8 +650,18 @@ def parse_score(md_text):
     else:
         verdict, verdict_class = 'Critical Gaps', 'critical'
 
-    critical_count = sum(1 for k in breakdown_severity if breakdown_severity[k] == 'HIGH' and breakdown.get(k, 10) < 5)
-    moderate_count = sum(1 for k in breakdown_severity if breakdown_severity[k] in ('MEDIUM', 'HIGH') and breakdown.get(k, 10) < 7)
+    # Deterministic severity counts — root-cause fix (JBL 2026-07-01, lululemon earlier):
+    # the old formula gated HIGH/MEDIUM membership on an ARBITRARY score cutoff
+    # (severity=='HIGH' AND score<5; severity in ('MEDIUM','HIGH') AND score<7),
+    # which (a) double-counted HIGH areas into moderate_count whenever their score
+    # was also <7, and (b) silently dropped any HIGH/MEDIUM area whose score sat on
+    # the wrong side of the cutoff — producing wrong totals (JBL: critical 4 not 5,
+    # moderate 7 not 4) and never emitting low_count at all. breakdown_severity IS
+    # the 10-scoring-matrix.md HIGH/MEDIUM/LOW classification (parsed above) — count
+    # it directly, no secondary score-based filter.
+    critical_count = sum(1 for v in breakdown_severity.values() if v == 'HIGH')
+    moderate_count = sum(1 for v in breakdown_severity.values() if v == 'MEDIUM')
+    low_count = sum(1 for v in breakdown_severity.values() if v == 'LOW')
 
     return {
         'overall': overall,
@@ -626,6 +672,7 @@ def parse_score(md_text):
         'breakdown_labels': breakdown_labels,
         'critical_count': critical_count,
         'moderate_count': moderate_count,
+        'low_count': low_count,
         'formula_shown': 'sum(score×weight)/sum(weights)',
         'source': '10-scoring-matrix.md',
     }
@@ -1339,7 +1386,9 @@ def main():
             # Partial — only patch what we have
             existing_score = data.get('score', {}) or {}
             for field, val in score_parsed.items():
-                if val:
+                # `is not None` (not truthy) so a legitimate 0 for critical_count/
+                # moderate_count/low_count still gets patched in on a partial parse.
+                if val is not None:
                     existing_score[field] = val
             data['score'] = existing_score
             log(f"score: partial patch — {len(score_parsed.get('breakdown', {}))} areas found")
@@ -1373,6 +1422,51 @@ def main():
         if added:
             patch_count += added
             log(f'financials (Phase 2 JSON lift): added {added} fields')
+
+    # ── Patch: financials.roi_scenarios.{conservative,moderate}.value/value_num +      ─
+    # ── financials.total_digital_revenue — deterministic re-derivation from the       ─
+    # ── authoritative source strings (roi_conservative/roi_moderate/d2c_digital_revenue) ─
+    # Root cause (JBL 2026-07-01): the LLM hand-types roi_scenarios[*].value and
+    # total_digital_revenue as separate fields from the authoritative strings it also
+    # writes (roi_conservative/roi_moderate/d2c_digital_revenue) — and was observed
+    # dropping the leading digit ("8.4M" vs authoritative "$18.4M/year"; "82M" vs
+    # authoritative "$182M"). Never trust the hand-written value: regex-extract the
+    # full number+unit from the authoritative string every time. `aggressive` has no
+    # authoritative roi_aggressive source field (known gap — see factcheck manifest
+    # "ROI Scenario Gap" AE-action item), so it is left as the LLM wrote it.
+    fin_obj = data.get('financials') or {}
+    roi_scenarios = fin_obj.get('roi_scenarios') or {}
+    scenario_sources = {
+        'conservative': fin_obj.get('roi_conservative'),
+        'moderate': fin_obj.get('roi_moderate'),
+        'aggressive': fin_obj.get('roi_aggressive'),
+    }
+    roi_fixed = 0
+    for scenario, source_str in scenario_sources.items():
+        value, value_num = parse_money_amount(source_str)
+        if value is None:
+            continue
+        existing = roi_scenarios.get(scenario) or {}
+        if existing.get('value') != value or existing.get('value_num') != value_num:
+            existing['value'] = value
+            existing['value_num'] = value_num
+            existing.setdefault('label', scenario.capitalize())
+            roi_scenarios[scenario] = existing
+            roi_fixed += 1
+    if roi_scenarios:
+        fin_obj['roi_scenarios'] = roi_scenarios
+        data['financials'] = fin_obj
+        if roi_fixed:
+            patch_count += roi_fixed
+            log(f'financials: corrected {roi_fixed} roi_scenarios value(s) from authoritative roi_conservative/roi_moderate strings')
+
+    td_value, _td_value_num = parse_money_amount(fin_obj.get('d2c_digital_revenue'))
+    if td_value is not None and fin_obj.get('total_digital_revenue') != td_value:
+        log(f'financials: corrected total_digital_revenue "{fin_obj.get("total_digital_revenue")}" '
+            f'-> "{td_value}" (from authoritative d2c_digital_revenue)')
+        fin_obj['total_digital_revenue'] = td_value
+        data['financials'] = fin_obj
+        patch_count += 1
 
     # ── Patch: tech_stack (Phase 3 — ai_search_gap, data_acquisitions, architecture_notes) ─
     ts_json = lift_techstack_json(research_dir)
