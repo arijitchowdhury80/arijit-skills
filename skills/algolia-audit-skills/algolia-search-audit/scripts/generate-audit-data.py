@@ -611,14 +611,17 @@ def parse_score(md_text):
         score_val = float(m.group(2))
         severity = m.group(3).upper()
 
-        # Map to canonical key
-        canonical = SCORE_ALIASES.get(area_raw)
-        if not canonical:
-            # Try partial match
-            for alias, key in SCORE_ALIASES.items():
-                if alias in area_raw or area_raw in alias:
-                    canonical = key
-                    break
+        # Map to canonical key. Normalize punctuation (hyphens/slashes/ampersands -> spaces)
+        # and match the LONGEST alias first, so bare 'merchandising' cannot steal
+        # 'Recommendations / Merchandising' and hyphenated 'Content-Commerce UX' still
+        # matches the 'content commerce' alias.
+        area_norm = re.sub(r'[^a-z0-9]+', ' ', area_raw.lower()).strip()
+        canonical = None
+        for alias, key in sorted(SCORE_ALIASES.items(), key=lambda kv: len(kv[0]), reverse=True):
+            a = re.sub(r'[^a-z0-9]+', ' ', alias.lower()).strip()
+            if a == area_norm or a in area_norm or area_norm in a:
+                canonical = key
+                break
 
         if canonical and canonical not in breakdown:
             breakdown[canonical] = score_val
