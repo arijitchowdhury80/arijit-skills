@@ -5006,7 +5006,7 @@ function renderTopbar(D) {
     <span class="tb-vintage no-print">Audit: ${s(D.meta?.audit_date)}</span>
 
     ${(()=>{
-      const assets=(D.abx_sequence&&D.abx_sequence.assets_library)||[];
+      const assets=Array.isArray((D.abx_sequence&&D.abx_sequence.assets_library)) ? ((D.abx_sequence&&D.abx_sequence.assets_library)) : [];
       if(!assets.length) return '';
       const icoDoc=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
       const icoStar=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
@@ -5052,9 +5052,9 @@ document.addEventListener('click', function(e){
 
 function buildSidebar(D) {
 
-  const findings    = D.findings || [];
+  const findings    = Array.isArray(D.findings) ? (D.findings) : [];
 
-  const signals     = D.intelligence_signals || [];
+  const signals     = Array.isArray(D.intelligence_signals) ? (D.intelligence_signals) : [];
 
   const signalTypes = [...new Set(signals.map(s => s.type))];
 
@@ -5466,7 +5466,7 @@ function sectionOverviewGrid(D) {
   const score = D.score || {};
   const fin   = D.financials || {};
   const ae    = D.ae_fields  || {};
-  const findings = D.findings || [];
+  const findings = Array.isArray(D.findings) ? (D.findings) : [];
 
   const criticals = findings.filter(function(f){ return f.severity === 'critical' || f.severity === 'HIGH'; }).slice(0, 3);
   const overall   = parseFloat(score.overall) || 0;
@@ -5874,7 +5874,7 @@ function sectionExecSummary(D) {
 
     ${(() => {
 
-      const allFindings = D.findings || [];
+      const allFindings = Array.isArray(D.findings) ? (D.findings) : [];
 
       const criticalFindings = allFindings.filter(f => f.severity === 'critical' || f.severity === 'HIGH').slice(0, 3);
 
@@ -6210,7 +6210,7 @@ function sectionCompanySnapshot(D) {
 
   const cs   = D.company_snapshot || {};
 
-  const execs = D.executives || [];
+  const execs = Array.isArray(D.executives) ? (D.executives) : [];
 
   const ownership = cs.ticker ? `Public · ${cs.ticker}` : 'Private Company';
 
@@ -6470,7 +6470,7 @@ function sectionTraffic(D) {
 
   if (!t.monthly_visits && !(t.top_channels||[]).length) return '';
 
-  const channels = t.top_channels || [];
+  const channels = Array.isArray(t.top_channels) ? (t.top_channels) : [];
 
   const maxShare = Math.max(...channels.map(c => parseFloat(c.share) || 0), 1);
 
@@ -6479,7 +6479,7 @@ function sectionTraffic(D) {
   const age = audience.age || {};
 
   // Normalize gender — support both object {female, male} and demographics array [{age_group:"Female", pct:76}]
-  const demoArr = t.demographics || [];
+  const demoArr = Array.isArray(t.demographics) ? (t.demographics) : [];
   const femaleEntry = demoArr.find(d => /^female$/i.test(d.age_group));
   const maleEntry   = demoArr.find(d => /^male$/i.test(d.age_group));
   const genderFromDemo = (femaleEntry || maleEntry)
@@ -6846,7 +6846,7 @@ function sectionTraffic(D) {
     const branded    = parseFloat(os.branded_pct)     || 0;
     const nonBranded = parseFloat(os.non_branded_pct) || 0;
     const sharePct   = os.share_of_total_pct ? String(os.share_of_total_pct) + '%' : '';
-    const kws = os.top_non_branded_keywords || [];
+    const kws = Array.isArray(os.top_non_branded_keywords) ? (os.top_non_branded_keywords) : [];
     const maxKwShare = Math.max(...kws.map(k => parseFloat(k.share_pct)||0), 1);
 
     // Mini SVG donut for branded/NB split
@@ -6913,7 +6913,7 @@ function sectionTraffic(D) {
     const _accPre2 = `<div class="acc-panel"><button class="acc-header" onclick="(function(btn){const body=btn.nextElementSibling;const open=body.style.display!=='none';body.style.display=open?'none':'block';btn.querySelector('.acc-chevron').style.transform=open?'rotate(0deg)':'rotate(180deg)';})(this)" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--near-white);border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:inherit;text-align:left;"><span style="${T.bold14};color:var(--gray);">${_psLabel}</span><svg class="acc-chevron" width="16" height="16" viewBox="0 0 16 16" style="transition:transform 0.2s;flex-shrink:0;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><div class="acc-body" style="display:none;padding:14px;">`;
     return _accPre2 + (() => {
     const ps = t.paid_search;
-    const kws = ps.top_keywords || [];
+    const kws = Array.isArray(ps.top_keywords) ? (ps.top_keywords) : [];
     const maxKwShare = Math.max(...kws.map(k => parseFloat(k.share_pct)||0), 1);
     const sharePct = ps.share_of_total_pct ? String(ps.share_of_total_pct) : '';
     return `
@@ -6947,8 +6947,8 @@ function sectionTraffic(D) {
 
   ${/* PANEL: Referrals */ ''}
   ${(() => {
-    const refs = t.top_referrers || t.referrals?.top_referring_sites || [];
-    const inds = t.referring_industries || t.referrals?.top_referring_industries || [];
+    const refs = Array.isArray(t.top_referrers || t.referrals?.top_referring_sites) ? (t.top_referrers || t.referrals?.top_referring_sites) : [];
+    const inds = Array.isArray(t.referring_industries || t.referrals?.top_referring_industries) ? (t.referring_industries || t.referrals?.top_referring_industries) : [];
     const refShare = t.referrals?.share_of_total_pct;
     if (!refs.length && !inds.length) return '';
     const _refLabel = `Referrals${refShare ? ' — ' + refShare + '% of traffic' : ''}`;
@@ -7000,7 +7000,7 @@ function sectionTraffic(D) {
     const _cLabel = 'Competitor Traffic Scale';
     const _accPre4 = `<div class="acc-panel"><button class="acc-header" onclick="(function(btn){const body=btn.nextElementSibling;const open=body.style.display!=='none';body.style.display=open?'none':'block';btn.querySelector('.acc-chevron').style.transform=open?'rotate(0deg)':'rotate(180deg)';})(this)" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--near-white);border:none;cursor:pointer;font-family:inherit;text-align:left;"><span style="${T.bold14};color:var(--gray);">${_cLabel}</span><svg class="acc-chevron" width="16" height="16" viewBox="0 0 16 16" style="transition:transform 0.2s;flex-shrink:0;"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><div class="acc-body" style="display:none;padding:14px;">`;
     return _accPre4 + (() => {
-    const comps = t.competitor_traffic || [];
+    const comps = Array.isArray(t.competitor_traffic) ? (t.competitor_traffic) : [];
     const prospectDomain = (D.meta?.domain || '').toLowerCase().trim();
     const parseVisits = v => {
       const s2 = String(v||'').replace(/,/g,'');
@@ -7773,7 +7773,7 @@ function sectionScoreHeatmap(D) {
 
   // Build category→finding map for TOC click targets
 
-  const findings = D.findings || [];
+  const findings = Array.isArray(D.findings) ? (D.findings) : [];
 
   const catToFinding = {};
 
@@ -8407,7 +8407,7 @@ function sectionExecQuotes(D) {
 
 function sectionCompetitive(D) {
 
-  const comps = D.competitors || [];
+  const comps = Array.isArray(D.competitors) ? (D.competitors) : [];
 
   if (!comps.length) return '';
 
@@ -8695,17 +8695,17 @@ function sectionBattleCard(D) {
 
   const vendor    = D.company_snapshot?.current_search_vendor || 'Current Vendor';
 
-  const gaps      = D.gap_pairs || [];
+  const gaps      = Array.isArray(D.gap_pairs) ? (D.gap_pairs) : [];
 
   const hir       = D.hiring || {};
 
-  const objections = hir.objection_counters || [];
+  const objections = Array.isArray(hir.objection_counters) ? (hir.objection_counters) : [];
 
   // Use only critical findings for feature comparison
 
   const criticalFindings = (D.findings || []).filter(f => f.severity === 'critical');
 
-  const allFindings = D.findings || [];
+  const allFindings = Array.isArray(D.findings) ? (D.findings) : [];
 
   // Single strongest hook — first gap pair only
 
@@ -8867,7 +8867,7 @@ function sectionBattleCard(D) {
 
 function sectionSources(D) {
 
-  const bibs = D.bibliography || [];
+  const bibs = Array.isArray(D.bibliography) ? (D.bibliography) : [];
 
   return `<section id="section-sources" class="audit-section">
 
@@ -8973,7 +8973,7 @@ function sectionAppendixScoring(D) {
 
 function sectionAppendixQueries(D) {
 
-  const findings = D.findings || [];
+  const findings = Array.isArray(D.findings) ? (D.findings) : [];
 
   return `<section id="appendix-queries" class="audit-section">
 
@@ -9134,7 +9134,7 @@ function renderBerkshire(f) {
 function sectionROI(D) {
   const f = D.financials || {};
   const revBase = parseFloat(String(f.total_digital_revenue || '100000000').replace(/[^0-9.-]+/g,"")) || 100000000;
-  const components = f.roi_components || [];
+  const components = Array.isArray(f.roi_components) ? (f.roi_components) : [];
   const rs = f.roi_scenarios || {};
 
   const colMap = { blue:'var(--blue)', violet:'var(--violet)', teal:'var(--teal)', red:'var(--red)', amber:'var(--amber)', green:'var(--green)' };
@@ -9438,9 +9438,9 @@ function sectionRevenueAtRisk(D) {
 
 function sectionBusinessCaseHook(D) {
 
-  const gaps = D.gap_pairs || [];
+  const gaps = Array.isArray(D.gap_pairs) ? (D.gap_pairs) : [];
 
-  const findings = D.findings || [];
+  const findings = Array.isArray(D.findings) ? (D.findings) : [];
 
   if (!gaps.length) return '';
 
@@ -9590,9 +9590,9 @@ function sectionCompetitiveSynthesis(D) {
 
   const ga = D.golden_angle || {};
 
-  const tiers = cs.competitor_tiers || [];
+  const tiers = Array.isArray(cs.competitor_tiers) ? (cs.competitor_tiers) : [];
 
-  const matrix = cs.positioning_matrix || [];
+  const matrix = Array.isArray(cs.positioning_matrix) ? (cs.positioning_matrix) : [];
 
   if (!tiers.length && !matrix.length && !ga.talk_track && !((Array.isArray(ga.competitors_using_algolia)?ga.competitors_using_algolia:[])).length) return '';
 
@@ -9853,7 +9853,7 @@ function initCaseStudyCountUp() {
 function sectionCaseStudies(D) {
 
   // Prefer top-level case_studies[]; fall back to deduplicating from findings[]
-  const topLevel = D.case_studies || [];
+  const topLevel = Array.isArray(D.case_studies) ? (D.case_studies) : [];
 
   if (!topLevel.length) {
     // Build from findings — deduplicate by company, derive stat from result string
@@ -10114,7 +10114,7 @@ function sectionWhyNow(D) {
   const HIRING_TYPES = new Set(['hiring','hiring_signal']);
   const OTHER_TYPES  = new Set(['competitor','news_signal','sec_risk','industry-opp']);
 
-  const allSigs = D.intelligence_signals || [];
+  const allSigs = Array.isArray(D.intelligence_signals) ? (D.intelligence_signals) : [];
   const _uniqBy = arr => { const s=new Set(); return arr.filter(x => { const k=x.badge_label||x.title||x.type; if(s.has(k)) return false; s.add(k); return true; }); };
   const uniqueQuotes  = _uniqBy(allSigs.filter(s => QUOTE_TYPES.has(s.type)));
   const uniqueHiring  = _uniqBy(allSigs.filter(s => HIRING_TYPES.has(s.type)));
@@ -10217,7 +10217,7 @@ function sectionWhyNow(D) {
 
 function sectionStrategicAngles(D) {
 
-  const angles = D.strategic_angles || [];
+  const angles = Array.isArray(D.strategic_angles) ? (D.strategic_angles) : [];
 
   if (!angles.length) return '';
 
@@ -10285,13 +10285,13 @@ function sectionStrategicAngles(D) {
 
 function sectionSalesPlays(D) {
 
-  const angles = D.strategic_angles || [];
+  const angles = Array.isArray(D.strategic_angles) ? (D.strategic_angles) : [];
 
   if (!angles.length) return '';
 
   const hir = D.hiring || {};
 
-  const genericObjs = hir.objection_counters || [];
+  const genericObjs = Array.isArray(hir.objection_counters) ? (hir.objection_counters) : [];
 
   const accentColors = ['var(--blue)','var(--green)','var(--violet)','var(--teal)'];
 
@@ -10605,7 +10605,7 @@ function sectionPreCallBrief(D) {
 
   const icp = D.icp_mapping || {};
 
-  const anchors = icp.anchor_lines || [];
+  const anchors = Array.isArray(icp.anchor_lines) ? (icp.anchor_lines) : [];
 
   const fin = D.financials || {};
 
@@ -10689,7 +10689,7 @@ function sectionBuyingCommittee(D) {
 
   const committee = Array.isArray(hir.buying_committee) ? hir.buying_committee : [];
 
-  const phases = hir.engagement_phases || [];
+  const phases = Array.isArray(hir.engagement_phases) ? (hir.engagement_phases) : [];
 
   if (!committee.length) return '';
 
@@ -10832,9 +10832,9 @@ function sectionDiscoveryObjections(D) {
 
   const hir = D.hiring || {};
 
-  const ptops = icp.priority_to_product || [];
+  const ptops = Array.isArray(icp.priority_to_product) ? (icp.priority_to_product) : [];
 
-  const objections = hir.objection_counters || [];
+  const objections = Array.isArray(hir.objection_counters) ? (hir.objection_counters) : [];
 
   return `<section id="section-discovery" class="audit-section">
 
@@ -10890,15 +10890,15 @@ function sectionOutreachPlan(D) {
 
 
 
-  const contacts = abx.contacts || [];
+  const contacts = Array.isArray(abx.contacts) ? (abx.contacts) : [];
 
-  const touches  = abx.touches || [];
+  const touches  = Array.isArray(abx.touches) ? (abx.touches) : [];
 
-  const variants = abx.ab_variants || [];
+  const variants = Array.isArray(abx.ab_variants) ? (abx.ab_variants) : [];
 
-  const assets   = abx.assets_library || [];
+  const assets   = Array.isArray(abx.assets_library) ? (abx.assets_library) : [];
 
-  const triggers = abx.triggers || [];
+  const triggers = Array.isArray(abx.triggers) ? (abx.triggers) : [];
 
 
 
@@ -11228,7 +11228,7 @@ function sectionStatBar(D) {
   const sc = D.score || {};
   const fin = D.financials || {};
   const ga = D.golden_angle || {};
-  const signals = D.intelligence_signals || [];
+  const signals = Array.isArray(D.intelligence_signals) ? (D.intelligence_signals) : [];
   const criticals = (D.findings || []).filter(f => f.severity === 'critical');
 
   const navTo = (tab, anchor) =>
@@ -11376,8 +11376,8 @@ function sectionPartnerIntel(D) {
   const pi = D.partner_intel;
   if (!pi) return ''; // Graceful degradation — section hidden when no partner data
 
-  const techPartners = pi.tech_partners || [];
-  const siPartners = pi.si_partners || [];
+  const techPartners = Array.isArray(pi.tech_partners) ? (pi.tech_partners) : [];
+  const siPartners = Array.isArray(pi.si_partners) ? (pi.si_partners) : [];
   const action = pi.immediate_action || '';
   const coSell = pi.co_sell_recommendation || '';
 
@@ -11442,7 +11442,7 @@ function renderSections(D) {
 
   const content  = document.getElementById('content');
 
-  const findings = D.findings || [];
+  const findings = Array.isArray(D.findings) ? (D.findings) : [];
 
   const isSevCritical = s => s === 'critical' || s === 'HIGH';
   const isSevModerate = s => s === 'moderate' || s === 'MEDIUM';
@@ -11629,7 +11629,7 @@ function renderSections(D) {
   // ── Solution Map ────────────────────────────────────────────────────────
   function sectionSolutionMap(D) {
     const icp = D.icp_mapping || {};
-    const ptp = icp.priority_to_product || [];
+    const ptp = Array.isArray(icp.priority_to_product) ? (icp.priority_to_product) : [];
     const findings = (D.findings || []).filter(f => f.algolia_solution && f.algolia_case_study_company);
     if (!ptp.length && !findings.length) return '';
     return `<section id="section-solution-map" class="audit-section">
@@ -11856,7 +11856,7 @@ function initSectionStrips() {
 
   // Build a panel for each tab
   function buildPanel(tabId) {
-    const config = SECTION_STRIP_CONFIG[tabId] || [];
+    const config = Array.isArray(SECTION_STRIP_CONFIG[tabId]) ? (SECTION_STRIP_CONFIG[tabId]) : [];
     const panel = document.createElement('div');
     panel.className = 'section-sidebar__panel';
     panel.id = `sidebar-panel-${tabId}`;
