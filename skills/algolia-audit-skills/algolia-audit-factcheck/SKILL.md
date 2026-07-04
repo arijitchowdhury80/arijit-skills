@@ -56,24 +56,53 @@ If `research/09-browser-findings.md` exists with ≥ 50 lines, then `audit-data.
 
 ---
 
-## Mechanical dimensions — run the script FIRST (deterministic, not by hand)
+## Mechanical gate — run the script FIRST, it is BLOCKING (deterministic, not by hand)
 
-The mechanical dimensions (completeness, source-density, cross-file money consistency,
-no-fabrication placeholder/unsourced-impact grep, a money spot-check, and optional URL liveness)
-are implemented as a deterministic script. **Run it before doing any LLM verification** and read its
-JSON — do NOT re-derive these counts by hand (that is non-deterministic and the whole point of the
-script is reproducibility):
+Two deterministic check families run BEFORE any LLM verification. A `BLOCKED` verdict here
+BLOCKS the publish regardless of every LLM/judgment dimension. This exists because an LLM reading
+prose cannot reliably catch a blank field, an empty array, or a >100% percentage — deterministic
+code can. (A prior run returned a false 9.4/10 PROCEED on a report with blank sourced fields, an
+impossible "276.44% of traffic" channel, and a self-contradictory tech-stack block precisely
+because this script was not deployed to the skill-discovery path and factcheck degraded to
+LLM-only. Do not let that recur — run this first, and treat BLOCKED as final.)
+
+**A. STRUCTURAL gate — the 8 bug-class checks, run directly on audit-data.json:**
+1. financials — most-recent-year revenue/gross_profit/ebitda/operating_income/net_income are
+   non-null OR carry an explicit unavailable marker; never blank sitting next to a citation.
+2. tech_stack — search provider non-empty AND not a leaked markdown/label fragment; the summary
+   must not contradict populated vendor fields; a GREENFIELD/DISPLACEMENT scenario must be
+   consistent with algolia_detected / search_vendor.
+3. traffic — every "% of traffic / share" field is within [0, 100].
+4. hiring — >= 1 role OR an explicit "no ICP roles found, verified via <source>" note.
+5. partner_intel — Crossbeam prose must carry an availability marker / fallback note (not an
+   unexplained skip).
+6. screenshots — each finding.screenshot_file exists on disk, > 50KB, AND is embedded in the
+   rendered index.html.
+7. next_steps / ae_fields — no placeholder-only or blank action items.
+8. dash_citation — no bare "—" / empty sourced-value sitting next to a citation implying it was
+   sourced.
+
+**B. CORPUS gate:** completeness (required research files exist & sized), source-density,
+no-fabrication placeholder/unsourced-impact grep, optional URL liveness.
 
 ```bash
+# PRIMARY form — point it straight at audit-data.json (+ the rendered index.html so the
+# screenshot-embed sub-check can run). blocking_reasons feed straight into FACTCHECK_GATE.md.
+python3 ~/.claude/skills/algolia-audit-factcheck/scripts/factcheck_mechanical.py \
+  --audit-data "$ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/{companyslug}-audit-data.json" \
+  --rendered-html "$ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/index.html"
+# LEGACY / pipeline form (auto-resolves deliverables/*audit-data.json AND runs the corpus gate too):
 python3 ~/.claude/skills/algolia-audit-factcheck/scripts/factcheck_mechanical.py \
   --audit-dir "$ALGOLIA_AUDIT_DIR" --company "{CompanyName}" [--check-urls --url-sample 8]
-# exit 0 = no mechanical blocker; exit 2 = BLOCKED (placeholder / missing required file / dead URL)
-# JSON.mechanical_action is PROCEED|BLOCKED — feed BLOCKED reasons straight into FACTCHECK_GATE.md
+# exit 0 = PROCEED (no mechanical blocker); exit 2 = BLOCKED
+# JSON.mechanical_action is PROCEED|BLOCKED; JSON.blocking_reasons lists every failure verbatim.
+# Self-test the script itself with:  factcheck_mechanical.py --self-test
 ```
 
-The script covers ONLY mechanical truths. The **judgment** dimensions below (quote-vs-transcript
-authenticity, "does this claim match the evidence", competitive-claim accuracy) stay on the LLM and
-are NOT in the script. If the script says BLOCKED, the gate is BLOCKED regardless of LLM dimensions.
+The script covers ONLY mechanical/structural truths. The **judgment** dimensions below
+(quote-vs-transcript authenticity, "does this claim match the evidence", competitive-claim
+accuracy) stay on the LLM and are NOT in the script. If the script says BLOCKED, the gate is
+BLOCKED regardless of LLM dimensions — do not publish until every blocking_reason is resolved.
 
 ## 20 Verification Dimensions
 **Group A (Intelligence modules 1-11):** Company context, tech stack, traffic params, competitor claims, financial integrity, investor quote verification, hiring URL validity, social currency, news freshness, industry benchmarks, partner data
