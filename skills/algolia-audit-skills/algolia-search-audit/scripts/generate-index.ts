@@ -186,7 +186,7 @@ ${audits.length === 0 ? `
 <div class="empty">
   <h2>No audits yet</h2>
   <p>Run your first audit then regenerate the index.</p>
-  <code>deno run render-audit.ts {slug} site</code><br><br>
+  <code>deno run --allow-read --allow-write --allow-net --allow-run=python3 render-audit.ts {slug} site</code><br><br>
   <code>deno run generate-index.ts</code>
 </div>` : `
 <div class="grid">

@@ -71,7 +71,7 @@ JSON_FILE="$CWD/$SLUG-audit-data.json"
 
 if [ ! -f "$SPA_DIR/index.html" ]; then
   echo "✗ $SPA_DIR/index.html not found."
-  echo "  Run: deno run render-audit.ts $SLUG site"
+  echo "  Run: deno run --allow-read --allow-write --allow-net --allow-run=python3 render-audit.ts $SLUG site"
   exit 1
 fi
 if [ ! -f "$JSON_FILE" ]; then

@@ -2307,6 +2307,48 @@ def main():
         patch_count += 1
         log('company_snapshot: backfilled revenue_source/revenue_source_label from financials')
 
+    # ── Patch: icp_mapping.priority_to_product — backfill canonical pain/product keys ─
+    # Schema requires pain/product as canonical (non-optional) fields — index-template.html's
+    # sectionSolutionMap() already tolerates the LLM's actual field names (priority/
+    # their_priority/why, algolia_product/algolia_solution) via a JS fallback chain, but that
+    # JS-side shim never wrote the canonical keys back into audit-data.json itself, so the raw
+    # JSON stayed schema-invalid even though the rendered HTML looked correct. Root-cause fix:
+    # backfill the canonical keys into the data, not just the renderer.
+    icp = data.get('icp_mapping') or {}
+    ptp = icp.get('priority_to_product')
+    if isinstance(ptp, list) and ptp:
+        ptp_fixed = 0
+        for p in ptp:
+            if not isinstance(p, dict):
+                continue
+            if not p.get('pain'):
+                p['pain'] = p.get('priority') or p.get('their_priority') or p.get('why') or ''
+                ptp_fixed += 1
+            if not p.get('product'):
+                p['product'] = p.get('algolia_product') or p.get('algolia_solution') or ''
+                ptp_fixed += 1
+        if ptp_fixed:
+            icp['priority_to_product'] = ptp
+            data['icp_mapping'] = icp
+            patch_count += ptp_fixed
+            log(f'icp_mapping.priority_to_product: backfilled {ptp_fixed} canonical pain/product key(s)')
+
+    # ── Patch: abx_sequence.touches[].day — coerce to string per schema (ABXTouch.day: str) ─
+    # LLM/synthesis emits day as a plain int (1, 2, 4...); schema declares it a string.
+    abx = data.get('abx_sequence') or {}
+    touches = abx.get('touches')
+    if isinstance(touches, list) and touches:
+        day_fixed = 0
+        for t in touches:
+            if isinstance(t, dict) and 'day' in t and not isinstance(t['day'], str):
+                t['day'] = str(t['day'])
+                day_fixed += 1
+        if day_fixed:
+            abx['touches'] = touches
+            data['abx_sequence'] = abx
+            patch_count += day_fixed
+            log(f'abx_sequence.touches: coerced {day_fixed} day value(s) to string per schema')
+
     # ── Ensure meta.generated_by ─────────────────────────────────────────────
     meta = data.get('meta', {}) or {}
     meta['generated_by'] = 'generate-audit-data.py + LLM synthesis'
