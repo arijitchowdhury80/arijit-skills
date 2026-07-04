@@ -316,7 +316,7 @@ interface AuditData {
     pilot_takeaway?: string;
     pilot_scope_details?: string;
   };
-  next_steps?: Array<{ step_num: number; title: string; description: string }>;
+  next_steps?: Array<{ step_num?: number; title?: string; description?: string; action?: string; detail?: string; priority?: string; owner?: string }>;
   methodology?: string;
   bibliography?: Array<{ n: number; label: string; url: string; accessed?: string }>;
 
@@ -646,12 +646,12 @@ function buildRevenue3yRows(data: AuditData): string {
 
 function buildNextSteps(data: AuditData): string {
   if (!data.next_steps || data.next_steps.length === 0) return "";
-  return data.next_steps.map(ns => `
+  return data.next_steps.map((ns, i) => `
     <div class="next-step">
-      <div class="next-step__num">${ns.step_num}</div>
+      <div class="next-step__num">${ns.step_num ?? i + 1}</div>
       <div class="next-step__body">
-        <div class="next-step__title">${esc(ns.title)}</div>
-        <div class="next-step__desc">${esc(ns.description)}</div>
+        <div class="next-step__title">${esc(ns.title || ns.action || "")}</div>
+        <div class="next-step__desc">${esc(ns.description || ns.detail || "")}</div>
       </div>
     </div>`).join("\n");
 }

@@ -800,9 +800,34 @@
               },
               "revenue": {
                 "type": "string"
+              },
+              "gross_profit": {
+                "type": ["string", "null"],
+                "description": "Formatted e.g. '$6.284B'. Backfilled by generate-audit-data.py's enrich_revenue_3y() from 08-financial-profile.json's revenue_trend, matched by revenue dollar value (not year label)."
+              },
+              "ebitda": {
+                "type": ["string", "null"],
+                "description": "Formatted e.g. '$2.707B'. Same enrich_revenue_3y() backfill as gross_profit."
+              },
+              "operating_income": {
+                "type": ["string", "null"],
+                "description": "Formatted e.g. '$2.211B'. Same enrich_revenue_3y() backfill as gross_profit."
+              },
+              "net_income": {
+                "type": ["string", "null"],
+                "description": "Formatted e.g. '$1.579B'. Same enrich_revenue_3y() backfill as gross_profit."
+              },
+              "net_margin": {
+                "type": ["string", "null"],
+                "description": "Formatted percentage e.g. '14.2%'. Computed as net_income/total_revenue by enrich_revenue_3y() when not already present."
               }
             }
-          }
+          },
+          "description": "Every entry SHOULD carry all 5 metrics (gross_profit/ebitda/operating_income/net_income/net_margin) in addition to revenue — index-template.html's per-year metric table (mRow()/pvB() at ~line 7163-7173) reads them directly off each entry. A silently-missing metric here renders as '—' for every year, not just a gap for one year."
+        },
+        "data_vintage": {
+          "type": ["string", "null"],
+          "description": "Collector fetch date (e.g. '2026-07-01'), lifted from 08-financial-profile.json meta.collection_date. Populates the 'Data as of' footer via the D.meta?.data_vintage?.yahoo_finance || f.data_vintage fallback chain."
         },
         "total_digital_revenue": {
           "type": [
@@ -1243,6 +1268,45 @@
               "string",
               "null"
             ]
+          }
+        }
+      }
+    },
+    "hiring": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Hiring signals \u2014 ICP-relevant open roles. total_open_roles/icp_roles_count/top_signals are aggregate scalars from parse_hiring_extended(); roles[] is the full per-role array lifted by lift_hiring_roles_json() from 09d-hiring-classified.json (tiers 1-3 only, tier 4 excluded). Added because sectionHiring() in index-template.html previously had no per-role data source and fell back to filtering intelligence_signals, which surfaces at most ~1 hiring entry regardless of company size.",
+      "properties": {
+        "total_open_roles": {
+          "type": ["integer", "null"]
+        },
+        "icp_roles_count": {
+          "type": ["integer", "null"]
+        },
+        "summary": {
+          "type": ["string", "null"]
+        },
+        "top_signals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "null_signal_note": {
+          "type": ["string", "null"]
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title":     { "type": ["string", "null"] },
+              "tier":      { "type": ["integer", "null"], "description": "1=Economic Buyer, 2=Technical Buyer, 3=Champion, 4=Context (excluded from this array)" },
+              "tier_name": { "type": ["string", "null"] },
+              "icp_score": { "type": ["number", "null"] },
+              "url":       { "type": ["string", "null"] },
+              "location":  { "type": ["string", "null"] }
+            }
           }
         }
       }
