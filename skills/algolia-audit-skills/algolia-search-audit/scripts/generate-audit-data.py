@@ -30,8 +30,9 @@ WHAT IT PATCHES (deterministic extraction, always correct):
   - score.breakdown_labels      → {canonical_key: display_name}
   - score.overall               → recalculated from weighted formula
   - score.verdict               → derived from overall score
-  - score.critical_count        → counted from severity
-  - score.moderate_count        → counted from severity
+  - score.critical_count        → counted from breakdown_severity (10-scoring-matrix.md HIGH)
+  - score.moderate_count        → counted from breakdown_severity (10-scoring-matrix.md MEDIUM)
+  - score.low_count             → counted from breakdown_severity (10-scoring-matrix.md LOW)
   - competitors[]               → [{name,domain,search_vendor,traffic,uses_algolia}]
   - intelligence_signals[]      → appends media_quote entries from 11-investor-intelligence.json
   - intelligence_signals[].urgency_score  → deterministic score by signal type + keyword boost
@@ -45,6 +46,10 @@ WHAT IT PATCHES (deterministic extraction, always correct):
   - financials.margins          → gross/EBITDA/operating/net margins from 08-financial-profile.json
   - financials.balance_sheet    → assets/debt/cash from 08-financial-profile.json
   - financials.digital_revenue  → latest FY estimate from 08-financial-profile.json
+  - financials.roi_scenarios.{conservative,moderate}.value/value_num → re-derived
+    from authoritative roi_conservative/roi_moderate strings (was: LLM hand-typed
+    value could drop the leading digit, e.g. "8.4M" vs authoritative "$18.4M/year")
+  - financials.total_digital_revenue → re-derived from authoritative d2c_digital_revenue
   - tech_stack.ai_search_gap    → NikeAI-type signal from 02-tech-stack.json
   - tech_stack.data_acquisitions → company acquisitions from 02-tech-stack.json
   - tech_stack.architecture_notes → frontend+cloud context from 02-tech-stack.json
@@ -136,6 +141,37 @@ def log(msg):
     print(f'  [generate-audit-data] {msg}', flush=True)
 
 
+def parse_money_amount(raw):
+    """Extract (display_value, numeric_value) from an authoritative money string,
+    e.g. '$18.4M/year' -> ('18.4M', 18400000), '$182M (jbl.com, 2024)' -> ('182M', 182000000).
+
+    Root-cause fix for the leading-digit-drop bug (JBL 2026-07-01): a hand-written/
+    LLM-written roi_scenarios.*.value ("8.4M") silently lost its first digit relative
+    to the authoritative source string ("$18.4M/year"). Never trust the hand-written
+    value — always regex-capture the FULL number (all leading digits) + unit from the
+    source-of-truth string. This is intentionally NOT a strip-then-parseFloat: the
+    capture group anchors on the digit/decimal run before the unit letter, so a
+    leading "$" or trailing "/year" / "(jbl.com, 2024)" never eats into the number.
+
+    Returns (None, None) if `raw` isn't a string or no $-amount pattern is found.
+    """
+    if not isinstance(raw, str):
+        return None, None
+    m = re.search(r'\$?\s*([0-9][0-9,]*\.?[0-9]*)\s*([BMK])\b', raw, re.IGNORECASE)
+    if not m:
+        return None, None
+    num_str = m.group(1).replace(',', '')
+    unit = m.group(2).upper()
+    try:
+        num = float(num_str)
+    except ValueError:
+        return None, None
+    mult = {'B': 1e9, 'M': 1e6, 'K': 1e3}[unit]
+    value_num = int(round(num * mult))
+    value = f'{num_str}{unit}'
+    return value, value_num
+
+
 # ── TECH STACK parser ─────────────────────────────────────────────────────────
 
 def parse_tech_stack(md_text):
@@ -143,14 +179,42 @@ def parse_tech_stack(md_text):
     result = {}
 
     # 1. full_list — bullet list of technology names (must be string[])
+    # Scope extraction to sections that actually enumerate technologies (the
+    # "Technology Stack" detection table and the "Adjacent stack" sentence),
+    # NOT the whole document — a global bold-bullet regex over the entire .md
+    # also matches field LABELS from unrelated sections (Search Vendor status
+    # bullets, Oracle Method, Limitations, Sources Failed), and since those
+    # labels are the bolded token while the actual value sits in plain text
+    # after the colon, a global scrape produces label-only/blank chips
+    # ("Status:", "Detected Vendor:", "Deal type:", etc.) instead of real
+    # technology names.
     techs = []
-    for m in re.finditer(r'[-*]\s+\*\*([^*]+)\*\*', md_text):
-        name = m.group(1).strip()
-        # Strip trailing parenthetical descriptions
-        name = re.sub(r'\s*\(.*', '', name).strip()
-        # Skip section headers and meta-text
-        if len(name) > 1 and not name.lower().startswith(('note', 'source', 'step', 'api')):
-            if name not in techs:
+    tech_section_match = re.search(
+        r'##\s+Technology Stack.*?\n(.*?)(?=\n##|\Z)', md_text, re.IGNORECASE | re.DOTALL
+    )
+    tech_section = tech_section_match.group(1) if tech_section_match else ''
+    # Detection table rows: | Category | Vendor |  — only keep rows with a real
+    # detected value (not "Unable to detect" / WAF-blocked placeholders).
+    for row in re.finditer(r'\|\s*([^|\n]+?)\s*\|\s*([^|\n]+?)\s*\|', tech_section):
+        cat, val = row.group(1).strip(), row.group(2).strip()
+        if cat.lower() in ('category', 'detection') or not val:
+            continue
+        # Skip markdown table separator rows (e.g. "|----------|-----------|") — a row
+        # is a separator if either column is made up entirely of dashes/colons/spaces.
+        if re.fullmatch(r'[-:\s]+', cat) or re.fullmatch(r'[-:\s]+', val):
+            continue
+        if re.search(r'unable to detect|not fingerprinted|n/a|—|^-$', val, re.IGNORECASE):
+            continue
+        if val not in techs:
+            techs.append(val)
+    # "Adjacent stack (observed live): **Contentful** CMS (...), **Quantum
+    # Metric** session replay..." — bolded technology names named as actually
+    # observed, distinct from field-label bullets elsewhere in the doc.
+    adjacent_match = re.search(r'Adjacent stack \(observed live\):\s*(.+)', md_text, re.IGNORECASE)
+    if adjacent_match:
+        for m in re.finditer(r'\*\*([^*]+)\*\*', adjacent_match.group(1)):
+            name = re.sub(r'\s*\(.*', '', m.group(1)).strip()
+            if len(name) > 1 and name not in techs:
                 techs.append(name)
 
     if techs:
@@ -180,17 +244,48 @@ def parse_tech_stack(md_text):
                 elif 'tag' in cat and vendor:
                     result['tag_manager'] = vendor
 
-    # 3. primary_platform — "Specific platform: X" or tech summary row or fallback
-    plat_match = re.search(r'(?:primary platform|e[- ]?commerce platform)[:\s]+([^\n\[]+)', md_text, re.IGNORECASE)
-    if plat_match:
-        result['primary_platform'] = plat_match.group(1).strip().rstrip('.')
+    # 3. primary_platform — "Specific platform: X" or tech summary row or fallback.
+    # Excludes "|" from the capture so this can't match a markdown TABLE ROW like
+    # "| Ecommerce Platform | Unable to detect (WAF blocked) |" (the unscoped original
+    # pattern treated "Ecommerce Platform" the table-header cell as a match trigger and
+    # captured the rest of the row, pipes and all, as the platform name).
+    plat_match = re.search(r'(?:primary platform|e[- ]?commerce platform)[:\s]+([^\n\[|]+)', md_text, re.IGNORECASE)
+    candidate = plat_match.group(1).strip().rstrip('.').strip() if plat_match else None
+    if candidate and re.search(r'unable to detect|not fingerprinted|n/a', candidate, re.IGNORECASE):
+        candidate = None
+    if candidate:
+        result['primary_platform'] = candidate
     elif 'ecommerce_platform' in result:
         result['primary_platform'] = result['ecommerce_platform']
+    else:
+        # validate-json-schema.py's `if not ts.get('primary_platform'): fail(...)` treats
+        # this field as REQUIRED-and-truthy, so we can't leave it None/unset when
+        # detection genuinely failed (that would just fail the publish gate instead of
+        # rendering a garbage value). Emit an honest, clean placeholder string instead
+        # of the raw markdown table row an earlier, unscoped version of this regex used
+        # to capture verbatim (e.g. "| Unable to detect (WAF blocked) |", pipes and all).
+        result['primary_platform'] = 'Unable to detect (WAF-blocked; browser-based detection required)'
 
-    # 4. search_provider — explicit line
-    sp_match = re.search(r'(?:site search|search provider|search vendor)[:\s]+([^\n\[\.]+)', md_text, re.IGNORECASE)
+    # 4. search_provider — explicit line. Must require the label AND the value on the
+    # SAME line, anchored to the start of a bullet — an unanchored pattern (previous
+    # version) can match the bare "## Search Vendor" section HEADING itself, then
+    # greedily capture the entire next line (the "- **Status:** ACTIVE..." bullet, not
+    # the "**Detected Vendor:**" bullet one line further down, since that line has no
+    # period to stop the capture).
+    # NOTE: the source markdown wraps the colon INSIDE the bold span
+    # (e.g. "- **Detected Vendor:** value"), not after it — the pattern below
+    # tolerates the colon on either side of the closing "**" so it matches both
+    # "**Detected Vendor:**" and "**Detected Vendor**:" forms.
+    sp_match = re.search(
+        r'^\s*-\s*\*\*(?:Detected Vendor|Search Vendor|Site Search):?\*\*:?\s*(.+)$',
+        md_text, re.IGNORECASE | re.MULTILINE
+    )
     if sp_match and 'search_provider' not in result:
-        result['search_provider'] = sp_match.group(1).strip()
+        vendor = sp_match.group(1).strip()
+        # Strip a leading bold wrapper (e.g. "**Proprietary / in-house** (Oracle...")
+        # down to the plain vendor name, keeping any trailing parenthetical as-is.
+        vendor = re.sub(r'^\*\*([^*]+)\*\*', r'\1', vendor).strip()
+        result['search_provider'] = vendor
 
     # 5. algolia_detected
     result['algolia_detected'] = bool(re.search(r'algolia detected.*?yes', md_text, re.IGNORECASE))
@@ -241,10 +336,37 @@ def parse_traffic(md_text):
             cols = [c.strip() for c in row.split('|') if c.strip()]
             if len(cols) >= 2:
                 ch_name = re.sub(r'\*+', '', cols[0]).strip()
+                # Normalize to the canonical bucket name the render template's DONUT_KEYS
+                # strict-equality check expects (['Direct','Organic Search','Paid Search',
+                # 'Social']) — upstream markdown headings vary in wording (e.g. "Google
+                # (Organic Search)") and a verbatim label silently falls through to "Other",
+                # zeroing out the "Via Search" KPI even when a genuine share was captured.
+                if re.search(r'organic search', ch_name, re.IGNORECASE):
+                    ch_name = 'Organic Search'
+                elif re.search(r'paid search', ch_name, re.IGNORECASE):
+                    ch_name = 'Paid Search'
+                elif re.search(r'\bdirect\b', ch_name, re.IGNORECASE):
+                    ch_name = 'Direct'
+                elif re.search(r'\bsocial\b', ch_name, re.IGNORECASE):
+                    ch_name = 'Social'
                 share_raw = cols[1].strip()
-                share_match = re.search(r'([\d.]+%)', share_raw)
-                if share_match and ch_name and ch_name.lower() not in ('channel', 'source', 'total'):
-                    channels.append({'channel': ch_name, 'share': share_match.group(1)})
+                # A "share" must be a 0-100% share-of-traffic value, NOT a period-over-period
+                # change metric. Some upstream tables put a MoM/YoY growth rate in the same
+                # column as legitimate shares (e.g. "+276.44% MoM increase" next to "41.23%")
+                # — reject those instead of silently accepting the first %-shaped number,
+                # which previously produced impossible values like a 276% traffic share.
+                is_change_metric = bool(re.search(
+                    r'\bMoM\b|\bYoY\b|\bincrease\b|\bdecrease\b|\bchange\b|\bgrowth\b',
+                    share_raw, re.IGNORECASE
+                ))
+                share_match = re.search(r'([\d.]+)%', share_raw)
+                if (share_match and not is_change_metric and float(share_match.group(1)) <= 100
+                        and ch_name and ch_name.lower() not in ('channel', 'source', 'total')):
+                    channels.append({'channel': ch_name, 'share': share_match.group(1) + '%'})
+                elif share_match and ch_name and ch_name.lower() not in ('channel', 'source', 'total'):
+                    log(f'traffic.top_channels: skipped {ch_name!r} — {share_raw!r} is a period-change '
+                        f'metric or out-of-range (>100%), not a genuine traffic share; leaving unset '
+                        f'(real upstream gap, not fabricated)')
 
     if channels:
         result['top_channels'] = channels
@@ -397,10 +519,27 @@ def parse_traffic(md_text):
         log('traffic.top_referrers: could not parse referrer table')
 
     # 11. paid_search — paid channel share + top keywords + competitor bidding
+    paid_mom_change = None
     paid_share_match = re.search(r'Paid Search.*?(\d+\.?\d*)%\s*of.*?traffic', md_text, re.IGNORECASE)
     if not paid_share_match:
-        # Try channel table row: | Paid Search | 10.05% |
-        paid_share_match = re.search(r'\|\s*Paid(?:\s+Search)?\s*\|\s*([\d.]+%)', md_text, re.IGNORECASE)
+        # Try channel table row: | Paid Search | 10.05% |  — but guard against conflating a
+        # MoM/YoY *change* metric (e.g. "+276.44% MoM increase") with a genuine share value.
+        # A share must be 0-100% with no change-language qualifier in the same cell.
+        paid_candidate = re.search(r'\|\s*Paid(?:\s+Search)?\s*\|\s*([^\|]+)\|', md_text, re.IGNORECASE)
+        if paid_candidate:
+            cell = paid_candidate.group(1).strip()
+            is_change_metric = bool(re.search(
+                r'\bMoM\b|\bYoY\b|\bincrease\b|\bdecrease\b|\bchange\b|\bgrowth\b',
+                cell, re.IGNORECASE
+            ))
+            pct_m = re.search(r'([\d.]+)%', cell)
+            if pct_m and not is_change_metric and float(pct_m.group(1)) <= 100:
+                paid_share_match = pct_m
+            elif pct_m:
+                paid_mom_change = pct_m.group(1) + '%'
+                log(f'traffic.paid_search: rejected share_of_total_pct candidate {cell!r} — '
+                    f'MoM/YoY change metric or >100%, not a genuine share; leaving '
+                    f'share_of_total_pct unset (real upstream gap, not fabricated)')
     paid_keywords = []
     paid_kw_section = re.search(
         r'Top [Pp]aid (?:Non-[Bb]randed )?[Ss]earch [Tt]erms?\s*\n.*?\|.*?Keyword.*?\|.*?\n.*?\|[-| ]+\|\n((?:\|[^\n]+\n?)+)',
@@ -426,10 +565,12 @@ def parse_traffic(md_text):
         if re.search(known_competitors_pattern, kw_obj.get('keyword',''), re.IGNORECASE):
             competitor_bid = kw_obj['keyword']
             break
-    if paid_share_match or paid_keywords:
+    if paid_share_match or paid_keywords or paid_mom_change:
         paid_obj = {}
         if paid_share_match:
             paid_obj['share_of_total_pct'] = paid_share_match.group(1).strip().rstrip('%') + '%' if '%' not in paid_share_match.group(1) else paid_share_match.group(1).strip()
+        if paid_mom_change:
+            paid_obj['mom_change_pct'] = paid_mom_change
         if paid_keywords:
             paid_obj['top_keywords'] = paid_keywords
         if competitor_bid:
@@ -575,14 +716,17 @@ def parse_score(md_text):
         score_val = float(m.group(2))
         severity = m.group(3).upper()
 
-        # Map to canonical key
-        canonical = SCORE_ALIASES.get(area_raw)
-        if not canonical:
-            # Try partial match
-            for alias, key in SCORE_ALIASES.items():
-                if alias in area_raw or area_raw in alias:
-                    canonical = key
-                    break
+        # Map to canonical key. Normalize punctuation (hyphens/slashes/ampersands -> spaces)
+        # and match the LONGEST alias first, so bare 'merchandising' cannot steal
+        # 'Recommendations / Merchandising' and hyphenated 'Content-Commerce UX' still
+        # matches the 'content commerce' alias.
+        area_norm = re.sub(r'[^a-z0-9]+', ' ', area_raw.lower()).strip()
+        canonical = None
+        for alias, key in sorted(SCORE_ALIASES.items(), key=lambda kv: len(kv[0]), reverse=True):
+            a = re.sub(r'[^a-z0-9]+', ' ', alias.lower()).strip()
+            if a == area_norm or a in area_norm or area_norm in a:
+                canonical = key
+                break
 
         if canonical and canonical not in breakdown:
             breakdown[canonical] = score_val
@@ -614,8 +758,18 @@ def parse_score(md_text):
     else:
         verdict, verdict_class = 'Critical Gaps', 'critical'
 
-    critical_count = sum(1 for k in breakdown_severity if breakdown_severity[k] == 'HIGH' and breakdown.get(k, 10) < 5)
-    moderate_count = sum(1 for k in breakdown_severity if breakdown_severity[k] in ('MEDIUM', 'HIGH') and breakdown.get(k, 10) < 7)
+    # Deterministic severity counts — root-cause fix (JBL 2026-07-01, lululemon earlier):
+    # the old formula gated HIGH/MEDIUM membership on an ARBITRARY score cutoff
+    # (severity=='HIGH' AND score<5; severity in ('MEDIUM','HIGH') AND score<7),
+    # which (a) double-counted HIGH areas into moderate_count whenever their score
+    # was also <7, and (b) silently dropped any HIGH/MEDIUM area whose score sat on
+    # the wrong side of the cutoff — producing wrong totals (JBL: critical 4 not 5,
+    # moderate 7 not 4) and never emitting low_count at all. breakdown_severity IS
+    # the 10-scoring-matrix.md HIGH/MEDIUM/LOW classification (parsed above) — count
+    # it directly, no secondary score-based filter.
+    critical_count = sum(1 for v in breakdown_severity.values() if v == 'HIGH')
+    moderate_count = sum(1 for v in breakdown_severity.values() if v == 'MEDIUM')
+    low_count = sum(1 for v in breakdown_severity.values() if v == 'LOW')
 
     return {
         'overall': overall,
@@ -626,6 +780,7 @@ def parse_score(md_text):
         'breakdown_labels': breakdown_labels,
         'critical_count': critical_count,
         'moderate_count': moderate_count,
+        'low_count': low_count,
         'formula_shown': 'sum(score×weight)/sum(weights)',
         'source': '10-scoring-matrix.md',
     }
@@ -945,6 +1100,15 @@ def lift_traffic_json(research_dir):
             result['referring_industries'] = industries
         log(f'traffic (JSON lift): referrals — {len(referrals.get("top_referring_sites", []))} sites, {len(industries)} industries')
 
+    # data_vintage — so the render template's "Data as of {{data_vintage}}" footer is no
+    # longer blank. Prefer meta.period (the actual data window the figures cover); fall
+    # back to meta.collection_date (when the fetch/scrape ran) if period is absent.
+    meta = tj.get('meta', {})
+    vintage = meta.get('period') or meta.get('collection_date')
+    if vintage:
+        result['data_vintage'] = vintage
+        log(f'traffic (JSON lift): data_vintage={vintage}')
+
     return result
 
 
@@ -1033,7 +1197,81 @@ def lift_financial_json(research_dir):
             }
             log(f'financials (JSON lift): digital_revenue — {latest_key}, {result["digital_revenue"].get("estimated_amount","?")} ({result["digital_revenue"].get("pct_of_total","?")}% of total)')
 
+    # revenue_trend — year-keyed {total_revenue, gross_profit, ebit, ebitda, net_income,
+    # operating_income} per fiscal year. Stashed under a private key here; enrich_revenue_3y()
+    # (called at merge time in main()) uses it to backfill financials.revenue_3y, which the
+    # LLM synthesis pass emits as {year, revenue} ONLY — dropping every other per-year metric
+    # even though the raw collector data has them. See docs/workspace fix-and-learn note:
+    # producer/renderer field-shape mismatch, not a data-fetch gap.
+    revenue_trend = fin.get('revenue_trend')
+    if revenue_trend and isinstance(revenue_trend, dict):
+        result['_revenue_trend'] = revenue_trend
+        log(f'financials (JSON lift): revenue_trend — {len(revenue_trend)} fiscal year(s) available to enrich revenue_3y')
+
+    # data_vintage — collector's fetch timestamp, so the render template's
+    # "Data as of {{data_vintage}}" footer is no longer blank.
+    collection_date = (fj.get('meta') or {}).get('collection_date')
+    if collection_date:
+        result['data_vintage'] = collection_date
+        log(f'financials (JSON lift): data_vintage={collection_date}')
+
     return result
+
+
+# ── PHASE 2b: REVENUE_3Y ENRICHMENT (backfill gross_profit/ebitda/operating_income/net_income) ──
+
+def enrich_revenue_3y(revenue_3y, revenue_trend):
+    """Backfill gross_profit/ebitda/operating_income/net_income/net_margin onto each
+    financials.revenue_3y entry by MATCHING ON THE DOLLAR VALUE of its 'revenue' field
+    against 08-financial-profile.json's revenue_trend (a dict keyed fy2025/fy2024/fy2023...).
+
+    Why match by value and not by year key: the LLM synthesis pass labels revenue_3y
+    entries as e.g. "FY2026 (TTM)"/"FY2025"/"FY2024", but revenue_trend's fy2025/fy2024/fy2023
+    keys follow the company's SEC fiscal-year numbering (e.g. Lululemon's FY2025 10-K covers
+    the period the synthesis pass calls "FY2026 (TTM)"). Joining on the label string produces
+    a silent off-by-one; joining on the actual revenue dollar amount (which both sides agree on
+    to 3 decimal places) is unambiguous.
+    """
+    if not revenue_3y or not revenue_trend:
+        return revenue_3y, 0
+
+    def fmt_b(n):
+        if n is None:
+            return None
+        return f'${n / 1e9:.3f}B'
+
+    def parse_rev_b(s):
+        if not s:
+            return None
+        m = re.search(r'([\d.]+)\s*B', str(s), re.IGNORECASE)
+        return float(m.group(1)) if m else None
+
+    trend_entries = [te for te in revenue_trend.values() if isinstance(te, dict) and te.get('total_revenue')]
+    enriched = 0
+    for entry in revenue_3y:
+        target = parse_rev_b(entry.get('revenue'))
+        if target is None:
+            continue
+        best, best_diff = None, None
+        for te in trend_entries:
+            diff = abs((te['total_revenue'] / 1e9) - target)
+            if best_diff is None or diff < best_diff:
+                best, best_diff = te, diff
+        # Accept only a close match (within 1% of the target, floor 0.02B) — a loose match
+        # would silently attach the wrong fiscal year's figures to an entry.
+        if best is not None and best_diff is not None and best_diff <= max(0.02, target * 0.01):
+            if entry.get('gross_profit') is None:
+                entry['gross_profit'] = fmt_b(best.get('gross_profit'))
+            if entry.get('ebitda') is None:
+                entry['ebitda'] = fmt_b(best.get('ebitda'))
+            if entry.get('operating_income') is None:
+                entry['operating_income'] = fmt_b(best.get('operating_income') or best.get('ebit'))
+            if entry.get('net_income') is None:
+                entry['net_income'] = fmt_b(best.get('net_income'))
+            if entry.get('net_margin') is None and best.get('net_income') and best.get('total_revenue'):
+                entry['net_margin'] = f"{(best['net_income'] / best['total_revenue']) * 100:.1f}%"
+            enriched += 1
+    return revenue_3y, enriched
 
 
 # ── PHASE 3: TECH STACK JSON LIFTER ──────────────────────────────────────────
@@ -1156,6 +1394,67 @@ def parse_hiring_extended(md_text):
         )
         log('hiring (extended): null_signal_note set — 0 ICP roles is itself a signal')
 
+    return result
+
+
+def lift_hiring_roles_json(research_dir):
+    """Lift the full classified per-role array from 09d-hiring-classified.json.
+
+    parse_hiring_extended() (above) only ever lifted aggregate scalars
+    (total_open_roles, icp_roles_count, top_signals text) — the actual per-role
+    list (title, tier, tier_name, icp_score, url, location) that already exists
+    upstream in 09d-hiring-classified.json was never carried forward, and
+    audit-data.json had nowhere to put it. sectionHiring() in index-template.html
+    currently falls back to filtering intelligence_signals for hiring-tagged
+    entries, which only ever surfaces ~1 signal regardless of company size.
+    Lifting hiring.roles[] here gives the render layer a real array to switch to.
+    """
+    path = os.path.join(research_dir, '09d-hiring-classified.json')
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding='utf-8') as f:
+            hj = json.load(f)
+    except Exception:
+        return {}
+
+    raw_roles = hj.get('roles') or []
+    if not raw_roles:
+        return {}
+
+    # Only ICP-relevant tiers (1=Economic Buyer, 2=Technical Buyer, 3=Champion) —
+    # tier 4 ("Context") roles are excluded, matching how icp_roles_count is scoped.
+    roles = []
+    for r in raw_roles:
+        if r.get('tier') in (1, 2, 3):
+            roles.append({
+                'title':     r.get('title'),
+                'tier':      r.get('tier'),
+                'tier_name': r.get('tier_name'),
+                'icp_score': r.get('icp_score'),
+                'url':       r.get('url'),
+                'location':  r.get('location'),
+            })
+    roles.sort(key=lambda r: r.get('icp_score') or 0, reverse=True)
+
+    result = {}
+    if roles:
+        result['roles'] = roles
+        log(f'hiring (roles lift): {len(roles)} ICP-tier roles lifted from 09d-hiring-classified.json')
+
+    # total_open_roles / icp_roles_count — ALWAYS derive from this classified JSON
+    # (source of truth) rather than trusting parse_hiring_extended()'s markdown-regex
+    # extraction, which has been observed matching the WRONG number entirely — e.g.
+    # its "N open roles" regex can match a Tier-2 section heading ("Tier 2: Technical
+    # Buyer Vacancies (5 open roles)") instead of the document's actual
+    # "Total roles in analysis: 13" line, silently producing total_open_roles=5 while
+    # icp_roles_count=9 and roles[] has 9 entries — three numbers that all disagree.
+    # This override forces all three to agree, since they're computed from the same
+    # array. It runs AFTER parse_hiring_extended() is merged (see main()), so it wins.
+    result['total_open_roles'] = len(raw_roles)
+    result['icp_roles_count'] = len(roles)
+    log(f'hiring (roles lift): reconciled total_open_roles={len(raw_roles)}, '
+        f'icp_roles_count={len(roles)} (overriding any markdown-regex-derived counts)')
     return result
 
 
@@ -1671,7 +1970,9 @@ def main():
             # Partial — only patch what we have
             existing_score = data.get('score', {}) or {}
             for field, val in score_parsed.items():
-                if val:
+                # `is not None` (not truthy) so a legitimate 0 for critical_count/
+                # moderate_count/low_count still gets patched in on a partial parse.
+                if val is not None:
                     existing_score[field] = val
             data['score'] = existing_score
             log(f"score: partial patch — {len(score_parsed.get('breakdown', {}))} areas found")
@@ -1706,6 +2007,64 @@ def main():
             patch_count += added
             log(f'financials (Phase 2 JSON lift): added {added} fields')
 
+    # ── Enrich: financials.revenue_3y (Phase 2b — backfill gross_profit/ebitda/       ─
+    # ── operating_income/net_income/net_margin per year, matched by revenue value) ─
+    fin_obj = data.get('financials') or {}
+    revenue_trend_for_enrich = fin_obj.pop('_revenue_trend', None)
+    if revenue_trend_for_enrich and fin_obj.get('revenue_3y'):
+        fin_obj['revenue_3y'], n_enriched = enrich_revenue_3y(fin_obj['revenue_3y'], revenue_trend_for_enrich)
+        data['financials'] = fin_obj
+        if n_enriched:
+            patch_count += n_enriched
+            log(f'financials: enriched {n_enriched} revenue_3y year(s) with gross_profit/ebitda/operating_income/net_income/net_margin')
+    elif '_revenue_trend' in (data.get('financials') or {}):
+        data['financials'].pop('_revenue_trend', None)  # never leak this internal key into the output
+
+    # ── Patch: financials.roi_scenarios.{conservative,moderate}.value/value_num +      ─
+    # ── financials.total_digital_revenue — deterministic re-derivation from the       ─
+    # ── authoritative source strings (roi_conservative/roi_moderate/d2c_digital_revenue) ─
+    # Root cause (JBL 2026-07-01): the LLM hand-types roi_scenarios[*].value and
+    # total_digital_revenue as separate fields from the authoritative strings it also
+    # writes (roi_conservative/roi_moderate/d2c_digital_revenue) — and was observed
+    # dropping the leading digit ("8.4M" vs authoritative "$18.4M/year"; "82M" vs
+    # authoritative "$182M"). Never trust the hand-written value: regex-extract the
+    # full number+unit from the authoritative string every time. `aggressive` has no
+    # authoritative roi_aggressive source field (known gap — see factcheck manifest
+    # "ROI Scenario Gap" AE-action item), so it is left as the LLM wrote it.
+    fin_obj = data.get('financials') or {}
+    roi_scenarios = fin_obj.get('roi_scenarios') or {}
+    scenario_sources = {
+        'conservative': fin_obj.get('roi_conservative'),
+        'moderate': fin_obj.get('roi_moderate'),
+        'aggressive': fin_obj.get('roi_aggressive'),
+    }
+    roi_fixed = 0
+    for scenario, source_str in scenario_sources.items():
+        value, value_num = parse_money_amount(source_str)
+        if value is None:
+            continue
+        existing = roi_scenarios.get(scenario) or {}
+        if existing.get('value') != value or existing.get('value_num') != value_num:
+            existing['value'] = value
+            existing['value_num'] = value_num
+            existing.setdefault('label', scenario.capitalize())
+            roi_scenarios[scenario] = existing
+            roi_fixed += 1
+    if roi_scenarios:
+        fin_obj['roi_scenarios'] = roi_scenarios
+        data['financials'] = fin_obj
+        if roi_fixed:
+            patch_count += roi_fixed
+            log(f'financials: corrected {roi_fixed} roi_scenarios value(s) from authoritative roi_conservative/roi_moderate strings')
+
+    td_value, _td_value_num = parse_money_amount(fin_obj.get('d2c_digital_revenue'))
+    if td_value is not None and fin_obj.get('total_digital_revenue') != td_value:
+        log(f'financials: corrected total_digital_revenue "{fin_obj.get("total_digital_revenue")}" '
+            f'-> "{td_value}" (from authoritative d2c_digital_revenue)')
+        fin_obj['total_digital_revenue'] = td_value
+        data['financials'] = fin_obj
+        patch_count += 1
+
     # ── Patch: tech_stack (Phase 3 — ai_search_gap, data_acquisitions, architecture_notes) ─
     ts_json = lift_techstack_json(research_dir)
     if ts_json:
@@ -1733,6 +2092,41 @@ def main():
         data['hiring'] = existing_hiring
         if added:
             patch_count += added
+
+    # ── Patch: hiring.roles (per-role array for a future sectionHiring() card list) ─
+    hiring_roles_ext = lift_hiring_roles_json(research_dir)
+    if hiring_roles_ext:
+        existing_hiring = data.get('hiring', {}) or {}
+        existing_hiring.update(hiring_roles_ext)
+        data['hiring'] = existing_hiring
+        patch_count += 1
+
+        # ── Patch: hiring.summary — correct the LLM-synthesized narrative string,
+        # which is never validated against the deterministic counts above and has
+        # been observed stating the RAW total ("13 ICP-relevant open roles") instead
+        # of the tier-filtered ICP count (9) — the module's own tiering explicitly
+        # excludes tier-4 "Context" roles from ICP relevance, so quoting the raw
+        # total as "ICP-relevant" overstates buying-committee size to the reader
+        # (this string is quoted verbatim into ae-precall-brief.md,
+        # strategic-signal-brief.md, and the published "Why Act Now" tile).
+        icp_n = hiring_roles_ext.get('icp_roles_count')
+        total_n = hiring_roles_ext.get('total_open_roles')
+        summary = existing_hiring.get('summary')
+        # Idempotency guard: strip any parenthetical this same patch step added on a
+        # prior run before re-substituting, so re-running generate-audit-data.py on an
+        # already-patched JSON never stacks "(of N total scraped)" more than once.
+        if icp_n is not None and total_n is not None and isinstance(summary, str) and summary.strip():
+            summary = re.sub(r'\s*\(of \d+ total scraped\)', '', summary)
+            fixed_summary, n_subs = re.subn(
+                r'\d+\s+ICP-relevant open roles',
+                f'{icp_n} ICP-relevant open roles (of {total_n} total scraped)',
+                summary, count=1, flags=re.IGNORECASE
+            )
+            if n_subs:
+                existing_hiring['summary'] = fixed_summary
+                data['hiring'] = existing_hiring
+                log(f'hiring: corrected summary ICP-count wording to "{icp_n} ICP-relevant '
+                    f'open roles (of {total_n} total scraped)"')
 
     # ── Patch: partner_intel (Phase 5 — unconfirmed_partners, sales_action_plan, cio_background_signal) ─
     partner_text = read_file(os.path.join(research_dir, 'partner-intel.md'))
@@ -1849,9 +2243,25 @@ def main():
     # ── Patch: ae_fields — map LLM field names to renderer field names ────────
     ae = data.get('ae_fields') or {}
     if ae:
-        # next_step_action: renderer reads ae.next_step_action; LLM outputs ae.cta
-        if not ae.get('next_step_action') and ae.get('cta'):
-            ae['next_step_action'] = ae['cta']
+        # next_step_action: renderer reads ae.next_step_action; LLM outputs ae.cta, but has
+        # also been observed emitting the bare, non-canonical key 'next_step' instead (with
+        # real content) while cta stayed empty — broaden the fallback chain to catch it too.
+        if not ae.get('next_step_action'):
+            ae['next_step_action'] = ae.get('cta') or ae.get('next_step') or ''
+        # urgency_label: renderer/template_contract document a fallback chain
+        # (ae.urgency_label || ae.urgency || ae.urgency_level.split('—')[0]) that was never
+        # actually populated by the LLM synthesis pass — urgency_level ('HIGH') exists but
+        # urgency_label does not. Backfill it directly so the header chip isn't blank.
+        if not ae.get('urgency_label') and ae.get('urgency_level'):
+            ae['urgency_label'] = str(ae['urgency_level']).split('—')[0].strip()
+        # talk_track_opener: LLM writes the real opening talk-track text under
+        # golden_angle.talk_track, not ae_fields.talk_track_opener — backfill so any
+        # consumer reading the canonical ae_fields path finds real content instead of
+        # falling through to an empty-string default.
+        if not ae.get('talk_track_opener'):
+            golden_angle = data.get('golden_angle') or {}
+            if golden_angle.get('talk_track'):
+                ae['talk_track_opener'] = golden_angle['talk_track']
         # next_step_owner: renderer reads ae.next_step_owner; LLM outputs ae.champion or ae.economic_buyer
         if not ae.get('next_step_owner'):
             ae['next_step_owner'] = ae.get('champion') or ae.get('economic_buyer') or ''
@@ -1884,7 +2294,18 @@ def main():
                         proof += f' — {url}'
                     ae['benchmark_proof'] = proof
         data['ae_fields'] = ae
-        log('ae_fields: mapped cta→next_step_action, champion→next_step_owner, derived opportunity_headline/benchmark_proof where missing')
+        log('ae_fields: mapped cta→next_step_action, champion→next_step_owner, derived opportunity_headline/benchmark_proof/urgency_label/talk_track_opener where missing')
+
+    # ── Patch: company_snapshot.revenue_source / revenue_source_label — same data already ─
+    # ── lives on financials.revenue_source(_label) (populated with a real SEC/Yahoo citation) ─
+    cs = data.get('company_snapshot') or {}
+    fin_for_cs = data.get('financials') or {}
+    if cs and (not cs.get('revenue_source')) and fin_for_cs.get('revenue_source'):
+        cs['revenue_source'] = fin_for_cs['revenue_source']
+        cs['revenue_source_label'] = fin_for_cs.get('revenue_source_label') or cs.get('revenue_source_label')
+        data['company_snapshot'] = cs
+        patch_count += 1
+        log('company_snapshot: backfilled revenue_source/revenue_source_label from financials')
 
     # ── Ensure meta.generated_by ─────────────────────────────────────────────
     meta = data.get('meta', {}) or {}
