@@ -10,9 +10,16 @@ Rules enforced:
 Run before any render. Exits 1 if violations found.
 Usage: python3 check-style-tokens.py
 """
-import re, sys
+import re, sys, os
 
-template_path = '/Users/arijitchowdhury/.claude/skills/algolia-search-audit/templates/index-template.html'
+# Resolve relative to this script's own location — NOT a hardcoded developer-machine
+# path. The old hardcoded '/Users/arijitchowdhury/.claude/skills/...' path only ever
+# existed on one Mac; every other install (VPS runtime, CI, another contributor)
+# silently FileNotFoundError'd, which — combined with render-audit.ts never being
+# invoked with --allow-run — meant this gate never actually ran anywhere but that
+# one machine, and even there only when tested directly, not via render-audit.ts.
+_scripts_dir = os.path.dirname(os.path.abspath(__file__))
+template_path = os.path.join(_scripts_dir, '..', 'templates', 'index-template.html')
 
 with open(template_path) as f:
     lines = f.readlines()
