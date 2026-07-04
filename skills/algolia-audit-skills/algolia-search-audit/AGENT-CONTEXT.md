@@ -310,7 +310,7 @@ fi
 `$ALGOLIA_AUDIT_DIR/{CompanyName}/deliverables/index.html` MUST be produced by:
 ```
 cd ~/.claude/skills/algolia-search-audit/scripts
-deno run --allow-read --allow-write --allow-net render-audit.ts {slug} site
+deno run --allow-read --allow-write --allow-net --allow-run=python3 render-audit.ts {slug} site
 ```
 
 **Why this is non-negotiable:** `render-audit.ts` injects `algolia-brand.css` (`.proof-pill`, `.glow-card`, all brand classes) and `window.AUDIT_DATA` into the output. Writing `index.html` directly bypasses both injections — the SPA renders with broken styling and no data.

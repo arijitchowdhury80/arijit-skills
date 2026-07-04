@@ -1,9 +1,9 @@
-#!/usr/bin/env deno run --allow-read --allow-write --allow-net
+#!/usr/bin/env deno run --allow-read --allow-write --allow-net --allow-run=python3
 /**
  * Algolia Search Audit — Renderer
  * Version: 2.0
  * Usage:
- *   deno run --allow-read --allow-write render-audit.ts <company-slug> <mode>
+ *   deno run --allow-read --allow-write --allow-run=python3 render-audit.ts <company-slug> <mode>
  *
  * Modes:
  *   site         → index-template.html  → {slug}/index.html  (SPA — primary deliverable)
@@ -15,9 +15,15 @@
  *   deliverables → deliverables-template.html  → {slug}/deliverables.html
  *   all          → all modes above
  *
+ * --allow-run=python3 is REQUIRED — enforceStyleTokens()/enforceJsonSchema() shell
+ * out to check-style-tokens.py/validate-json-schema.py via Deno.Command. Without it,
+ * Deno throws a NotCapable error on every call, silently caught and misreported as
+ * "not found — skipping gate" — both gates looked absent for a long time when they
+ * were actually just never permitted to run. See docs/sop/lessons-log.md 2026-07-04.
+ *
  * Example:
- *   deno run --allow-read --allow-write --allow-net render-audit.ts costco site
- *   deno run --allow-read --allow-write --allow-net render-audit.ts costco all
+ *   deno run --allow-read --allow-write --allow-net --allow-run=python3 render-audit.ts costco site
+ *   deno run --allow-read --allow-write --allow-net --allow-run=python3 render-audit.ts costco all
  */
 
 import { join, dirname, fromFileUrl } from "https://deno.land/std@0.224.0/path/mod.ts";

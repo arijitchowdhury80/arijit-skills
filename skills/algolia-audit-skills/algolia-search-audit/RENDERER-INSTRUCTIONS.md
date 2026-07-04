@@ -243,16 +243,16 @@ This Deno script:
 ### Usage
 ```bash
 # Full binder
-deno run --allow-read --allow-write render-audit.ts {company-slug} binder
+deno run --allow-read --allow-write --allow-run=python3 render-audit.ts {company-slug} binder
 
 # AE action report
-deno run --allow-read --allow-write render-audit.ts {company-slug} ae-report
+deno run --allow-read --allow-write --allow-run=python3 render-audit.ts {company-slug} ae-report
 
 # Battle card
-deno run --allow-read --allow-write render-audit.ts {company-slug} battle-card
+deno run --allow-read --allow-write --allow-run=python3 render-audit.ts {company-slug} battle-card
 
 # Prospect leave-behind
-deno run --allow-read --allow-write render-audit.ts {company-slug} leave-behind
+deno run --allow-read --allow-write --allow-run=python3 render-audit.ts {company-slug} leave-behind
 ```
 
 ### Token map (applies to all templates)
