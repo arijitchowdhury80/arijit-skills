@@ -1,129 +1,98 @@
-# Learn From YT
+# learn-from-yt
 
-Portable AI skill for turning long videos, podcasts, calls, courses, or lectures into structured knowledge bases, business methodologies, SOP libraries, execution checklists, and downstream software or research requirements.
+Turn long videos, podcasts, courses, talks, or lectures into **structured operating knowledge** — knowledge bases, business methodologies, SOPs, execution plans, and downstream software/research requirements.
 
-This is the first WorkOS knowledge-extraction skill. It is optimized for business-building content such as POD, SaaS, marketing, sales, operations, product strategy, and founder education, while remaining general enough for technical lectures, product demos, and research talks.
+This skill is **self-contained**: it captures the source *and* processes it. One skill, one execution chain. (It absorbs what used to be a separate `youtube-knowledge` capture skill.)
 
-## What It Does
+## What it does
 
-- Captures raw source artifacts before synthesis.
-- Segments long transcripts by chapter, timestamp, topic, or fixed windows.
-- Extracts claims, tactics, SOP steps, tools, metrics, risks, open questions, and evidence.
-- Captures frames or screenshots when visual demonstrations matter.
-- Produces a reusable knowledge base, business plan, SOP library, execution checklist, and downstream software/research backlog.
-- Preserves traceability from final recommendations back to segments and timestamps.
+It runs a source through a mechanical capture/prep chain, then the agent performs the judgment-heavy extraction and synthesis on top.
 
-## Skill Layout
+```mermaid
+flowchart TD
+    A["YouTube URL"] --> B["capture.py<br/>yt-dlp metadata + chapters<br/>+ timestamped transcript"]
+    B --> C["create_knowledge_project.py<br/>scaffold knowledge base"]
+    C --> D["segment_transcript.py<br/>split into time windows"]
+    D --> E["capture_frames.py<br/>frames where visuals matter<br/>(yt-dlp + ffmpeg)"]
+    E --> F{{"run.py orchestrates 1-4"}}
+    F --> G["AGENT (per SKILL.md):<br/>extract each segment → build indexes<br/>→ quality gates → synthesize"]
+    G --> H["Knowledge base · Methodology<br/>SOP library · Execution checklist<br/>Software/research requirements"]
 
-```text
-learn-from-yt/
-├── SKILL.md
-├── README.md
-├── install-skill.sh
-├── agents/
-│   └── openai.yaml
-├── references/
-│   ├── extraction-schema.md
-│   ├── failure-modes.md
-│   ├── output-structure.md
-│   └── quality-gates.md
-└── scripts/
-    ├── capture_frames.py
-    ├── create_knowledge_project.py
-    └── segment_transcript.py
+    R["--from-transcript PATH"] -.reuse, skip live fetch.-> C
+    style B fill:#e8f0fe
+    style G fill:#fef7e0
+    style H fill:#e6f4ea
 ```
+
+Mechanical stages (1–4) are deterministic scripts driven by `run.py`. The final stage (extraction + synthesis) is done by the agent following `SKILL.md`, because it requires judgment.
+
+## What it uses
+
+| Dependency | Purpose | Install |
+|---|---|---|
+| `yt-dlp` | video metadata, chapters, subtitles, frame-source download | `pip install yt-dlp` |
+| `ffmpeg` | extract frames from downloaded segments | `brew install ffmpeg` |
+| `youtube-transcript-api` | transcript fallback when yt-dlp subs unavailable | `pip install youtube-transcript-api` |
+| Python 3.9+ | runs the scripts | — |
+
+> **Rate limits:** YouTube throttles heavy IPs with HTTP 429. When that happens, live capture/frames fail temporarily. Use `--from-transcript` to run against an already-captured transcript, or wait ~30–60 min for the limit to clear.
+
+## Usage — one command
+
+```bash
+python3 scripts/run.py "YOUTUBE_URL" \
+  --root ./Knowledge --domain "print-on-demand business" --minutes 10 --frame-interval 30
+```
+
+### Parameters
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `url` (positional) | — | YouTube URL (still passed with `--from-transcript` for metadata/frames) |
+| `--root` | `./Knowledge` | root output folder |
+| `--domain` | `business-building` | topic label used in the scaffold |
+| `--minutes` | `10` | transcript segment window size |
+| `--frame-interval` | `30` | seconds between captured frames |
+| `--no-frames` | off | skip the visual/frame stage |
+| `--capture-only` | off | capture source artifacts, then stop |
+| `--from-transcript PATH` | — | reuse an existing transcript, skip live fetch (429-safe) |
+
+### Individual scripts (advanced)
+
+- `capture.py URL --wiki-root DIR` → `metadata.json`, `source.md`, `raw/transcript.md`
+- `create_knowledge_project.py --root DIR --title T --domain D --url U` → knowledge-base scaffold
+- `segment_transcript.py TRANSCRIPT --out-dir DIR --minutes N` → segmented markdown
+- `capture_frames.py URL --out-dir DIR --start --end --every-seconds N` → frames
+
+## Output it produces
+
+```
+Knowledge/
+  raw-captures/<slug>/
+    metadata.json          # title, channel, duration, chapters, url, views
+    source.md              # human-readable summary + chapters
+    raw/transcript.md      # full timestamped transcript
+    segments/              # transcript split into windows (001-*.md, index.md)
+    visuals/frames/        # extracted frames (when visuals matter)
+  projects/<domain>/<slug>/
+    source-card.md  source-manifest.md  extraction-log.md
+    methodology.md  business-plan.md  execution-plan.md
+    open-questions.md  sop/  visuals/
+```
+
+The agent then fills these with extracted, cited knowledge per `references/extraction-schema.md` and gates each stage with `references/quality-gates.md`.
 
 ## Install
 
-From a fresh checkout:
-
 ```bash
-git clone https://github.com/arijitchowdhury80/arijit-skills.git
-cd arijit-skills/skills/general-skills/learn-from-yt
-chmod +x install-skill.sh
-```
-
-Install everywhere on the current machine:
-
-```bash
-./install-skill.sh --all
-```
-
-Install only for Codex:
-
-```bash
-./install-skill.sh --codex
-```
-
-Install only for Claude Code:
-
-```bash
-./install-skill.sh --claude
-```
-
-Install into a Hermes skills directory:
-
-```bash
+./install-skill.sh --claude      # Claude Code (~/.claude/skills)
+./install-skill.sh --codex       # Codex (~/.codex/skills)
+./install-skill.sh --all         # both
 ./install-skill.sh --hermes-dir /opt/data/skills
 ```
 
-For Hermes/chowmes, run the install as the runtime user or fix ownership after installation so the Hermes process can read and update runtime files safely.
+## Design notes
 
-## Default Install Locations
-
-| Runtime | Location |
-|---------|----------|
-| Codex | `$CODEX_HOME/skills/learn-from-yt` or `~/.codex/skills/learn-from-yt` |
-| Claude Code | `$CLAUDE_HOME/skills/learn-from-yt` or `~/.claude/skills/learn-from-yt` |
-| Hermes | Path passed with `--hermes-dir`, usually `/opt/data/skills/learn-from-yt` on the server |
-
-## Dependencies
-
-The skill itself is markdown and Python. For full YouTube capture and visual extraction, the environment should have:
-
-- Python 3
-- `yt-dlp`
-- `ffmpeg`
-- `youtube-transcript-api` as a fallback transcript provider
-
-The helper scripts fail with clear messages when optional media dependencies are missing.
-
-## Usage
-
-Ask the agent to use the skill on a video or transcript:
-
-```text
-Use learn-from-yt on this YouTube video and build the knowledge base, SOPs, execution checklist, and downstream software requirements.
-```
-
-Claude Code users can invoke it from the slash command list after installation:
-
-```text
-/learn-from-yt
-```
-
-Codex and Hermes should load the skill by name when the task involves video ingestion, methodology extraction, business-building knowledge capture, or chapter-by-chapter synthesis.
-
-## Operating Standard
-
-Do not jump straight to summary. The skill is designed around a durable pipeline:
-
-1. Preserve raw capture.
-2. Create a knowledge project scaffold.
-3. Run a pilot segment.
-4. Segment the source.
-5. Extract each segment with evidence.
-6. Capture visuals where they matter.
-7. Build indexes and backlog artifacts.
-8. Synthesize final methodology and execution assets.
-9. Record failure modes and skill improvements.
-
-## Download For Other Agents
-
-Other Codex, Claude Code, or Hermes agents can pull the skill from:
-
-```text
-https://github.com/arijitchowdhury80/arijit-skills/tree/main/skills/general-skills/learn-from-yt
-```
-
-For automated setup, clone the repo and run `install-skill.sh` with the appropriate target flags.
+- **Obsidian is the intended single source of truth.** Capture to local markdown first, then mirror into the vault.
+- Capture is a **callable sub-step** (`--capture-only`) so a bare transcript grab is still possible without the full run.
+- The extraction/synthesis stages are deliberately agent-driven, not scripted — they need judgment, and scripting them would produce shallow summaries.
