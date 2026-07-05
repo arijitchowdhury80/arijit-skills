@@ -1,0 +1,33 @@
+{
+  "skill_name": "prompt-shaper",
+  "evals": [
+    {
+      "id": 0,
+      "name": "buried-priority",
+      "prompt": "so for prism i keep thinking the audit takes too long, the browser phase specifically, like petsmart took forever, i want some kind of progress thing that tells me where it is, maybe telegram since hermes is right there, or just a file i can tail, i dont know you pick. also when it fails midway i have to restart the whole thing which sucks, it should resume from where it died. resume is more important actually, do that first. oh and dont touch the scoring logic that part works, took forever to get right. i need this before my next audit which is probably next week. keep it simple, no new services.",
+      "expected_output": "Numbered inventory; gap questions asked before any prompt; shaped prompt with resume prioritized over progress-visibility; scoring-logic freeze + no-new-services + deadline captured as constraints; verbatim original_input; coverage map; routing rec; no execution.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "self-corrections",
+      "prompt": "i want to add a weekly digest email to my gws setup, send it friday evening no wait sunday evening is better, that summarizes my calendar for the coming week plus any unread emails that look important, use the tone of voice skill for the writing, actually no scratch that, tone skill is for outbound stuff to customers, this is just for me so plain writing is fine, and it must never send anything to anyone else, only to me at arijit.chowdhury@gmail.com. maybe also pull in my kanban tasks from hermes into the digest? not sure if that is easy, if it is a pain just skip it, not worth it.",
+      "expected_output": "Both self-corrections honored (sunday not friday; plain writing not tone skill — dead options never appear as requirements); conditional kanban scope preserved as conditional; only-to-me constraint captured; inventory + questions-first + original_input + coverage map + routing; no execution.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "haiku-dispatch",
+      "prompt": "i need a sweep across all my algolia intel skill outputs, basically all the json files sitting in the audit workspaces, check every one of them is valid json and has the required fields for its module type, this is totally mechanical work so use a cheap model for it, haiku or whatever, and give me back a table of what is broken and where. there are probably a lot of files. dont fix anything, just report. dont go reading the md files, just the json.",
+      "expected_output": "Recognizes explicit haiku/cheap-tier dispatch target; shaped prompt written FOR haiku per reference.md (explicit numbered steps, unambiguous output format, no reliance on judgment); report-only and json-only constraints captured; inventory + original_input + coverage map + routing (haiku, low effort); no execution.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "embedded-doc",
+      "prompt": "my colleague sent me this spec, pasting it below, i think we should build what it describes but only the csv export part, not the pdf part, pdf is overkill for now, and whatever we build has to plug into the existing report-designer output pipeline not replace it. also she wants column selection which i think is fine but make it optional not required. here is the spec: --- EXPORT FEATURE SPEC v0.3 --- Purpose: allow users to export audit results from the deliverable page. Requirements: R1. Export formats: CSV and PDF. R2. CSV export must include all scored areas with columns: area_name, score, max_score, evidence_count, severity. R3. PDF export renders the full deck as paginated A4. R4. User may select which columns appear in CSV output via a checkbox panel. R5. Exports respect the current filter state of the page. R6. File naming: {company}-audit-export-{date}.{ext}. R7. Export button lives in the header bar next to the share control. Non-goals: scheduled exports, email delivery. Open question from spec author: should zero-evidence areas be included by default? --- END SPEC ---",
+      "expected_output": "Pasted spec placed at TOP of shaped prompt per long-context rule; PDF (R3) explicitly out-of-scope while CSV requirements retained; column selection kept but downgraded to optional; pipeline-integration constraint captured; spec author's open question surfaced as a gap question; inventory + original_input + coverage map + routing; no execution.",
+      "files": []
+    }
+  ]
+}
