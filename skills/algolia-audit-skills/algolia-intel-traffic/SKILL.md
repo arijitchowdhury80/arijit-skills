@@ -1,6 +1,6 @@
 ---
 name: algolia-intel-traffic
-description: Layer 1C traffic and engagement module. Collects full traffic profile via SimilarWeb REST API (direct HTTPS calls, SIMILARWEB_API_KEY required — not an MCP) — visits, bounce rate, device split, marketing channels, geography, keywords (Search 3.0 v4), referrals (incoming + outgoing), demographics, popular pages. Run in Wave 1 alongside other independent modules. Produces 03-traffic-data.md and 03-traffic-data.json.
+description: Layer 1C traffic and engagement module. ⛔ PERMANENT HITL STEP — SimilarWeb API is GONE (no service, no key, ever). Data is captured HUMAN-IN-THE-LOOP from a logged-in SimilarWeb PRO browser session (Arijit logs in; agent extracts from Highcharts chart-data + structured DOM, sum-validated). Full profile: visits, engagement, device, channels, geography, organic/paid keywords, referrals (in+out), demographics (age+gender), competitor traffic, category. `collect-traffic.py` is DEAD (API 401) and retained for reference only. Run in Wave 1.
 layer: 1-intelligence
 module_id: 1C
 script: collect-traffic.py
@@ -14,6 +14,21 @@ data_sources:
 skill_enrichment: false
 version: 2.0.0
 ---
+
+> # ⛔ PERMANENT HITL — NO SIMILARWEB API (read before anything)
+> **SimilarWeb API access is GONE and is NOT coming back.** Algolia no longer has the service. **No API key exists or can be generated** — the old `SIMILARWEB_API_KEY` (`483b77…`) is dead (HTTP 401), permanently. Do **NOT** ask for or wait on a key. Do **NOT** silently fall back and improvise.
+> - `collect-traffic.py` (deterministic API script) and the SimilarWeb MCP **CANNOT RUN** — both ride the dead key. Retained for reference only.
+> - **This module is Human-In-The-Loop (HITL), by design and permanently:** Arijit logs into SimilarWeb PRO in a real browser; the agent captures the data from that logged-in session.
+> - **FAIL-LOUD RULE:** when the API path is unavailable (always, now), HARD-STOP and switch to the HITL browser capture below — **never** produce a silent partial or an estimate. (Recorded 2026-07-06 after this exact failure: the module silently degraded to ad-hoc scraping and shipped an incomplete subset.)
+
+## HITL CAPTURE METHOD (canonical — deterministic browser extraction)
+Arijit logs into `pro.similarweb.com` (PRO). Then, **per domain**, drive the browser and extract from the page's own data objects — **read Highcharts `window.Highcharts.charts[].series[].data` (exact values) + structured DOM tables; never eyeball/vision-guess.** Capture the **full schema**, validate, then upsert to Postgres `audits.audit_data.traffic`.
+- **Overview route:** `#/sales/account-review/overview/website-performance/{domain}/*/999/3m?webSource=Total` → visits (use **"Monthly visits"**, NOT the 3-mo "Total visits"), engagement (bounce/pages/duration/unique), device split, 10-way marketing channels, geography (top countries table), organic branded/non-branded + top keywords, paid keywords, referrers, referring industries, outgoing traffic/ads, display networks, social, competitor traffic (multi-series trend chart), category, ranks.
+- **Demographics route:** `#/sales/account-review/audience-demographics/{domain}/*/999/3m?webSource=Total` → age groups + gender.
+- **Guards (mandatory):** confirm the loaded page's analyzed domain == target (avoid stale reads during SPA transitions); require value stability across 2 reads; **sum-validate** (channels ≈100%, device ≈100%, social ≈100%, age ≈100%, gender ≈100%).
+- **Completeness gate:** validate the assembled record against the traffic schema (every dimension present or explicitly N/A) BEFORE any DB write. Abort on any gap.
+- **N/A that is real (not a miss):** `popular_pages` is not exposed in the account-review overview (separate Digital Suite view) — mark explicit N/A.
+- **Reference implementation (2026-07-06 run, 18 companies):** `PIP/docs/temp/sw-capture/*` + `PIP/docs/temp/sw_upsert3.py` (assembler + completeness gate + upsert). This is the pattern to codify/reuse — not re-improvise each run.
 
 ## MANDATORY FIRST ACTION
 Read `~/.claude/skills/algolia-search-audit/AGENT-CONTEXT.md`
