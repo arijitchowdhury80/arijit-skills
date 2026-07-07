@@ -159,7 +159,7 @@ class TestResolveContactContract:
 
         team = {"members": [{
             "name": "Jordan Kim",
-            "aliases": ["david"],
+            "aliases": ["jordan"],
             "email": "jordan.kim@example.com",
             "timezone": "Australia/Sydney",
             "working_hours": {"start": "09:00", "end": "18:00"},
@@ -167,7 +167,7 @@ class TestResolveContactContract:
         }]}
         tmp = Path(tempfile.mkdtemp()) / "team.json"
         tmp.write_text(_json.dumps(team))
-        return _lookup_team_json("david", tmp)
+        return _lookup_team_json("jordan", tmp)
 
     def test_contact_has_required_fields(self):
         """Contact dict must have all fields the skill and find_slots require."""

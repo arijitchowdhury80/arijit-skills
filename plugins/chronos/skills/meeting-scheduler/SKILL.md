@@ -8,9 +8,24 @@ description: "Use when the user wants to book a calendar meeting, find mutual av
 **Skill name:** meeting-scheduler  
 **Triggers on:** Use when the user wants to book a calendar meeting, find mutual availability, or schedule a call with a real person — e.g., "schedule a meeting with X", "find time for me and X", "book 30 min with X". Do NOT use for automated cron jobs, recurring agent tasks, or one-time timed reminders (use the schedule skill for those).
 
-You are Arijit's personal meeting scheduler. When invoked, you orchestrate calendar lookups, find mutual availability across time zones, and schedule meetings via Google Calendar.
+You are the user's personal meeting scheduler. When invoked, you orchestrate calendar lookups, find mutual availability across time zones, and schedule meetings via Google Calendar.
 
-**Project location:** `/Users/arijitchowdhury/AI-Development-OLD/Scheduler/`
+**Project location:** `${CLAUDE_PLUGIN_ROOT}/skills/meeting-scheduler/project/` — this is the code bundled with this plugin. If `$CLAUDE_PLUGIN_ROOT` isn't set (e.g. running from a local skill checkout rather than an installed plugin), locate `project/` relative to this SKILL.md's own directory instead.
+
+---
+
+## First-time setup (do this once per machine, per user)
+
+1. **Install the `gws` CLI** (Google Workspace CLI) and run `gws auth setup` / `gws auth login` — see the `gws` skill in this same plugin for details.
+2. **Register your own Google Cloud OAuth client** (Cloud Console → APIs & Services → Credentials) and create `~/.config/gws/.env` (mode 600) with:
+   ```
+   export GOOGLE_WORKSPACE_CLI_CLIENT_ID="<your client id>"
+   export GOOGLE_WORKSPACE_CLI_CLIENT_SECRET="<your client secret>"
+   ```
+   Never hardcode these anywhere else, and never ask the user to paste the literal secret into chat.
+3. **Create your team directory:** copy `project/config/team.json.example` to `project/config/team.json` and fill in real people. Exactly one member must have `"owner": true` — that's you (or whoever this scheduler runs on behalf of). `team.json` is gitignored; it's meant to stay local, never committed.
+
+If `team.json` is missing or has no `owner: true` entry, `resolve_contact.py --owner` returns an error — don't hardcode a fallback identity, tell the user to complete step 3.
 
 ---
 
@@ -46,7 +61,7 @@ If it succeeds, continue silently.
 ### Step 1 — Parse Intent
 
 Extract from the user's message:
-- **participants**: list of names (do not include Arijit — he's always included)
+- **participants**: list of names (do not include the owner — they're always included, see Step 2)
 - **duration**: in minutes (default 30 if not specified)
 - **window**: date range (default = next 5 business days from today)
 - **purpose/title**: meeting title (infer from context if not given)
@@ -55,10 +70,18 @@ Announce: "Looking for a `[duration]`-min slot with `[names]` between `[date ran
 
 ### Step 2 — Resolve Contacts
 
-Run for each participant name:
+First, resolve the owner (the person this scheduler runs for):
 
 ```bash
-python3 /Users/arijitchowdhury/AI-Development-OLD/Scheduler/src/resolve_contact.py "[name1]" "[name2]"
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/meeting-scheduler/project/src/resolve_contact.py" --owner
+```
+
+If this errors (`owner_not_found`), stop and tell the user to complete step 3 of First-time setup above — don't guess or hardcode an identity.
+
+Then, for each participant name:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/meeting-scheduler/project/src/resolve_contact.py" "[name1]" "[name2]"
 ```
 
 Parse the JSON output.
@@ -70,11 +93,6 @@ Wait for the response, then continue with the provided info.
 
 **If contact was found via `calendar_list` source (not `team_config`):** Warn:
 > "⚠️ Found [name] in your calendar subscriptions but their timezone may not be accurate. Assuming [timezone] — let me know if that's wrong."
-
-Always include Arijit as a participant:
-- email: `arijit.chowdhury@algolia.com`
-- timezone: `America/New_York`
-- working_hours: 09:00–21:00 (willing to take evening calls for global teams)
 
 ### Step 3 — Fetch FreeBusy Data
 
@@ -88,7 +106,7 @@ gws calendar freebusy query --json '{
   "timeMax": "<window_end_iso_utc>",
   "timeZone": "UTC",
   "items": [
-    {"id": "arijit.chowdhury@algolia.com"},
+    {"id": "<owner_email, from Step 2>"},
     {"id": "<participant_email>"},
     ...
   ]
@@ -102,19 +120,19 @@ Parse the response. Note any calendars with errors (access denied) — treat tho
 Build the JSON payload and pipe to find_slots.py:
 
 ```bash
-echo '<JSON_PAYLOAD>' | python3 /Users/arijitchowdhury/AI-Development-OLD/Scheduler/src/find_slots.py
+echo '<JSON_PAYLOAD>' | python3 "${CLAUDE_PLUGIN_ROOT}/skills/meeting-scheduler/project/src/find_slots.py"
 ```
 
-Payload schema:
+Payload schema — `name`/`email`/`timezone`/`working_hours_*` for the owner all come from the Step 2 `--owner` resolution, not hardcoded:
 ```json
 {
   "participants": [
     {
-      "name": "Arijit Chowdhury",
-      "email": "arijit.chowdhury@algolia.com",
-      "timezone": "America/New_York",
-      "working_hours_start": "09:00",
-      "working_hours_end": "18:00"
+      "name": "<owner name, from Step 2>",
+      "email": "<owner email, from Step 2>",
+      "timezone": "<owner timezone, from Step 2>",
+      "working_hours_start": "<owner working_hours_start, from Step 2>",
+      "working_hours_end": "<owner working_hours_end, from Step 2>"
     },
     {
       "name": "<participant name>",
@@ -136,7 +154,7 @@ Payload schema:
   "max_results": 6,
   "preferred_hours": [9, 10, 11, 14, 15, 16],
   "avoid_hours": [12, 13],
-  "owner_timezone": "America/New_York"
+  "owner_timezone": "<owner timezone, from Step 2>"
 }
 ```
 
@@ -147,9 +165,9 @@ Parse the JSON output — it's a ranked list of SlotResult objects.
 Pipe the find_slots.py output directly into render_options.py:
 
 ```bash
-echo '<SLOTS_JSON>' | python3 /Users/arijitchowdhury/AI-Development-OLD/Scheduler/src/render_options.py \
-  --owner "Arijit" \
-  --owner-tz "America/New_York" \
+echo '<SLOTS_JSON>' | python3 "${CLAUDE_PLUGIN_ROOT}/skills/meeting-scheduler/project/src/render_options.py" \
+  --owner "<owner name, from Step 2>" \
+  --owner-tz "<owner timezone, from Step 2>" \
   --participants '<JSON: {name: timezone}>' \
   --duration <N> \
   --window-label "<e.g. Mon Apr 21 – Fri Apr 25>" \
@@ -181,9 +199,9 @@ gws calendar events insert \
   --params '{"calendarId": "primary", "sendUpdates": "all", "conferenceDataVersion": "1"}' \
   --json '{
     "summary": "<meeting title>",
-    "description": "Scheduled via Arijit'\''s Meeting Scheduler",
-    "start": {"dateTime": "<start_iso>", "timeZone": "America/New_York"},
-    "end":   {"dateTime": "<end_iso>",   "timeZone": "America/New_York"},
+    "description": "Scheduled via the meeting-scheduler skill",
+    "start": {"dateTime": "<start_iso>", "timeZone": "<owner timezone, from Step 2>"},
+    "end":   {"dateTime": "<end_iso>",   "timeZone": "<owner timezone, from Step 2>"},
     "attendees": [
       {"email": "<participant_email>"},
       ...
@@ -233,8 +251,8 @@ Generate `<unique_id>` using a random UUID (e.g. `python3 -c "import uuid; print
 
 ## Key Config Files
 
-- **Team directory:** `/Users/arijitchowdhury/AI-Development-OLD/Scheduler/config/team.json`
-- **Preferences:** `/Users/arijitchowdhury/AI-Development-OLD/Scheduler/config/preferences.json`
+- **Team directory:** `${CLAUDE_PLUGIN_ROOT}/skills/meeting-scheduler/project/config/team.json` — local-only, gitignored, created from `team.json.example` during First-time setup
+- **Preferences:** `${CLAUDE_PLUGIN_ROOT}/skills/meeting-scheduler/project/config/preferences.json`
 
 To add a new team member, edit `team.json` and add an entry following the existing schema.
 
@@ -251,8 +269,8 @@ If yes, update `team.json` using the Edit tool.
 
 ## Timezone Quick Reference
 
-Common Algolia team timezones:
-- Atlanta / US East: `America/New_York`
+Common IANA timezones (use these when filling in `team.json` entries):
+- US East: `America/New_York`
 - California / US Pacific: `America/Los_Angeles`
 - UK: `Europe/London`
 - France / Spain: `Europe/Paris` / `Europe/Madrid`
