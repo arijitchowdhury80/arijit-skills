@@ -1,0 +1,78 @@
+# persist-stages.yaml — THE single source of truth for the /persist pipeline.
+# Both persist.md (the command) and persist-verify.sh (the gate) read THIS file.
+# Never add a stage to one without the other — that is the drift class that rotted v1.
+# Approved design: AI-OS/research/GATE1-SECOND-BRAIN-DESIGN.md (Gate 1, 2026-07-07).
+#
+# Fields:
+#   id:        stage identifier (verify script dispatches on this)
+#   tier:      core (cheap, deterministic, must always run) | synthesis (agent prose)
+#   required:  yes | migration (only after vault migration lands) | optional (skip-warn if infra absent)
+#   surface:   what it writes
+#   check:     the SUBSTANCE check persist-verify.sh runs (mtime alone is FORBIDDEN — false-green)
+
+stages:
+  - id: vault_log
+    tier: core
+    required: migration
+    surface: "vault wiki/log.md"
+    check: "gained >=1 new line dated today referencing this session (append-only; non-append writes are a FAIL)"
+
+  - id: graph_build
+    tier: core
+    required: optional
+    surface: "AI-OS/cockpit/data/graph.json"
+    check: "file exists, build stamp advanced past persist start, node count > 0"
+
+  - id: dashboard_data
+    tier: core
+    required: optional
+    surface: "AI-OS/cockpit/data/*.json"
+    check: "valid JSON + embedded timestamp advanced past persist start"
+
+  - id: vps_sync_queue
+    tier: core
+    required: optional
+    surface: "~/.claude/queue/vault-sync.pending"
+    check: "queue entry written (network ship is ASYNC — never in this gate, never --delete)"
+
+  - id: project_wiki
+    tier: synthesis
+    required: yes
+    surface: "vault Projects/<active>/index.md + log.md (record-knowledge convention)"
+    check: "index.md 'updated:' advanced AND content hash changed; log.md gained dated entry"
+
+  - id: hot_cache
+    tier: synthesis
+    required: migration
+    surface: "vault wiki/hot.md"
+    check: "changed this persist, <=500 words"
+
+  - id: tracker
+    tier: synthesis
+    required: yes
+    surface: "vault Projects/ArijitOS/My-Projects.md"
+    check: "progress log gained entry dated today (via project-tracker skill — inline bypass forbidden)"
+
+  - id: memory
+    tier: synthesis
+    required: yes
+    surface: "~/.claude/projects/<slug>/memory/ + MEMORY.md"
+    check: "MEMORY.md modified past persist start AND index row count consistent with memory files on disk"
+
+  - id: session_md
+    tier: synthesis
+    required: yes
+    surface: "./SESSION.md"
+    check: "modified past persist start AND contains today's date AND required section headers"
+
+  - id: claude_md_gate
+    tier: core
+    required: migration
+    surface: "vault CLAUDE.md"
+    check: "line count <= 60 (regrowth gate)"
+
+  - id: compact_marker
+    tier: core
+    required: yes
+    surface: "~/.claude/.persisted_recently"
+    check: "touched ONLY if every required stage above passed"
