@@ -110,6 +110,33 @@ def _lookup_team_json(query: str, config_path: Path) -> Optional[dict]:
     return None
 
 
+def get_owner(team_config_path: Path = CONFIG_PATH) -> Optional[dict]:
+    """
+    Return the team.json member flagged `"owner": true` — the person this
+    scheduler is running on behalf of. Used so the skill never has to
+    hardcode a specific person's email/timezone.
+    Returns None if team.json is missing or has no owner flagged.
+    """
+    if not team_config_path.exists():
+        return None
+
+    with open(team_config_path) as f:
+        team = json.load(f)
+
+    for member in team.get("members", []):
+        if member.get("owner"):
+            return {
+                "name": member["name"],
+                "email": member["email"],
+                "timezone": member.get("timezone", "UTC"),
+                "working_hours_start": member.get("working_hours", {}).get("start", "09:00"),
+                "working_hours_end": member.get("working_hours", {}).get("end", "18:00"),
+                "location": member.get("location", ""),
+            }
+
+    return None
+
+
 def _lookup_calendar_list(query: str) -> Optional[dict]:
     """Check subscribed calendars via gws for a matching email."""
     try:
@@ -171,12 +198,22 @@ def main():
     """
     Usage: python resolve_contact.py "david"
            python resolve_contact.py "david" "sarah" "metin"
+           python resolve_contact.py --owner
 
     Outputs JSON: list of resolved contacts + list of not-found names.
+    `--owner` returns the team.json member flagged owner:true instead.
     """
     if len(sys.argv) < 2:
-        print(json.dumps({"error": "usage: resolve_contact.py <name> [name2 ...]"}))
+        print(json.dumps({"error": "usage: resolve_contact.py <name> [name2 ...] | --owner"}))
         sys.exit(1)
+
+    if sys.argv[1] == "--owner":
+        owner = get_owner()
+        if owner is None:
+            print(json.dumps({"error": "owner_not_found", "hint": "No member with \"owner\": true in config/team.json"}))
+            sys.exit(1)
+        print(json.dumps({"owner": owner}, indent=2))
+        return
 
     queries = sys.argv[1:]
     found, not_found = resolve_multiple(queries)

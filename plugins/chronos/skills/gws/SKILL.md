@@ -8,8 +8,8 @@ description: "Use when any task involves Google Workspace: reading/sending/draft
 **Skill name:** gws
 **Tool:** `gws` CLI v0.22.5+ (installed via Homebrew at `/opt/homebrew/bin/gws`)
 **Auth:** OAuth2, encrypted credentials at `~/.config/gws/credentials.enc`
-**Account:** REDACTED@example.com
-**GCP Project:** algolia-rag (792733722369)
+**Account:** whichever Google Workspace account you authenticate with via `gws auth login`
+**GCP Project:** your own Google Cloud project, registered with its own OAuth client (see First-time setup in the `meeting-scheduler` skill)
 
 ---
 
@@ -54,8 +54,8 @@ source ~/.config/gws/.env && gws <command>
 
 If `~/.config/gws/.env` doesn't exist on a machine, tell the user to create it (mode 600) with:
 ```
-export GOOGLE_WORKSPACE_CLI_CLIENT_ID="<from Google Cloud Console, algolia-rag project>"
-export GOOGLE_WORKSPACE_CLI_CLIENT_SECRET="<from Google Cloud Console, algolia-rag project>"
+export GOOGLE_WORKSPACE_CLI_CLIENT_ID="<from Google Cloud Console, your own GCP project>"
+export GOOGLE_WORKSPACE_CLI_CLIENT_SECRET="<from Google Cloud Console, your own GCP project>"
 ```
 Never ask the user to paste the actual secret value into chat — point them to Google Cloud Console → APIs & Services → Credentials.
 
@@ -115,7 +115,7 @@ gws gmail +forward --message-id MSG_ID --to recipient@example.com --body 'FYI' -
 
 ### Watch for new emails (streaming)
 ```bash
-gws gmail +watch --project algolia-rag --label-ids INBOX --once
+gws gmail +watch --project <your-gcp-project> --label-ids INBOX --once
 ```
 
 ### List messages (raw API)
@@ -281,7 +281,7 @@ gws calendar events insert --params '{"calendarId":"primary"}' --json '{
   "summary": "Team Standup",
   "start": {"dateTime": "2026-07-02T10:00:00-04:00"},
   "end": {"dateTime": "2026-07-02T10:30:00-04:00"},
-  "attendees": [{"email": "colleague@algolia.com"}]
+  "attendees": [{"email": "colleague@example.com"}]
 }'
 ```
 
