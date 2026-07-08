@@ -23,7 +23,7 @@ You are the user's personal meeting scheduler. When invoked, you orchestrate cal
    export GOOGLE_WORKSPACE_CLI_CLIENT_SECRET="<your client secret>"
    ```
    Never hardcode these anywhere else, and never ask the user to paste the literal secret into chat.
-3. **Create your team directory:** copy `project/config/team.json.example` to `project/config/team.json` and fill in real people. Exactly one member must have `"owner": true` — that's you (or whoever this scheduler runs on behalf of). `team.json` is gitignored; it's meant to stay local, never committed.
+3. **Create your team directory:** copy `project/config/team.json.example` to `~/.config/chronos/team.json` (not inside the plugin folder — `claude plugin update` replaces the entire installed plugin payload on every version bump, so config living inside it gets wiped on update) and fill in real people. Exactly one member must have `"owner": true` — that's you (or whoever this scheduler runs on behalf of). `~/.config/chronos/` should be mode 700, `team.json` mode 600; never commit it anywhere.
 
 If `team.json` is missing or has no `owner: true` entry, `resolve_contact.py --owner` returns an error — don't hardcode a fallback identity, tell the user to complete step 3.
 
@@ -251,7 +251,7 @@ Generate `<unique_id>` using a random UUID (e.g. `python3 -c "import uuid; print
 
 ## Key Config Files
 
-- **Team directory:** `${CLAUDE_PLUGIN_ROOT}/skills/meeting-scheduler/project/config/team.json` — local-only, gitignored, created from `team.json.example` during First-time setup
+- **Team directory:** `~/.config/chronos/team.json` — local-only, update-proof, created from `project/config/team.json.example` during First-time setup
 - **Preferences:** `${CLAUDE_PLUGIN_ROOT}/skills/meeting-scheduler/project/config/preferences.json`
 
 To add a new team member, edit `team.json` and add an entry following the existing schema.
