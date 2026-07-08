@@ -2,7 +2,7 @@
 resolve_contact.py — Resolve a person's name to their email and timezone.
 
 Resolution order:
-  1. config/team.json — name/alias match (case-insensitive)
+  1. ~/.config/chronos/team.json — name/alias match (case-insensitive)
   2. gws calendar calendarList — check subscribed calendars
   3. Return None → caller should ask user for email
 
@@ -23,7 +23,12 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-CONFIG_PATH = Path(__file__).parent.parent / "config" / "team.json"
+# Deliberately OUTSIDE the plugin's own install directory. `claude plugin
+# update` replaces the entire installed plugin payload with a fresh copy on
+# every version bump (verified 2026-07-07: config/team.json placed inside
+# the plugin dir vanished the moment the plugin was updated to a new
+# version). Real per-user config has to live somewhere update-proof.
+CONFIG_PATH = Path.home() / ".config" / "chronos" / "team.json"
 
 
 # ---------------------------------------------------------------------------
@@ -210,7 +215,7 @@ def main():
     if sys.argv[1] == "--owner":
         owner = get_owner()
         if owner is None:
-            print(json.dumps({"error": "owner_not_found", "hint": "No member with \"owner\": true in config/team.json"}))
+            print(json.dumps({"error": "owner_not_found", "hint": "No member with \"owner\": true in ~/.config/chronos/team.json"}))
             sys.exit(1)
         print(json.dumps({"owner": owner}, indent=2))
         return
