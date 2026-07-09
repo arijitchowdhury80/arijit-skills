@@ -950,7 +950,7 @@ def build_industry_context(research_dir):
 
     Graceful: returns None on any parse error or insufficient data.
     """
-    intel_path = os.path.join(research_dir, 'industry-intel.json')
+    intel_path = os.path.join(research_dir, '06-industry-intel.json')  # BUG FIX 2026-07-09: was missing the 06- prefix every other research file uses, so this was silently None for every audit ever run
     if not os.path.exists(intel_path):
         log('industry_context: industry-intel.json not found — setting null')
         return None
@@ -1108,6 +1108,16 @@ def lift_traffic_json(research_dir):
     if vintage:
         result['data_vintage'] = vintage
         log(f'traffic (JSON lift): data_vintage={vintage}')
+
+    # data_quality — MUST propagate forward so factcheck can see degraded/estimate data.
+    # Root cause of the 2026-07-01 lululemon false-PROCEED: this flag existed in
+    # 03-traffic-data.json but was silently dropped when building audit-data.json, so
+    # nothing downstream (mechanical script or LLM) could ever see or block on it.
+    data_quality = meta.get('data_quality')
+    if data_quality:
+        result['data_quality'] = data_quality
+        result['degraded_mode'] = bool(meta.get('degraded_mode', False))
+        log(f'traffic (JSON lift): data_quality={data_quality!r} degraded_mode={meta.get("degraded_mode", False)}')
 
     return result
 

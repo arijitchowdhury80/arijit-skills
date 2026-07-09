@@ -245,6 +245,22 @@ def struct_traffic(data):
     if not isinstance(tr, dict) or not tr:
         return {"pass": True, "skipped": "no traffic block", "fails": []}
 
+    # data_quality gate — SimilarWeb is PERMANENT HITL, no API exists or ever will.
+    # degraded_mode=true means the API path was attempted, failed, and the module fell
+    # back to a Gemini-search ESTIMATE instead of a real HITL capture. That is a policy
+    # violation, not a warning: it must BLOCK, not PROCEED. (Root cause of the 2026-07-01
+    # lululemon false 9.4/10 PROCEED — this flag existed in research JSON but was dropped
+    # before reaching audit-data.json, so nothing could ever check it. Fixed upstream in
+    # generate-audit-data.py's lift_traffic_json; this is the enforcement side.)
+    dq = str(tr.get("data_quality") or "").upper()
+    if tr.get("degraded_mode") is True or "DEGRADED" in dq or "ESTIMATE" in dq:
+        fails.append(
+            f"traffic.data_quality={tr.get('data_quality')!r} / degraded_mode={tr.get('degraded_mode')!r} "
+            "— SimilarWeb traffic data is API-fallback/estimate, not a verified HITL capture. "
+            "BLOCKED per permanent HITL policy: no API-derived or estimate traffic data may ship. "
+            "Run the SimilarWeb PRO live-capture method (see algolia-intel-traffic SKILL.md) and re-run this module."
+        )
+
     def check_share(label, v):
         for p in all_pcts(v):
             if p < 0 or p > 100:
