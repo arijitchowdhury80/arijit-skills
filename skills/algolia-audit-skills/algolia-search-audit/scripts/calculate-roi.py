@@ -324,18 +324,24 @@ def calculate_components(a: dict) -> dict:
 
     # Monthly search sessions = monthly_visits × search_usage_rate
     sessions = visits * sur if (visits is not None and sur is not None) else None
+    cur_conv_c1 = d.get('current_conversion')
 
     # ── Component 1: Search Conversion Lift ──────────────────────────────────
-    # sessions × conversion_delta × AOV × 12
-    if sessions is not None and aov is not None:
-        c1c = sessions * d['c1_conv_delta_conservative'] * aov * 12
-        c1m = sessions * d['c1_conv_delta_moderate'] * aov * 12
+    # BUG FIX 2026-07-09: previously computed sessions × conv_delta × AOV × 12 with NO
+    # baseline conversion rate — treating "15% conversion lift" as if 15% of ALL search
+    # sessions become brand-new orders. A relative lift must anchor to real orders first
+    # (orders = sessions × current_conversion), exactly like Component 2 already does.
+    # Without current_conversion this MUST be SKIPPED, not computed on an unanchored guess.
+    if sessions is not None and aov is not None and cur_conv_c1 is not None:
+        orders_c1 = sessions * cur_conv_c1
+        c1c = orders_c1 * d['c1_conv_delta_conservative'] * aov * 12
+        c1m = orders_c1 * d['c1_conv_delta_moderate'] * aov * 12
         add(1, 'Search Conversion Lift', d.get('c1_status', 'ACTIVE'), (c1c, c1m),
-            f"{visits:,.0f} visits × {sur:.0%} search usage × {d['c1_conv_delta_conservative']:.0%} conv delta × ${aov:,.2f} AOV × 12 = {_money(c1c)}",
-            f"{visits:,.0f} visits × {sur:.0%} search usage × {d['c1_conv_delta_moderate']:.0%} conv delta × ${aov:,.2f} AOV × 12 = {_money(c1m)}")
+            f"({visits:,.0f} × {sur:.0%} × {cur_conv_c1:.1%} conv) orders × {d['c1_conv_delta_conservative']:.0%} lift × ${aov:,.2f} AOV × 12 = {_money(c1c)}",
+            f"({visits:,.0f} × {sur:.0%} × {cur_conv_c1:.1%} conv) orders × {d['c1_conv_delta_moderate']:.0%} lift × ${aov:,.2f} AOV × 12 = {_money(c1m)}")
     else:
         add(1, 'Search Conversion Lift', 'SKIPPED', (None, None),
-            'SKIPPED — needs monthly_visits, search_usage_rate, aov', 'SKIPPED')
+            'SKIPPED — needs monthly_visits, search_usage_rate, aov, current_conversion (AE fill-in; a relative lift cannot be computed without the real baseline conversion rate)', 'SKIPPED')
 
     # ── Component 2: AOV Increase ────────────────────────────────────────────
     # search_initiated_orders/mo × aov_delta(× AOV) × 12
@@ -381,19 +387,22 @@ def calculate_components(a: dict) -> dict:
             'SKIPPED — needs sessions, aov', 'SKIPPED')
 
     # ── Component 5: Speed / Latency Gain ────────────────────────────────────
-    # visits × search_usage × (delay_buckets × revenue_per_100ms) × AOV × 12
-    if visits is not None and sur is not None and aov is not None:
+    # BUG FIX 2026-07-09: same class of bug as Component 1 — "1% revenue impact per 100ms"
+    # is a lift on REAL revenue (orders × AOV), not on raw session count. Must anchor to
+    # orders = sessions × current_conversion first. SKIP without current_conversion.
+    if sessions is not None and aov is not None and cur_conv_c1 is not None:
+        orders_c5 = sessions * cur_conv_c1
         rev100 = d['c5_revenue_per_100ms']
         bc = d['c5_delay_buckets_conservative']
         bm = d['c5_delay_buckets_moderate']
-        c5c = visits * sur * (bc * rev100) * aov * 12
-        c5m = visits * sur * (bm * rev100) * aov * 12
+        c5c = orders_c5 * (bc * rev100) * aov * 12
+        c5m = orders_c5 * (bm * rev100) * aov * 12
         add(5, 'Speed / Latency Gain', d.get('c5_status', 'CONDITIONAL'), (c5c, c5m),
-            f"{visits:,.0f} × {sur:.0%} × ({bc} bucket × {rev100:.0%}/100ms) × ${aov:,.2f} × 12 = {_money(c5c)}",
-            f"{visits:,.0f} × {sur:.0%} × ({bm} buckets × {rev100:.0%}/100ms) × ${aov:,.2f} × 12 = {_money(c5m)}")
+            f"({visits:,.0f} × {sur:.0%} × {cur_conv_c1:.1%} conv) orders × ({bc} bucket × {rev100:.0%}/100ms) × ${aov:,.2f} × 12 = {_money(c5c)}",
+            f"({visits:,.0f} × {sur:.0%} × {cur_conv_c1:.1%} conv) orders × ({bm} buckets × {rev100:.0%}/100ms) × ${aov:,.2f} × 12 = {_money(c5m)}")
     else:
         add(5, 'Speed / Latency Gain', 'SKIPPED', (None, None),
-            'SKIPPED — needs monthly_visits, search_usage_rate, aov', 'SKIPPED')
+            'SKIPPED — needs monthly_visits, search_usage_rate, aov, current_conversion (AE fill-in)', 'SKIPPED')
 
     # ── Component 6: Long-Tail Discovery ─────────────────────────────────────
     # monthly_searches × nlp_fail_rate × AOV × recovery_rate × 12
