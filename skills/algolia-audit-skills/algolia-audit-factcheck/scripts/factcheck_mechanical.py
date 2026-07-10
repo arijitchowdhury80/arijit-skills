@@ -202,9 +202,15 @@ def struct_techstack(data):
     if not isinstance(ts, dict) or not ts:
         return {"pass": True, "skipped": "no tech_stack block", "fails": []}
 
-    provider = ts.get("search_provider") or ts.get("search_vendor") or ""
+    # current_vendor is the canonical field when the report/render pipeline overrides the
+    # client-side detect-search finding with partner/investor intel (e.g. Belk: detect-search
+    # found nothing but partner intel confirmed Constructor.io). search_provider/search_vendor
+    # are the raw detect-search output and may be empty even when current_vendor is correctly
+    # set — checking only the raw fields produced a false "search provider field is empty"
+    # BLOCKED on Belk's 2026-07-03 run even after the vendor was correctly resolved.
+    provider = ts.get("current_vendor") or ts.get("search_provider") or ts.get("search_vendor") or ""
     if not nonempty_str(str(provider)):
-        fails.append("tech_stack: search provider field is empty")
+        fails.append("tech_stack: search provider field is empty (checked current_vendor, search_provider, search_vendor)")
     else:
         p = str(provider).strip()
         # leaked markdown-fragment signature: a bullet / label / bold marker instead of a vendor name
@@ -219,6 +225,25 @@ def struct_techstack(data):
                         if nonempty_str(str(ts.get(k) or "")) and not str(ts.get(k)).strip().startswith("-")]
     if negation and len(populated_fields) >= 2:
         fails.append(f"tech_stack_summary claims no detection ('{negation.group(0)}') but these fields are populated: {populated_fields}")
+
+    # current_vendor self-consistency: when current_vendor is set from an override (partner/
+    # investor intel), tech_stack_summary must name that SAME vendor — never a different one
+    # left over from an earlier detect-search pass. Root cause of Belk's original C1 bug
+    # (summary said "proprietary search" while current_vendor said "Constructor.io"); this is
+    # the structural check that would have caught it instead of requiring a manual re-render.
+    cv_raw = str(ts.get("current_vendor") or "").strip()
+    # strip a trailing parenthetical qualifier (e.g. "Constructor.io (displacement target)")
+    # before the substring check — the vendor name itself is what must appear in the summary,
+    # not the deal-context annotation tacked onto it. Belk 2026-07-09: a real vendor match was
+    # false-flagged because "Constructor.io" and "(displacement target)" aren't one contiguous
+    # substring in the summary even though the vendor name is clearly present.
+    cv = re.sub(r"\s*\([^)]*\)\s*$", "", cv_raw).strip()
+    if cv and summary and cv.lower() not in summary.lower():
+        fails.append(
+            f"tech_stack_summary does not name current_vendor ('{cv_raw}') — summary may describe a "
+            f"stale/different vendor from an earlier detect-search pass. Regenerate the summary "
+            f"from current_vendor before shipping."
+        )
 
     # garbage full_list: a list of bare label fragments (ends with ':') is a parse failure
     fl = ts.get("full_list")
@@ -328,12 +353,24 @@ def struct_partner(data):
     return {"pass": not fails, "fails": fails}
 
 
-def struct_screenshots(data, screenshots_roots, rendered_html):
+def struct_screenshots(data, screenshots_roots, rendered_html, browser_findings_path=None):
     fails = []
     findings = data.get("findings") or []
     if not isinstance(findings, list) or not findings:
         return {"pass": True, "skipped": "no findings", "fails": []}
     html = read(rendered_html) if rendered_html and os.path.isfile(rendered_html) else ""
+
+    # WAF-degraded exception: a genuine WAF/bot-challenge interstitial (e.g. Belk's PerimeterX
+    # "Press & Hold" block) is a real, small screenshot by construction — flagging it as
+    # "blank/broken" on size alone produced a false BLOCKED on Belk's 2026-07-03 run even though
+    # the screenshot was verified real. Read the browser-findings doc's own status line rather
+    # than guess from size.
+    waf_degraded = False
+    if browser_findings_path and os.path.isfile(browser_findings_path):
+        bf_text = read(browser_findings_path)
+        if re.search(r"STATUS:\s*WAF[- ]BLOCKED|blocked\s+by\s+waf|waf[- ]block", bf_text, re.IGNORECASE):
+            waf_degraded = True
+
     checked = 0
     for f in findings:
         if not isinstance(f, dict):
@@ -358,11 +395,16 @@ def struct_screenshots(data, screenshots_roots, rendered_html):
             fails.append(f"screenshots: finding {fid} references '{sf}' but the file is not present on disk")
             continue
         size = os.path.getsize(found_path)
+        finding_text = f"{f.get('title', '')} {f.get('detail', '')} {f.get('description', '')}".lower()
+        is_waf_finding = waf_degraded and re.search(r"waf|blocked|interstitial|perimeterx|press\s*&?\s*hold", finding_text)
         if size < 50 * 1024:
-            fails.append(f"screenshots: finding {fid} file '{base}' is only {size} bytes (< 50KB — likely blank/broken)")
+            if is_waf_finding:
+                pass  # PASS-with-note: legitimately small because it's a bot-challenge page, not blank/broken
+            else:
+                fails.append(f"screenshots: finding {fid} file '{base}' is only {size} bytes (< 50KB — likely blank/broken)")
         if html and base not in html and os.path.splitext(base)[0] not in html:
             fails.append(f"screenshots: finding {fid} file '{base}' is NOT embedded in the rendered index.html")
-    return {"pass": not fails, "checked": checked, "embed_checked": bool(html), "fails": fails}
+    return {"pass": not fails, "checked": checked, "embed_checked": bool(html), "waf_degraded": waf_degraded, "fails": fails}
 
 
 def struct_next_steps(data):
@@ -538,6 +580,7 @@ def run_structural(audit_data_path, rendered_html=None):
     # {company}/index.html next to {company}/screenshots/, with audit-data.json one level up)
     if rendered_html and os.path.isfile(rendered_html):
         screenshots_roots.insert(0, os.path.dirname(os.path.abspath(rendered_html)))
+    browser_findings_path = os.path.join(company_dir, "research", "09-browser-findings.md")
 
     dims = {
         "financials": struct_financials(data),
@@ -545,7 +588,7 @@ def run_structural(audit_data_path, rendered_html=None):
         "traffic": struct_traffic(data),
         "hiring": struct_hiring(data),
         "partner_intel": struct_partner(data),
-        "screenshots": struct_screenshots(data, screenshots_roots, rendered_html),
+        "screenshots": struct_screenshots(data, screenshots_roots, rendered_html, browser_findings_path),
         "next_steps": struct_next_steps(data),
         "dash_citation": struct_dash_citation(data),
     }
