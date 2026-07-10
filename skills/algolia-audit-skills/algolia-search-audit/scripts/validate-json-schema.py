@@ -140,8 +140,11 @@ if isinstance(abx, dict):
         fail('abx_sequence.touches empty — ABX sequence section shows nothing')
     else:
         for i, t in enumerate(touches):
-            if not t.get('body') and not t.get('message') and not t.get('email_body'):
-                warn(f'abx touch {i+1} (T{t.get("touch","?")}) has no body/message — content will be empty')
+            # video-channel touches carry their content in video_script (the template reads
+            # t.video_script for the Loom panel, never t.body) — checking body/message/email_body
+            # alone false-warned on every valid video touch (Belk 2026-07-03).
+            if not t.get('body') and not t.get('message') and not t.get('email_body') and not t.get('video_script'):
+                warn(f'abx touch {i+1} (T{t.get("touch","?")}) has no body/message/video_script — content will be empty')
     if not contacts:
         fail('abx_sequence.contacts empty — no contacts shown in ABX section')
     # Check for CEO as contact
