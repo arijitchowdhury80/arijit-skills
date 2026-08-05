@@ -19,7 +19,7 @@ Create co-branded materials for technology partners and system integrators. Mana
 
 ## Process
 
-1. **Co-Brand Framework** -- Establish logo hierarchy: for Algolia-led materials, Algolia logo appears first/left/top; for joint materials, both logos at equal size side by side. Define color usage: primary sections use Algolia brand colors, partner sections can use partner colors in designated areas. Neutral sections use Space Gray on white.
+1. **Co-Brand Framework** -- Establish logo hierarchy: for Algolia-led materials, Algolia logo appears first/left/top; for joint materials, both logos at equal size side by side. Define color usage: primary sections use Algolia brand colors, partner sections can use partner colors in designated areas. Neutral sections use the body colour from `../algolia-shared-reference/brand-core/tokens.md` on white.
 2. **Joint Value Proposition** -- Write a combined headline that names both companies and the joint outcome. Format: "[Partner] + Algolia: [Benefit Statement]". The value proposition must be greater than either product alone -- explain the integration multiplier.
 3. **Joint Solution Brief** -- Two to three pages: (1) Cover with both logos and joint headline, (2) Challenge section framing the problem the joint solution solves, (3) Solution architecture showing how the products integrate, (4) Benefits section with three to four joint value points, (5) Customer proof point if available, (6) CTA for both companies.
 4. **Integration Overview** -- One page: architecture diagram description, integration method (API, webhook, plugin, native), data flow summary, setup complexity estimate, supported platforms and versions. Technical but accessible to a solutions architect audience.

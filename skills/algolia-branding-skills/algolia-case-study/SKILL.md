@@ -26,7 +26,7 @@ Create a structured customer success story using the challenge-solution-results 
 4. **Technical Sidebar** -- Optional boxed section with implementation specifics: products used, integration method, data volume, index configuration, custom features. Use bullet points. Background: the section wash `#f7f8fb`.
 5. **Results Section** -- Lead with the headline metric (the most impressive number). Follow with two to four supporting metrics. Each metric: large number in Nebula Blue #003DFF with a descriptive label. Provide context for each number (before vs. after, timeframe). Heading: "The Results" in H2.
 6. **Pull Quotes** -- Extract two to three compelling quotes from the customer. Format: large text in `#003DFF` with attribution (name, title, company) below. Sora has no italic — use weight and size for emphasis, never a faux-italic transform. Place one in the challenge section, one in the results section.
-7. **Key Metrics Callout Strip** -- Horizontal bar with three to four quantified results: percentage improvements, time savings, revenue impact. Large numbers in Nebula Blue, labels in Space Gray.
+7. **Key Metrics Callout Strip** -- Horizontal bar with three to four quantified results: percentage improvements, time savings, revenue impact. Large numbers in `#003DFF`, labels in the body colour from `../algolia-shared-reference/brand-core/tokens.md`.
 8. **CTA Section** -- "Ready to see similar results?" followed by a CTA button linking to demo request or free trial. Include a secondary link to related case studies.
 9. **Metadata** -- Industry tag, company size, Algolia products used, region, use case type (ecommerce search, content discovery, mobile search, etc.).
 10. **Run `/algolia-brand-check`** on the complete case study before finalizing.
