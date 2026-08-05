@@ -60,7 +60,7 @@ exact values — do not "modernize" them, or previously shipped output stops mat
 |---|---|---|
 | `--color-primary` | `#003DFF` | Primary CTA, links |
 | `--color-accent` | `#5468FF` | Accent — valid in this theme only |
-| `--color-text` | `#23263B` | Headings and body |
+| `--color-text` | `#23263B` | **Space Gray** — headings and body |
 | `--color-muted` | `#6B7280` | Secondary text |
 | `--color-bg` | `#F5F5F7` | Page background |
 | `--color-border` | `#E5E7EB` | Card and section borders |
@@ -70,6 +70,12 @@ Severity system: critical `#DC2626`, moderate `#D97706`, positive `#059669`, eac
 border variants.
 
 Hero gradient: `linear-gradient(135deg, #0D1240 0%, #21243D 45%, #001A8A 100%)`.
+
+> **Naming note.** "Space Gray" is the current, valid name for `#23263B` in this theme — it is not
+> retired, and it is **not** `#21243D`. `#21243D` survives only as a midpoint of the hero gradient
+> above; it is not a text or surface colour in either theme. Do not treat the name and that hex as
+> interchangeable. The `marketing` theme has no Space Gray: its body colour is `#2f3447` and its
+> headline ink is `#021046`, so the name should not appear in marketing guidance at all.
 
 ---
 
