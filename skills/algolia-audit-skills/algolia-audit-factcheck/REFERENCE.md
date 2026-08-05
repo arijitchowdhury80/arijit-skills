@@ -268,9 +268,9 @@ Read `memory/search-audit-impact-map.md` (the SAIM reference) and verify every c
    - etc.
 
 2. **Algolia Approved Stats**: Verify:
-   - "17,000+ customers" (not 17,500 or 18,000)
-   - "1.75T searches" or "1.7 trillion searches/year"
-   - "30 billion records indexed"
+   - "18,000+ businesses" (not 17,000+, not 18,500)
+   - "1.75 trillion searches a year" (not 1.7 trillion)
+   - (withdrawn: "30 billion records indexed" has no current source — flag any use)
 
 3. **Case Study Metrics**: Cross-check any customer case study citations:
    - "Lacoste: 37% increase in search revenue" → must match reference
@@ -278,7 +278,7 @@ Read `memory/search-audit-impact-map.md` (the SAIM reference) and verify every c
    - "Herschel: 80% no-results reduction" → must match reference
 
 4. **Product Names**: Verify Algolia product names are correct:
-   - "Algolia Search", "Algolia Recommend", "Algolia NeuralSearch", "Algolia AI Search"
+   - "Algolia Search", "Algolia Recommendations", "Algolia AI Search & Retrieval", "Algolia AI Search"
    - NOT: "Algolia search" (lowercase), "Algolia's Search" (possessive)
 
 **Output**: Write combined results to `dim-1-2-3-results.md` with per-claim status tables.

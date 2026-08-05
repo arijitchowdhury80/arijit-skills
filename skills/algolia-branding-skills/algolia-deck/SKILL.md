@@ -19,7 +19,7 @@ Create structured presentation content following the official Algolia slide temp
 
 1. **Outline Structure** -- Create a narrative arc: opening hook, problem framing, solution positioning, proof points, call to action. Map each section to slide count allocation.
 2. **Title Slide** -- Company logo placement top-left, presentation title centered, subtitle with date and presenter name, Nebula Blue #003DFF background with white text.
-3. **Agenda Slide** -- Three to five agenda items, numbered, sentence case. White background with Space Gray #21243D text.
+3. **Agenda Slide** -- Three to five agenda items, numbered, sentence case. White background with `#021046` headings and `#2f3447` body text.
 4. **Problem/Challenge Slides** -- Frame the audience pain point. Use data callouts, short bullet points (max four per slide), supporting visuals guidance. One idea per slide.
 5. **Solution Slides** -- Position Algolia capabilities against the framed problem. Use two-column layouts for before/after or feature/benefit pairs. Include product screenshots or architecture diagrams as callouts.
 6. **Proof Point Slides** -- Customer logos, quantified results (use approved stats), pull quotes from case studies. Data visualization guidance for charts and graphs.
@@ -45,12 +45,18 @@ For each slide, provide:
 - Estimated presentation duration
 - Key message reinforcement checklist
 
-## Brand Requirements
+## Brand requirements
 
-- **Voice**: Confident and credible -- presentations should feel authoritative without being pushy
-- **Colors**: Title/divider slides use Nebula Blue #003DFF background with white text. Content slides use white background with Space Gray #21243D text. Accent elements use Algolia Purple #5468FF. Data visualizations use the Algolia color palette.
-- **Font**: Source Sans Pro for all text. Titles 28-36pt bold. Body 18-24pt regular. Speaker notes 14pt.
-- **Logo**: Algolia logo top-left on title slide, bottom-right on content slides. Minimum clear space of 1x logo height on all sides.
-- **Bullets**: Use sentence case, no periods on single-line bullets, max four bullets per slide
-- **Stats**: Only use approved metrics (17,000+ customers, 1.7T searches/year, 30B records)
-- **Competitors**: Never name competitors in customer-facing decks; use "legacy solutions" or "traditional approaches"
+**Theme: `marketing`.** Read `../algolia-shared-reference/brand-core/` before generating —
+`tokens.md`, `approved-stats.md`, `product-names.md`, and `messaging-framework.md`. Those files are
+the source of truth for color, typography, statistics, product naming, voice, and editorial standards.
+Do not rely on brand values remembered from anywhere else; Algolia's brand moved in 2026.
+
+**Skill-specific**
+- Maximum four bullets per slide, sentence case, no periods on single-line bullets.
+- Title and divider slides: `#003DFF` background, white text. Content slides: white background.
+- Logo top-left on the title slide, bottom-right on content slides, clear space of 1x logo height.
+- Titles 28–36pt, body 18–24pt, speaker notes 14pt.
+- Speaker notes expand on the bullets; they never repeat them.
+
+Run `/algolia-brand-check --theme marketing` on the output before finalizing.
