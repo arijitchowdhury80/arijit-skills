@@ -514,7 +514,7 @@ Create comparison table:
 
 | Feature/Capability | {Prospect} Current | Competitor A (Leader) | Competitor B (Parity) | Algolia Positioning |
 |-------------------|-------------------|---------------------|---------------------|-------------------|
-| **NLP / Semantic Search** | ❌ None | ✅ Advanced (Algolia NeuralSearch) | ❌ None | **Defensive** (close gap) + **Golden Angle** (proven) |
+| **NLP / Semantic Search** | ❌ None | ✅ Advanced (Algolia AI Search & Retrieval) | ❌ None | **Defensive** (close gap) + **Golden Angle** (proven) |
 | **Personalization** | ❌ None | ✅ Yes (Algolia AI) | ⚠️ Basic | **Defensive** (close gap) + **Offensive** (leapfrog parity) |
 | **Dynamic Faceting** | ⚠️ Static | ✅ Query-aware | ⚠️ Static | **Offensive** (leapfrog 4/5 competitors) |
 | **Recommendations** | ❌ None | ✅ ML-powered | ❌ None | **Offensive** (shared gap = differentiation opportunity) |
@@ -654,7 +654,7 @@ Synthesize financial data with trend visualization.
 
 **Trend Analysis**: Calculate YoY growth rates. Flag divergences (e.g., "Revenue growing 8% but e-commerce growing 22% = digital acceleration"). Flag margin compression.
 
-**Graph Specification (for deck)**: Multi-line indexed chart: Revenue (Algolia Purple #5468FF), E-commerce (Nebula Blue #003DFF), Net Income (Space Gray #21243D). Annotations at inflection points.
+**Graph Specification (for deck)**: Multi-line indexed chart: Revenue (Algolia Purple #5468FF), E-commerce (Nebula Blue #003DFF), Net Income (Space Gray #23263B). Annotations at inflection points.
 
 **ROI estimate formula** (show the math):
 ```
@@ -878,7 +878,7 @@ f. **Industry/Analyst Coverage**:
 ### In Their Own Words (Sourced Quotes)
 | # | Speaker | Title | Quote | Source | Date | Source URL | Maps To |
 |---|---------|-------|-------|--------|------|-----------|---------|
-| 1 | {Name} | {Title} | "{exact quote}" | Q4 FY2025 Earnings Call | Feb 2025 | {url} | Algolia NeuralSearch |
+| 1 | {Name} | {Title} | "{exact quote}" | Q4 FY2025 Earnings Call | Feb 2025 | {url} | Algolia AI Search & Retrieval |
 
 ### Forward Guidance
 - E-commerce revenue target: {stated target or "not disclosed"}
@@ -957,7 +957,7 @@ Note: `10-scoring-matrix.md` is referenced here but will be empty at this stage 
 ### Priority-to-Product Map
 | Their Stated Priority | Source | Algolia Solution | Discovery Question |
 |---|---|---|---|
-| "{exact quote from executive}" | Q4 2025 Earnings | NeuralSearch | "You told investors X — we can help with Y" |
+| "{exact quote from executive}" | Q4 2025 Earnings | AI Search & Retrieval | "You told investors X — we can help with Y" |
 
 ### Anchor Points for AE
 1. "{Company} told investors {X} — we can accelerate that with {product}"

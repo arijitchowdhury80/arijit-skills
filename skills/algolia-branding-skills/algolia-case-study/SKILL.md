@@ -22,10 +22,10 @@ Create a structured customer success story using the challenge-solution-results 
 
 1. **Customer Overview** -- One paragraph (3-4 sentences) introducing the customer: company name, industry, size, what they do, and why search/discovery matters to their business. Include company logo placement guidance.
 2. **Challenge Section** -- Two to three paragraphs describing the problem before Algolia. Lead with the business impact (lost revenue, poor UX, developer frustration), then detail the technical limitations. Use the customer's words where possible. Heading: "The Challenge" in H2.
-3. **Solution Section** -- Two to three paragraphs on how Algolia addressed the challenge. Name specific Algolia products used (Algolia Search, Algolia Recommend, Algolia AI Search). Describe the implementation approach without excessive technical jargon. Heading: "The Solution" in H2.
-4. **Technical Sidebar** -- Optional boxed section with implementation specifics: products used, integration method, data volume, index configuration, custom features. Use bullet points. Background: Light Gray #F5F5F7.
+3. **Solution Section** -- Two to three paragraphs on how Algolia addressed the challenge. Name the specific Algolia products used, taking the current names from `../algolia-shared-reference/brand-core/product-names.md`. Describe the implementation approach without excessive technical jargon. Heading: "The Solution" in H2.
+4. **Technical Sidebar** -- Optional boxed section with implementation specifics: products used, integration method, data volume, index configuration, custom features. Use bullet points. Background: the section wash `#f7f8fb`.
 5. **Results Section** -- Lead with the headline metric (the most impressive number). Follow with two to four supporting metrics. Each metric: large number in Nebula Blue #003DFF with a descriptive label. Provide context for each number (before vs. after, timeframe). Heading: "The Results" in H2.
-6. **Pull Quotes** -- Extract two to three compelling quotes from the customer. Format: large italic text in Algolia Purple #5468FF with attribution (name, title, company) below. Place one in the challenge section, one in the results section.
+6. **Pull Quotes** -- Extract two to three compelling quotes from the customer. Format: large text in `#003DFF` with attribution (name, title, company) below. Sora has no italic — use weight and size for emphasis, never a faux-italic transform. Place one in the challenge section, one in the results section.
 7. **Key Metrics Callout Strip** -- Horizontal bar with three to four quantified results: percentage improvements, time savings, revenue impact. Large numbers in Nebula Blue, labels in Space Gray.
 8. **CTA Section** -- "Ready to see similar results?" followed by a CTA button linking to demo request or free trial. Include a secondary link to related case studies.
 9. **Metadata** -- Industry tag, company size, Algolia products used, region, use case type (ecommerce search, content discovery, mobile search, etc.).
@@ -61,13 +61,20 @@ Create a structured customer success story using the challenge-solution-results 
 - Key objection this case study addresses
 - Ideal prospect profile for this story
 
-## Brand Requirements
+## Brand requirements
 
-- **Voice**: Let the customer be the hero. Algolia is the enabler, not the protagonist. Tone is celebratory of the customer's success, credible, and specific.
-- **Colors**: Nebula Blue #003DFF (metric numbers, accent elements), Space Gray #21243D (body text, headings), Algolia Purple #5468FF (pull quotes), Light Gray #F5F5F7 (technical sidebar background), White #FFFFFF (main background)
-- **Font**: Source Sans Pro -- headings bold, body regular, metrics in bold
-- **Product Names**: Always use full official names: Algolia Search, Algolia Recommend, Algolia AI Search
-- **Metrics**: All results must be customer-approved and accurately attributed. No rounding that inflates results.
-- **Quotes**: Must be real customer quotes with proper attribution. Never fabricate or paraphrase without noting it.
-- **Competitors**: If the customer previously used a competitor, refer to it as "their previous solution" or "their legacy search provider" -- never by name
-- **Logo Usage**: Customer logo requires permission. Display at consistent size alongside Algolia logo on the cover.
+**Theme: `marketing`.** Read `../algolia-shared-reference/brand-core/` before generating —
+`tokens.md`, `approved-stats.md`, `product-names.md`, and `messaging-framework.md`. Those files are
+the source of truth for color, typography, statistics, product naming, voice, and editorial standards.
+Do not rely on brand values remembered from anywhere else; Algolia's brand moved in 2026.
+
+**Skill-specific**
+- **The customer is the hero.** Algolia is the enabler, never the protagonist.
+- All metrics must be customer-approved and accurately attributed. No rounding that inflates results.
+- Quotes must be real, with name, title, and company. Never fabricate; never paraphrase without
+  marking it as such.
+- Customer logo requires written permission.
+- If the customer replaced a competitor, call it "their previous solution" — never by name.
+- Use the company insert from `../algolia-shared-reference/content-templates/case-study.md` verbatim.
+
+Run `/algolia-brand-check --theme marketing` on the output before finalizing.

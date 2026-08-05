@@ -61,13 +61,25 @@ Write interface text that is concise, helpful, and brand-consistent. Covers ever
 ### Onboarding Copy
 - Step headings, instructions, completion message
 
-## Brand Requirements
+## Brand requirements
 
-- **Voice**: Helpful, clear, and concise. UI copy is the most utilitarian expression of the Algolia voice. Every word must earn its place. Be direct without being curt. Be helpful without being verbose.
-- **Colors**: Nebula Blue #003DFF (primary actions, links), Space Gray #21243D (body text, labels), Algolia Purple #5468FF (accents, highlights), Green #00C853 (success states), Red #FF3D00 (error/destructive states), Amber #FFC107 (warning states)
-- **Font**: Source Sans Pro -- UI labels 14px medium, body text 14px regular, small text 12px regular
-- **Capitalization**: Sentence case for all UI text. Never use ALL CAPS except for abbreviations (API, SDK, URL).
-- **Punctuation**: No periods on single-sentence tooltips, button labels, or headings. Use periods on multi-sentence descriptions and error messages. No exclamation marks except in celebratory completion messages (use sparingly).
-- **Length**: Button labels 2-4 words. Tooltips 1-2 sentences. Error messages 1-2 sentences. Empty states 2-3 sentences maximum.
-- **Anthropomorphism**: The product "helps you", "lets you", "shows you" -- it never "thinks", "believes", or "knows"
-- **Technical Terms**: Use developer-friendly language but explain Algolia-specific concepts. "Index" is acceptable; "inverted index data structure" needs simplification for UI context.
+**Theme: `deliverable`.** Read `../algolia-shared-reference/brand-core/` before generating —
+`tokens.md`, `approved-stats.md`, `product-names.md`, and `messaging-framework.md`. Those files are
+the source of truth for color, typography, statistics, product naming, voice, and editorial standards.
+Do not rely on brand values remembered from anywhere else; Algolia's brand moved in 2026.
+
+**Skill-specific**
+
+This is product UI — the Algolia dashboard and console — so it uses the `deliverable` app palette,
+not the marketing palette.
+
+- Sentence case for all UI text. ALL CAPS only for abbreviations (API, SDK, URL).
+- Button labels 2–4 words. Tooltips 1–2 sentences. Error messages 1–2 sentences. Empty states 2–3.
+- No periods on single-sentence tooltips, button labels, or headings. Periods on multi-sentence
+  descriptions and error messages.
+- Status colors come from the `deliverable` severity system in `tokens.md`: positive `#059669`,
+  moderate `#D97706`, critical `#DC2626`. Do not invent status colors.
+- The product "helps you", "lets you", "shows you" — it never "thinks", "believes", or "knows".
+- Never blame the user in an error message. Always give a recovery action.
+
+Run `/algolia-brand-check --theme deliverable` on the output before finalizing.

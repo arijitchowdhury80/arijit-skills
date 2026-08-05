@@ -56,14 +56,19 @@ Write a complete blog post for the Algolia blog with proper SEO structure, edito
 - Internal link suggestions
 - Image alt text recommendations
 
-## Brand Requirements
+## Brand requirements
 
-- **Voice**: Authoritative yet accessible -- the Algolia blog is a trusted resource, not a sales pitch. Technical content should educate; thought leadership should provoke thinking.
-- **Colors**: If including HTML elements: Nebula Blue #003DFF for links and accents, Space Gray #21243D for body text
-- **Font**: Source Sans Pro for any styled output
-- **Headings**: Sentence case (capitalize first word and proper nouns only)
-- **Editorial**: AP Style, Oxford comma, numbers under 10 spelled out, no exclamation marks in headings
-- **Product References**: Use full product names on first mention (Algolia AI Search), shortened form acceptable on subsequent mentions (AI Search)
-- **Stats**: Only approved metrics or properly attributed third-party data
-- **Competitors**: Never name competitors; use "traditional search" or "legacy approaches"
-- **CTAs**: Every post must end with a clear, relevant call to action
+**Theme: `marketing`.** Read `../algolia-shared-reference/brand-core/` before generating —
+`tokens.md`, `approved-stats.md`, `product-names.md`, and `messaging-framework.md`. Those files are
+the source of truth for color, typography, statistics, product naming, voice, and editorial standards.
+Do not rely on brand values remembered from anywhere else; Algolia's brand moved in 2026.
+
+**Skill-specific**
+- Blog voice is authoritative yet accessible — a trusted resource, not a sales pitch. Technical posts
+  educate; thought leadership provokes thinking.
+- Product references use the full name on first mention, shortened form afterwards.
+- No exclamation marks in headings.
+- Every post ends with one clear, relevant call to action.
+- Third-party research must be linked and attributed, not paraphrased as an Algolia claim.
+
+Run `/algolia-brand-check --theme marketing` on the output before finalizing.

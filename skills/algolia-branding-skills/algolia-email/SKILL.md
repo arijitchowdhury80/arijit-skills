@@ -56,14 +56,20 @@ Create email content optimized for deliverability, engagement, and conversion wh
 - Conditional content blocks (if any)
 - Plain-text fallback guidance
 
-## Brand Requirements
+## Brand requirements
 
-- **Voice**: Helpful and direct -- emails should feel like a smart colleague sharing something useful, not a marketing blast. Developers get technical precision; executives get business impact.
-- **Colors**: Nebula Blue #003DFF (CTA buttons, accent bars), Space Gray #21243D (body text), White #FFFFFF (background), Algolia Purple #5468FF (secondary accents only)
-- **Font**: Source Sans Pro or system fallback stack (Arial, Helvetica, sans-serif) for email client compatibility
-- **Logo**: Algolia logo in header (centered or left-aligned) and footer (small, left-aligned)
-- **CTA Buttons**: Nebula Blue #003DFF background, white text, 16px font, 44px minimum height, 8px border-radius
-- **Subject Lines**: No ALL CAPS, no excessive punctuation, no spam trigger words, 40-60 characters
-- **Personalization**: Use first name minimum; company name and role when available
-- **Competitors**: Never mention competitors in any email communication
-- **Unsubscribe**: Always include clear unsubscribe link (legal requirement and brand trust)
+**Theme: `marketing`.** Read `../algolia-shared-reference/brand-core/` before generating —
+`tokens.md`, `approved-stats.md`, `product-names.md`, and `messaging-framework.md`. Those files are
+the source of truth for color, typography, statistics, product naming, voice, and editorial standards.
+Do not rely on brand values remembered from anywhere else; Algolia's brand moved in 2026.
+
+**Skill-specific**
+- One primary CTA per email. Button: `#003DFF` background, white text, 16px, 44px minimum height,
+  8px radius.
+- Subject lines 40–60 characters. No ALL CAPS, no excessive punctuation, no spam trigger words.
+- Sora is the brand face; for email-client compatibility fall back to a sans-serif stack. Do not
+  substitute a different named webfont.
+- Always include a working unsubscribe link and physical address (CAN-SPAM).
+- Personalize with first name minimum; company and role when available.
+
+Run `/algolia-brand-check --theme marketing` on the output before finalizing.
