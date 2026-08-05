@@ -56,13 +56,20 @@ Depending on type selected:
 - Sales enablement delivery method
 - Update cadence
 
-## Brand Requirements
+## Brand requirements
 
-- **Voice**: Collaborative and mutual -- partner materials celebrate the joint solution. Neither brand is subordinate. Use "together", "combined", "joint" language. Algolia voice remains confident and credible.
-- **Colors**: Algolia-led sections use Nebula Blue #003DFF and Space Gray #21243D. Partner sections may use partner brand colors in designated zones. Shared sections use neutral palette (Space Gray on white). Algolia Purple #5468FF for accent elements in Algolia sections only.
-- **Font**: Source Sans Pro for Algolia-branded sections. Partner font acceptable in partner-designated areas. Joint sections default to Source Sans Pro.
-- **Logo Rules**: Both logos at equal visual weight in joint materials. Minimum clear space maintained for both. Never combine logos into a single mark. Use "+" or "and" between logos, not merged graphics.
-- **Product Names**: Always use official Algolia product names. Reference partner products by their official names as well.
-- **Stats**: Algolia-specific stats require Algolia approval. Partner-specific stats require partner approval. Joint metrics require both.
-- **Competitors**: No competitor names in any partner-facing or customer-facing content. Internal battle cards may reference competitors for positioning context.
-- **Legal**: All co-branded materials require review from both companies before external distribution
+**Theme: `marketing`.** Read `../algolia-shared-reference/brand-core/` before generating —
+`tokens.md`, `approved-stats.md`, `product-names.md`, and `messaging-framework.md`. Those files are
+the source of truth for color, typography, statistics, product naming, voice, and editorial standards.
+Do not rely on brand values remembered from anywhere else; Algolia's brand moved in 2026.
+
+**Skill-specific**
+- Both logos at equal visual weight in joint materials. Minimum clear space maintained for both.
+  **Never merge the two logos into a single mark** — use "+" or "and" between them.
+- Algolia-led sections use the `marketing` theme. Partner sections may use partner colors in
+  designated zones. Shared sections stay neutral.
+- Sora for Algolia and joint sections; partner font acceptable only in partner-designated areas.
+- Algolia stats need Algolia approval, partner stats need partner approval, joint metrics need both.
+- All co-branded material requires legal review from both companies before external distribution.
+
+Run `/algolia-brand-check --theme marketing` on the output before finalizing.

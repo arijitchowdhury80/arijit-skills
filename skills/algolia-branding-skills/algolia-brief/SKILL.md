@@ -67,13 +67,18 @@ Create a comprehensive campaign planning document that aligns Marketing, ABX, an
 ### Approvals
 - Stakeholder list with review deadlines
 
-## Brand Requirements
+## Brand requirements
 
-- **Voice**: Strategic and precise -- briefs are internal documents but still reflect Algolia brand standards. Messaging sections must be publication-ready.
-- **Colors**: Use Algolia brand colors in any visual mockups or examples: Nebula Blue #003DFF, Space Gray #21243D, Algolia Purple #5468FF
-- **Font**: Source Sans Pro for any formatted output or mockups
-- **Messaging**: All customer-facing messages must pass brand check: no competitor names, no unsubstantiated claims, no anthropomorphism, approved stats only
-- **Product Names**: Use official product names in all messaging: Algolia Search, Algolia Recommend, Algolia AI Search
-- **Stats**: Campaign materials may only claim approved metrics (17,000+ customers, 1.7T searches/year, 30B records) unless using attributed customer results
-- **Competitors**: Internal sections may reference competitors for positioning context; all customer-facing content must use category terms
-- **Approval**: Note that all customer-facing messaging requires brand team sign-off before production
+**Theme: `deliverable`.** Read `../algolia-shared-reference/brand-core/` before generating —
+`tokens.md`, `approved-stats.md`, `product-names.md`, and `messaging-framework.md`. Those files are
+the source of truth for color, typography, statistics, product naming, voice, and editorial standards.
+Do not rely on brand values remembered from anywhere else; Algolia's brand moved in 2026.
+
+**Skill-specific**
+- Briefs are internal, but every messaging section must be publication-ready and pass brand check.
+- Internal sections may reference competitors for positioning context. Anything customer-facing
+  must use category terms.
+- All customer-facing messaging requires brand team sign-off before production. Note this in the
+  approvals section.
+
+Run `/algolia-brand-check --theme deliverable` on the output before finalizing.

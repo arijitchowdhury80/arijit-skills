@@ -359,12 +359,12 @@ Fetch the Algolia SVG logos once and hardcode them in the renderer:
 ```typescript
 // Minimal Algolia wordmark SVGs (use these until official assets are available)
 const ALGOLIA_BLUE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 32">
-  <text x="0" y="25" font-family="'Source Sans Pro','Helvetica Neue',Helvetica,sans-serif"
+  <text x="0" y="25" font-family="'Sora','Helvetica Neue',Helvetica,sans-serif"
     font-size="27" font-weight="900" fill="#003DFF" letter-spacing="-0.5">algolia</text>
 </svg>`;
 
 const ALGOLIA_WHITE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 32">
-  <text x="0" y="25" font-family="'Source Sans Pro','Helvetica Neue',Helvetica,sans-serif"
+  <text x="0" y="25" font-family="'Sora','Helvetica Neue',Helvetica,sans-serif"
     font-size="27" font-weight="900" fill="#FFFFFF" letter-spacing="-0.5">algolia</text>
 </svg>`;
 

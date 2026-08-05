@@ -113,7 +113,6 @@ algolia-search-audit (orchestrator)
 | `algolia-audit-eval` | Quality scorer for any module output (5 dimensions, 7.0 pass threshold) | None |
 | `algolia-audit-research` | *(Legacy)* Original monolithic research skill. Kept as standalone fallback. | All |
 | `algolia-live-signals` | Targeted Apify scraper for hiring, social, and news signals for one company | Apify |
-| `algolia-shared-reference` | Shared brand reference files used by branding skills | None |
 
 ### Required MCP Servers
 
@@ -161,7 +160,15 @@ Add to `~/.claude/settings.json`:
 
 ## `algolia-branding-skills/` — Brand & Marketing Content
 
-Skills for creating Algolia-branded content across all formats. All skills use the shared brand reference for consistent voice, tone, and visual identity.
+Skills for creating Algolia-branded content across all formats. All thirteen read their brand data
+from a single shared reference library, so a stat or product name is corrected in one file and every
+skill picks it up.
+
+**This folder is self-contained and distributable on its own** — see
+[`skills/algolia-branding-skills/README.md`](skills/algolia-branding-skills/README.md) for the
+colleague-facing guide, the two-theme system, and how to keep brand values current. It ships its own
+installer (`skills/algolia-branding-skills/install.sh`) that needs no MCP servers, API keys, or
+workspace setup.
 
 | Skill | Purpose |
 |-------|---------|
@@ -178,6 +185,7 @@ Skills for creating Algolia-branded content across all formats. All skills use t
 | `algolia-social` | Writes LinkedIn and Twitter/X posts optimized for Algolia's brand voice. |
 | `algolia-ui-copy` | Writes UI microcopy: buttons, tooltips, error messages, empty states, onboarding. |
 | `algolia-boilerplate` | Returns approved company descriptions, taglines, and boilerplate copy. |
+| `algolia-shared-reference` | **Not directly invocable.** The single source of truth the 13 skills read at runtime: tokens, approved stats, product names, messaging, and Algolia's Figma section library. |
 
 ---
 

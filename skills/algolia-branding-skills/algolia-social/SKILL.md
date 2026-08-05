@@ -48,14 +48,18 @@ For each variant (2-3):
 - Cross-platform sequencing recommendation
 - Engagement response templates (for common replies)
 
-## Brand Requirements
+## Brand requirements
 
-- **Voice**: LinkedIn -- authoritative and insightful, share expertise generously. Twitter/X -- sharp, direct, technically savvy, occasionally witty but never flippant.
-- **Colors**: Brand assets should use Nebula Blue #003DFF, Space Gray #21243D, Algolia Purple #5468FF
-- **Font**: Source Sans Pro for any quote cards or designed assets
-- **Hashtags**: Always include #Algolia on company posts. Never use more than five hashtags on LinkedIn or two on Twitter/X.
-- **Product Names**: Use full product names even in short-form content (Algolia AI Search, not just "AI Search")
-- **Stats**: Only use approved metrics (17,000+ customers, 1.7T searches/year, 30B records)
-- **Competitors**: Never mention competitors by name on any social platform
-- **Anthropomorphism**: Algolia "powers" and "enables" -- never "thinks" or "believes"
-- **Emojis**: Sparingly on LinkedIn (max two per post), avoid on Twitter/X unless part of a thread visual pattern
+**Theme: `marketing`.** Read `../algolia-shared-reference/brand-core/` before generating —
+`tokens.md`, `approved-stats.md`, `product-names.md`, and `messaging-framework.md`. Those files are
+the source of truth for color, typography, statistics, product naming, voice, and editorial standards.
+Do not rely on brand values remembered from anywhere else; Algolia's brand moved in 2026.
+
+**Skill-specific**
+- Always include `#Algolia` on company posts. Never more than five hashtags on LinkedIn, two on X.
+- Use full product names even in short-form copy.
+- LinkedIn: authoritative and insightful. X: sharp, direct, technically savvy, never flippant.
+- Emoji sparingly on LinkedIn (max two per post); avoid on X unless part of a thread visual pattern.
+- Quote cards and designed assets follow the `marketing` theme in `tokens.md`.
+
+Run `/algolia-brand-check --theme marketing` on the output before finalizing.

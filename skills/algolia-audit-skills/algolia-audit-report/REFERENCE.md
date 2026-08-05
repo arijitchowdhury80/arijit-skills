@@ -256,7 +256,7 @@ Before citing ANY Algolia case study in any deliverable:
 **Forbidden patterns** (caused 5 of 6 case study errors in Oriental Trading audit 2026-02-24):
 - Adding timeframes not on the page (e.g., "in 6 months")
 - Changing metric types (e.g., "conversion rate" → "revenue")
-- Changing product names (e.g., "Algolia Recommend" → "Algolia Personalization")
+- Changing product names (e.g., "Algolia Recommendations" → "Algolia Personalization")
 - Using parent URLs when case study lives at a variant
 - Citing a specific percentage when source says "double-digit"
 
@@ -719,7 +719,8 @@ Every quantitative statistic cited with an external source URL must be verified 
 **Algolia corporate stats freshness** — always verify against latest from algolia.com:
 - Customer count: check `algolia.com/customers/` (currently 18,000+ as of 2026-02)
 - Searches/year: use 1.75T (or check `algolia.com/about/`)
-- Records indexed: use 30 billion (or check for updates)
+- Records indexed: **withdrawn** — no current source. Do not use. Approved figures live in
+  `../../algolia-branding-skills/algolia-shared-reference/brand-core/approved-stats.md`
 
 Checklist:
 - [ ] All cited percentages/numbers verified at source URL
@@ -753,7 +754,7 @@ Read `12-icp-priority-mapping.md` to extract the "Speaking Their Language" frami
 ### Priority-to-Product Map
 | Their Stated Priority | Source | Algolia Solution | Discovery Question |
 |---|---|---|---|
-| "{exact quote from executive}" | Q4 2025 Earnings | NeuralSearch | "You told investors X — we can help with Y" |
+| "{exact quote from executive}" | Q4 2025 Earnings | AI Search & Retrieval | "You told investors X — we can help with Y" |
 
 ### Anchor Points for AE
 1. "{Company} told investors {X} — we can accelerate that with {product}"
@@ -868,8 +869,8 @@ The overall score MUST be displayed as a **speedometer-style meter** with red/ye
     <path d="M 140 34 A 80 80 0 0 1 180 100" fill="none" stroke="#10B981" stroke-width="16" stroke-linecap="round"/>
     <!-- Needle — ROTATION FORMULA: -90 + (180 × score/10) -->
     <g transform="rotate({{NEEDLE_ROTATION}} 100 100)">
-      <line x1="100" y1="100" x2="100" y2="30" stroke="#21243D" stroke-width="4" stroke-linecap="round"/>
-      <circle cx="100" cy="100" r="8" fill="#21243D"/>
+      <line x1="100" y1="100" x2="100" y2="30" stroke="#23263B" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="100" cy="100" r="8" fill="#23263B"/>
     </g>
     <text x="100" y="88" text-anchor="middle" font-size="32" font-weight="900" fill="#DC2626">{{SCORE}}</text>
     <text x="100" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#6B7280">out of 10</text>
@@ -969,7 +970,7 @@ Architecture flows: use `.flow-enhanced--pipeline` with gradient connectors and 
 
 **Page dimensions**: Each `.chapter` is exactly `8.5in × 11in` (letter size), `overflow: hidden`, `page-break-after: always`.
 
-**SVG text visibility**: NEVER use `fill="#5A5E9A"` (too light). Use `fill="#4B5563"` or `fill="#21243D"`. Minimum 11px labels, 13px important text, always `font-weight: 600+`.
+**SVG text visibility**: NEVER use `fill="#5A5E9A"` (too light). Use `fill="#4B5563"` or `fill="#23263B"`. Minimum 11px labels, 13px important text, always `font-weight: 600+`.
 
 ---
 
@@ -987,7 +988,7 @@ Architecture flows: use `.flow-enhanced--pipeline` with gradient connectors and 
 | Browse/search inconsistency | Erodes user trust | Algolia unified index |
 | No results pages | 12% of searches → no results; 75% leave | Herschel: 80% no-results reduction |
 | Out of stock at top | Wastes real estate, frustrates users | Algolia custom ranking |
-| Irrelevant recommendations | Recommendations drive 31% of e-commerce revenue | Algolia Recommend ML models |
+| Irrelevant recommendations | Recommendations drive 31% of e-commerce revenue | Algolia Recommendations ML models |
 | Not factoring reviews | 93% say reviews influence purchase | Algolia custom ranking with ratings |
 
 ## Vertical-to-Case-Study Mapping (MANDATORY)
