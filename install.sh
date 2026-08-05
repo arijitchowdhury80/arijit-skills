@@ -1,9 +1,12 @@
 #!/bin/bash
-# Arijit Skills — Unified Claude Code Installer v3.1
-# 42 skills organized in three folders:
-#   skills/algolia-audit-skills/     — 23 audit pipeline skills
-#   skills/algolia-branding-skills/ — 13 brand & marketing skills
-#   skills/general-skills/           — 6 general tools
+# Arijit Skills — Claude Code installer
+#
+# Installs every skill in skills/ to ~/.claude/skills/.
+#
+# This script does NOT hardcode a skill list or a skill count. It reads the
+# filesystem. The previous version hardcoded both, drifted from reality, and
+# ended up advertising four skills that did not exist while omitting five that
+# did. Anything printed below is derived from what is actually on disk.
 
 set -e
 
@@ -13,163 +16,101 @@ SOURCE_DIR="$SCRIPT_DIR/skills"
 
 echo ""
 echo "╔══════════════════════════════════════════════════╗"
-echo "║   Arijit Skills for Claude Code — Install v3.1   ║"
-echo "║   42 skills · Modular pipeline architecture      ║"
+echo "║        Arijit Skills — Claude Code install       ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo ""
 
-# Verify source exists
 if [ ! -d "$SOURCE_DIR" ]; then
-  echo "ERROR: Cannot find skills/ directory at $SOURCE_DIR"
-  echo "Make sure you run this script from the algolia-claude-skills/ directory."
+  echo "ERROR: cannot find skills/ at $SOURCE_DIR"
+  echo "Run this script from the repository root."
   exit 1
 fi
 
-# Create ~/.claude/skills/ if needed
 mkdir -p "$SKILLS_DIR"
-
-echo "Installing skills to $SKILLS_DIR ..."
+echo "Installing to $SKILLS_DIR"
 echo ""
 
 TOTAL=0
 
+# A skill is any directory containing a SKILL.md. Claude Code requires a flat
+# skills directory, so every skill installs to its own top-level folder
+# regardless of which group folder it lives in here.
+install_skill() {
+  local skill_dir="$1"
+  local skill_name
+  skill_name=$(basename "$skill_dir")
+  [ -f "$skill_dir/SKILL.md" ] || return 0
+  rm -rf "$SKILLS_DIR/$skill_name"
+  cp -R "$skill_dir" "$SKILLS_DIR/$skill_name"
+  echo "  ✓ $skill_name"
+  TOTAL=$((TOTAL + 1))
+}
+
 install_group() {
-  local group_dir="$1"
-  local group_label="$2"
-  local count=0
-
-  if [ ! -d "$group_dir" ]; then
-    echo "  ⚠  $group_label not found at $group_dir"
-    return
-  fi
-
-  echo "[$group_label]"
+  local group_dir="$1" label="$2" count=0
+  [ -d "$group_dir" ] || return 0
+  echo "[$label]"
   for skill_dir in "$group_dir"/*/; do
-    if [ -d "$skill_dir" ]; then
-      skill_name=$(basename "$skill_dir")
-      # Install flat to ~/.claude/skills/ (Claude Code requires flat structure)
-      rm -rf "$SKILLS_DIR/$skill_name"
-      cp -R "$skill_dir" "$SKILLS_DIR/$skill_name"
-      echo "  ✓ $skill_name"
-      count=$((count + 1))
-      TOTAL=$((TOTAL + 1))
-    fi
+    [ -d "$skill_dir" ] || continue
+    [ -f "$skill_dir/SKILL.md" ] || continue
+    install_skill "$skill_dir"
+    count=$((count + 1))
   done
-  echo "  → $count skills installed"
+  echo "  → $count installed"
   echo ""
 }
 
-install_group "$SOURCE_DIR/algolia-audit-skills"     "Audit Pipeline (23 skills)"
-install_group "$SOURCE_DIR/algolia-branding-skills" "Marketing & Brand (13 skills)"
-install_group "$SOURCE_DIR/general-skills"           "General Tools (6 skills)"
+install_group "$SOURCE_DIR/algolia-audit-skills"    "Audit pipeline"
+install_group "$SOURCE_DIR/algolia-branding-skills" "Brand & marketing"
+install_group "$SOURCE_DIR/general-skills"          "General tools"
+
+# Skills that sit directly under skills/ rather than in a group folder.
+# The previous installer only walked the three group folders, so these were
+# silently never installed.
+STANDALONE=0
+for skill_dir in "$SOURCE_DIR"/*/; do
+  [ -f "$skill_dir/SKILL.md" ] || continue
+  if [ $STANDALONE -eq 0 ]; then echo "[Standalone]"; STANDALONE=1; fi
+  install_skill "$skill_dir"
+done
+[ $STANDALONE -eq 1 ] && echo ""
 
 echo "────────────────────────────────────────────────────"
-echo "  Total installed: $TOTAL skills"
+echo "  Total installed: $TOTAL"
 echo "────────────────────────────────────────────────────"
 echo ""
-echo "AUDIT PIPELINE  (algolia-audit/)"
-echo "  /algolia-search-audit       — Full pipeline orchestrator (v3.0)"
-echo "  /algolia-intel-company      — 1A: Company context"
-echo "  /algolia-intel-techstack    — 1B: Tech stack detection"
-echo "  /algolia-intel-traffic      — 1C: SimilarWeb traffic"
-echo "  /algolia-intel-competitors  — 1D: Competitor analysis"
-echo "  /algolia-intel-financial-*  — 1E/F: Financial intelligence"
-echo "  /algolia-intel-investor     — 1G: Investor quotes"
-echo "  /algolia-intel-hiring       — 1H: Hiring signals"
-echo "  /algolia-intel-social       — 1I: Social signals"
-echo "  /algolia-intel-news         — 1J: News signals"
-echo "  /algolia-intel-partner      — 1K: Partner intelligence"
-echo "  /algolia-intel-industry     — 1L: Industry benchmarks"
-echo "  /algolia-intel-queries      — 1M: Test query generation"
-echo "  /algolia-audit-browser      — Phase 2: Browser testing"
-echo "  /algolia-audit-report       — Phase 3-5: Scoring + deliverables"
-echo "  /algolia-synth-business-case — ROI model"
-echo "  /algolia-synth-sales-plays  — AE/BDR playbook"
-echo "  /algolia-campaign-abx       — ABX campaign package"
-echo "  /algolia-audit-factcheck    — Quality gate"
-echo "  /algolia-audit-eval         — Module quality scorer"
+echo "  Type / in Claude Code to see the commands."
 echo ""
-echo "MARKETING & BRAND  (algolia-marketing/)"
-echo "  /algolia-blog /algolia-email /algolia-deck /algolia-brief"
-echo "  /algolia-case-study /algolia-landing /algolia-one-pager"
-echo "  /algolia-social /algolia-partner /algolia-ui-copy"
-echo "  /algolia-algolialize /algolia-brand-check"
-echo ""
-echo "GENERAL TOOLS  (general/)"
-echo "  /market-research /partnerforge /project-governance"
-echo "  /learn-from-yt /sketch-explainer /agent-knowledge-capture"
-echo ""
-echo "────────────────────────────────────────────────────"
+echo "  Brand & marketing skills read their brand data from one place:"
+echo "    $SKILLS_DIR/algolia-shared-reference/brand-core/"
+echo "  Edit a value there and every branding skill picks it up."
+echo "  That folder is also distributable on its own — see"
+echo "  skills/algolia-branding-skills/README.md"
 echo ""
 
-# ── MCP server check ──────────────────────────────────
+# ── Audit pipeline prerequisites ──────────────────────
+# Only relevant if you intend to run the audit pipeline. The brand and
+# marketing skills need none of this.
 SETTINGS_FILE="$HOME/.claude/settings.json"
 MCP_MISSING=()
-
-if [ -f "$SETTINGS_FILE" ]; then
-  grep -q "127.0.0.1:21405\|chrome" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("Chrome MCP")
-  grep -q "similarweb" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("SimilarWeb MCP")
-  grep -q "builtwith" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("BuiltWith MCP")
-  grep -q "apify" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("Apify MCP")
-  grep -q "yahoo" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("Yahoo Finance MCP")
-else
-  MCP_MISSING=("Chrome MCP" "SimilarWeb MCP" "BuiltWith MCP" "Apify MCP" "Yahoo Finance MCP")
-fi
+for mcp in chrome apify yahoo; do
+  grep -q "$mcp" "$SETTINGS_FILE" 2>/dev/null || MCP_MISSING+=("$mcp")
+done
 
 if [ ${#MCP_MISSING[@]} -gt 0 ]; then
-  echo "⚠  AUDIT PIPELINE SETUP REQUIRED"
-  echo "   Missing MCP servers:"
-  for mcp in "${MCP_MISSING[@]}"; do
-    echo "     ✗ $mcp"
-  done
-  echo "   See skills/algolia-audit-skills/README.md for setup instructions."
-  echo ""
-else
-  echo "✓ All MCP servers detected. Audit pipeline is ready."
+  echo "  Note: the audit pipeline expects these MCP servers, not found in settings.json:"
+  printf '    - %s\n' "${MCP_MISSING[@]}"
+  echo "  Ignore this if you only want the brand & marketing skills."
   echo ""
 fi
 
-# ── ALGOLIA_AUDIT_DIR setup ───────────────────────────
-echo "────────────────────────────────────────────────────"
-echo "SEARCH AUDIT WORKSPACE SETUP"
-echo ""
-echo "  The audit pipeline stores research, screenshots, and"
-echo "  deliverables in a directory you choose."
-echo ""
-
-if [ -n "$ALGOLIA_AUDIT_DIR" ]; then
-  echo "  ✓ ALGOLIA_AUDIT_DIR already set: $ALGOLIA_AUDIT_DIR"
-  AUDIT_DIR="$ALGOLIA_AUDIT_DIR"
-else
-  DEFAULT_AUDIT_DIR="$HOME/Documents/Algolia Search Audits"
-  echo -n "  Enter audit workspace path [${DEFAULT_AUDIT_DIR}]: "
-  read -r USER_AUDIT_DIR
-  AUDIT_DIR="${USER_AUDIT_DIR:-$DEFAULT_AUDIT_DIR}"
+# ── Audit workspace ───────────────────────────────────
+if [ -z "$ALGOLIA_AUDIT_DIR" ]; then
+  echo "  Optional: set ALGOLIA_AUDIT_DIR to choose where audit runs are stored."
+  echo "    export ALGOLIA_AUDIT_DIR=\"\$HOME/Documents/Algolia Search Audits\""
+  echo "  Not needed for the brand & marketing skills."
+  echo ""
 fi
 
-mkdir -p "$AUDIT_DIR"
-echo "  ✓ Audit workspace: $AUDIT_DIR"
-
-SHELL_RC=""
-[ -f "$HOME/.zshrc" ] && SHELL_RC="$HOME/.zshrc"
-[ -z "$SHELL_RC" ] && [ -f "$HOME/.bashrc" ] && SHELL_RC="$HOME/.bashrc"
-[ -z "$SHELL_RC" ] && [ -f "$HOME/.bash_profile" ] && SHELL_RC="$HOME/.bash_profile"
-
-if [ -n "$SHELL_RC" ]; then
-  if ! grep -q "ALGOLIA_AUDIT_DIR" "$SHELL_RC"; then
-    echo "" >> "$SHELL_RC"
-    echo "# Algolia Search Audit — workspace directory" >> "$SHELL_RC"
-    echo "export ALGOLIA_AUDIT_DIR=\"$AUDIT_DIR\"" >> "$SHELL_RC"
-    echo "  ✓ Added to $SHELL_RC — run: source $SHELL_RC"
-  else
-    echo "  ✓ ALGOLIA_AUDIT_DIR already in $SHELL_RC"
-  fi
-else
-  echo "  ⚠  Add manually: export ALGOLIA_AUDIT_DIR=\"$AUDIT_DIR\""
-fi
-
+echo "Done."
 echo ""
-echo "Open any project in Claude Code and type / to see all commands."
-echo "Full documentation: skills/algolia-audit-skills/README.md"
-echo ""
-echo "Done! ✓"

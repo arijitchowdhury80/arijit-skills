@@ -41,3 +41,15 @@ deno.lock
 *.log
 *.simple.bak.html
 detect-search-workspace/
+
+# Archived / superseded work — do not re-commit
+_archive/
+*_archive/
+
+# Generated documentation artifacts
+docs.html
+docs-dark.html
+
+# Session and editor state
+SESSION.md
+pyrightconfig.json
