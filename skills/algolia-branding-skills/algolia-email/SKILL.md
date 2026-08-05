@@ -18,12 +18,12 @@ Create email content optimized for deliverability, engagement, and conversion wh
 
 ## Process
 
-1. **Subject Line** -- Write three subject line options (40-60 chars each). Lead with value or curiosity, not brand name. A/B test variants: one data-driven, one benefit-driven, one question-based. Avoid spam trigger words (free, guarantee, act now).
+1. **Subject Line** -- Write three subject line options (40-60 chars each). Lead with value or curiosity, not brand name. A/B test variants: one data-driven, one benefit-driven, one question-based. Avoid spam trigger words in the subject line specifically (free, guarantee, act now) — filters weight the subject far more heavily than body copy.
 2. **Preview Text** -- Write preview text (80-100 chars) that complements the subject line. This appears after the subject in inbox view and must add context, not repeat the subject.
 3. **Header** -- Algolia logo centered or left-aligned. Keep header minimal -- no large hero images that delay rendering. Optional thin Nebula Blue #003DFF accent bar.
 4. **Opening Line** -- Personalized greeting using first name token. First sentence must hook the reader with relevance to their role or situation. No generic "Hope this finds you well."
 5. **Body Content** -- Two to three short paragraphs (max four sentences each). Single-column layout for mobile compatibility. Bold key phrases for scannability. If including a list, use three to five bullet points maximum.
-6. **CTA Button** -- Single primary CTA per email. Button text is action-oriented (2-5 words): "Start building", "Reserve your spot", "See the results". Sentence case, and never a word from the spam-trigger list in step 1. Button color: Nebula Blue #003DFF with white text. Minimum 44px height for mobile tap targets.
+6. **CTA Button** -- Single primary CTA per email. Button text is action-oriented (2-5 words): "Start your free trial", "Reserve your spot", "See the results". Sentence case. "Free" is fine in a CTA button — the step 1 restriction applies to subject lines, not body copy. Button color: Nebula Blue #003DFF with white text. Minimum 44px height for mobile tap targets.
 7. **Secondary Link** -- Optional text link below CTA for a softer ask: "Or learn more about [feature]." Never compete with the primary CTA.
 8. **Footer** -- Algolia logo (small), physical address (CAN-SPAM), unsubscribe link, preference center link, social icons (LinkedIn, Twitter/X, GitHub). Footer text uses the body colour from `../algolia-shared-reference/brand-core/tokens.md` on a white background.
 9. **Nurture Sequence Logic** -- If part of a sequence: define the email's role (awareness, consideration, decision), reference previous email context, escalate CTA commitment level across the sequence.
