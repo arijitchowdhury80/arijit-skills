@@ -27,7 +27,7 @@ Create complete landing page content with HTML/CSS output following Algolia bran
 6. **Testimonial Section** -- One to two customer quotes with attribution (name, title, company, optional headshot). Pull quotes in `#003DFF`. Sora has no italic — use weight and size for emphasis. Company logo beside each quote.
 7. **Metrics Section** -- Three to four data callouts in a horizontal strip. Large numbers in `#003DFF`, labels in the body colour from `../algolia-shared-reference/brand-core/tokens.md`. Use approved stats or customer-specific results.
 8. **CTA Section** -- Repeated primary CTA with a slightly different framing than the hero. If lead capture: minimal form (name, email, company maximum). Form button matches hero CTA color.
-9. **Footer** -- Standard Algolia footer: navigation links, social icons, legal links, copyright notice. Dark navy background (`#0e1224`) with white text.
+9. **Footer** -- Standard Algolia footer: navigation links, social icons, legal links, copyright notice. Dark navy background with white text — use the dark-band token from `../algolia-shared-reference/brand-core/tokens.md`.
 10. **HTML/CSS Output** -- Generate clean, semantic HTML5 with inline CSS or a style block. Mobile-responsive using flexbox/grid. Accessible: proper heading hierarchy, alt text placeholders, sufficient color contrast, focus states on interactive elements.
 11. **Run `/algolia-brand-check`** on the complete page content and code before finalizing.
 
