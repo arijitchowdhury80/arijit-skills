@@ -1,0 +1,17 @@
+{
+  "name": "arijit-skills",
+  "owner": {
+    "name": "Arijit Chowdhury"
+  },
+  "metadata": {
+    "description": "Skills and plugins by Arijit Chowdhury"
+  },
+  "plugins": [
+    {
+      "name": "chronos",
+      "version": "1.0.2",
+      "source": "./plugins/chronos",
+      "description": "Google Workspace + meeting-scheduling composite plugin (gws mechanics + meeting-scheduler orchestration)"
+    }
+  ]
+}

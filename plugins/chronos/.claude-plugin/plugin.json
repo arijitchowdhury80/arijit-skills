@@ -1,0 +1,8 @@
+{
+  "name": "chronos",
+  "version": "1.0.2",
+  "description": "Google Workspace + meeting-scheduling composite plugin. gws handles raw Workspace mechanics (Gmail, Drive, Docs, Sheets, Slides, Calendar CRUD); meeting-scheduler is the higher-level workflow (contact resolution, cross-timezone freebusy, slot-ranking) built on top of gws's calendar commands.",
+  "author": {
+    "name": "Arijit Chowdhury"
+  }
+}
