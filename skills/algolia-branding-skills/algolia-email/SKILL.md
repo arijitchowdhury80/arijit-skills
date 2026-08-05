@@ -23,9 +23,9 @@ Create email content optimized for deliverability, engagement, and conversion wh
 3. **Header** -- Algolia logo centered or left-aligned. Keep header minimal -- no large hero images that delay rendering. Optional thin Nebula Blue #003DFF accent bar.
 4. **Opening Line** -- Personalized greeting using first name token. First sentence must hook the reader with relevance to their role or situation. No generic "Hope this finds you well."
 5. **Body Content** -- Two to three short paragraphs (max four sentences each). Single-column layout for mobile compatibility. Bold key phrases for scannability. If including a list, use three to five bullet points maximum.
-6. **CTA Button** -- Single primary CTA per email. Button text is action-oriented (2-5 words): "Try AI Search Free", "Reserve Your Spot", "See the Results". Button color: Nebula Blue #003DFF with white text. Minimum 44px height for mobile tap targets.
+6. **CTA Button** -- Single primary CTA per email. Button text is action-oriented (2-5 words): "Start building", "Reserve your spot", "See the results". Sentence case, and never a word from the spam-trigger list in step 1. Button color: Nebula Blue #003DFF with white text. Minimum 44px height for mobile tap targets.
 7. **Secondary Link** -- Optional text link below CTA for a softer ask: "Or learn more about [feature]." Never compete with the primary CTA.
-8. **Footer** -- Algolia logo (small), physical address (CAN-SPAM), unsubscribe link, preference center link, social icons (LinkedIn, Twitter/X, GitHub). All in Space Gray on white background.
+8. **Footer** -- Algolia logo (small), physical address (CAN-SPAM), unsubscribe link, preference center link, social icons (LinkedIn, Twitter/X, GitHub). Footer text uses the body colour from `../algolia-shared-reference/brand-core/tokens.md` on a white background.
 9. **Nurture Sequence Logic** -- If part of a sequence: define the email's role (awareness, consideration, decision), reference previous email context, escalate CTA commitment level across the sequence.
 10. **Deliverability Check** -- Verify: text-to-image ratio above 60:40, no all-caps words, no excessive punctuation, alt text for all images, plain-text fallback notes.
 11. **Run `/algolia-brand-check`** on the complete email content before finalizing.
