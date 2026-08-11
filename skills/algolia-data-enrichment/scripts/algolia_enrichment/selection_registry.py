@@ -15,12 +15,55 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import threading
 from contextlib import contextmanager
 
 from .errors import EnrichmentError
 
 
 REGISTRY_RELATIVE_PATH = Path("docs/70-enrichment/selection-registry.jsonl")
+
+
+class RunSelectionCoordinator:
+    """Single-flight model selection for one parallel ``enrich`` invocation.
+
+    The durable registry is intentionally populated only after final validation.  Before that
+    point, workers processing duplicate selection input still need one answer: otherwise each
+    worker can ask the stochastic writer and produce a later freeze conflict.  This coordinator
+    serialises only matching input contracts and shares a per-run, already quality-approved
+    choice.  Different pages retain full parallelism.
+    """
+
+    def __init__(self, cache: dict[tuple[str, str, str], dict]):
+        self.cache = cache
+        self._guard = threading.Lock()
+        self._locks: dict[str, threading.Lock] = {}
+
+    @contextmanager
+    def hold(self, input_lock_key: str):
+        with self._guard:
+            lock = self._locks.setdefault(input_lock_key, threading.Lock())
+        with lock:
+            yield
+
+    def publish(self, row: dict, *, run_id: str) -> None:
+        """Expose a successful in-run choice to duplicate inputs after it clears the judge."""
+        if row.get("status") != "PASS" or row.get("selection_origin") != "model":
+            return
+        ids = row.get("selected_candidate_ids")
+        if not isinstance(ids, dict) or not ids.get("abstract") or not ids.get("highlights"):
+            raise EnrichmentError(f"{row.get('objectID')}: PASS row has no candidate-ID selection")
+        key = key_of(row)
+        existing = self.cache.get(key)
+        if existing and existing.get("selected_candidate_ids") != ids:
+            raise EnrichmentError(
+                f"{row.get('objectID')}: concurrent selection differs for input contract "
+                f"{key[0][:12]}")
+        self.cache.setdefault(key, {
+            "selected_candidate_ids": ids,
+            "frozen_from_run": run_id,
+            "run_local": True,
+        })
 
 
 @contextmanager

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import json
 from dataclasses import dataclass, field
 
 from . import strategies
@@ -186,6 +187,34 @@ def _prompt(record: dict, profile, menu: str) -> str:
         menu=menu)
 
 
+def selection_input_lock_key(record: dict, profile) -> str:
+    """A conservative pre-writer key for the runner's single-flight lock.
+
+    The exact registry key is calculated after candidate filtering below.  This key includes all
+    record fields that can influence that filtering or the writer prompt, so equal selection
+    input always serialises while different records may merely wait unnecessarily, never reuse a
+    wrong selection.
+    """
+    markdown = record.get("markdown") or ""
+    start = main_content_start(markdown)
+    payload = {
+        "body": canonicalise(markdown[start:]).text,
+        "url": record.get("source_url") or record.get("url", ""),
+        "title": record.get("title", ""),
+        "description": record.get("description", ""),
+        "language_code": record.get("language_code", ""),
+        "profile_version": profile.version,
+        "prompt_version": PROMPT_VERSION,
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def selection_content_hash(record: dict, profile, candidates, ineligible: set[int]) -> str:
+    """Hash the literal prompt input, not raw Scout bytes or a partial subset of it."""
+    prompt = _prompt(record, profile, render_menu(candidates, no_open=ineligible))
+    return hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+
+
 def judge_quality_failures(judge: dict, canon) -> list[str]:
     """Validate the judge's scores; source evidence is attached by the script, not the model."""
     failures = []
@@ -251,10 +280,6 @@ def process_record(record: dict, profile, inference, *, writer_tier: str,
 
     content_start = main_content_start(markdown)
     out["content_start"] = content_start
-    # The selection contract is the cleaned main content the model may actually see. Keep the
-    # raw Scout hash separately for fetch provenance; it is deliberately not a selection key.
-    out["selection_content_hash"] = hashlib.sha256(
-        canonicalise(markdown[content_start:]).text.encode("utf-8")).hexdigest()
     cands, canon = split_candidates(markdown, boilerplate=boilerplate,
                                     already_indexed=record.get("description", ""),
                                     content_start=content_start)
@@ -294,6 +319,9 @@ def process_record(record: dict, profile, inference, *, writer_tier: str,
                     "candidates_before_filter": len(unfiltered)})
         return out
 
+    # The durable contract is the complete prompt input after all pool filtering, including
+    # title, description and the numbered menu. Raw Scout bytes are fetch provenance only.
+    out["selection_content_hash"] = selection_content_hash(record, profile, cands, ineligible)
     cache_key = key_of({"selection_content_hash": out["selection_content_hash"],
                         "profile_version": profile.version, "prompt_version": PROMPT_VERSION})
     frozen = (selection_cache or {}).get(cache_key)
@@ -302,7 +330,7 @@ def process_record(record: dict, profile, inference, *, writer_tier: str,
         llm, meta = ({"verdict": "REAL", "abstract": ids["abstract"],
                       "highlights": ids["highlights"],
                       "language_observed": record.get("language_code") or ""}, {})
-        out["selection_origin"] = "registry"
+        out["selection_origin"] = "run_singleflight" if frozen.get("run_local") else "registry"
         out["selection_frozen_from_run"] = frozen.get("frozen_from_run")
     else:
         llm, meta = inference.complete(writer_tier, _prompt(record, profile,
@@ -429,7 +457,10 @@ def process_record(record: dict, profile, inference, *, writer_tier: str,
         # identical, approved data flip status on replay. The deterministic gates above still
         # run against the current body before this return.
         out["judge"] = None
-        out["judge_skipped"] = "validated frozen selection; replay uses the approved contract"
+        out["judge_skipped"] = ("in-run selection already cleared the current quality gate; "
+                                "final artifact validation remains required"
+                                if frozen.get("run_local") else
+                                "validated frozen selection; replay uses the approved contract")
         out["status"] = "PASS"
         return out
 
