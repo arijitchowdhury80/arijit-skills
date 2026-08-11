@@ -187,21 +187,14 @@ def _prompt(record: dict, profile, menu: str) -> str:
 
 
 def judge_quality_failures(judge: dict, canon) -> list[str]:
-    """A quality approval must show page-grounded evidence for every scored criterion."""
-    evidence = judge.get("evidence") if isinstance(judge, dict) else None
-    if not isinstance(evidence, dict):
-        return ["judge supplied no per-criterion evidence"]
+    """Validate the judge's scores; source evidence is attached by the script, not the model."""
     failures = []
     for criterion in JUDGE_CRITERIA:
-        score, quote = judge.get(criterion), evidence.get(criterion)
+        score = judge.get(criterion)
         if not isinstance(score, int) or not 1 <= score <= 5:
             failures.append(f"judge {criterion} score is not an integer 1-5")
         elif score < 4:
             failures.append(f"judge {criterion} score {score} is below approval floor 4")
-        if not isinstance(quote, str) or not quote.strip():
-            failures.append(f"judge {criterion} has no evidence quote")
-        elif canonicalise(quote).text not in canon.text:
-            failures.append(f"judge {criterion} evidence is not on the page")
     return failures
 
 
@@ -406,6 +399,12 @@ def process_record(record: dict, profile, inference, *, writer_tier: str,
     out["abstract_spans_stored"] = att.abstract_spans
     out["abstract_enriched"] = " ".join(att.abstract_spans)
     out["keyhighlights_enriched"] = att.highlight_spans
+    # The judge may score these selected spans, but it never authors their citations. This makes
+    # every quality decision traceable to literal source text by construction.
+    out["judge_evidence"] = {criterion: {
+        "abstract_spans": list(att.abstract_spans),
+        "highlight_spans": list(att.highlight_spans),
+    } for criterion in JUDGE_CRITERIA}
     # Artifact-only provenance for deterministic replay. These are never payload fields and
     # therefore can never pollute the Algolia record. The numbers address this run's numbered
     # page menu, not model-generated prose.

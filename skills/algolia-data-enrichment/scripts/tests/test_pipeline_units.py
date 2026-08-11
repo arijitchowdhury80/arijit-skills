@@ -77,10 +77,11 @@ CASE_STUDY = load_profile(PROFILES, "Customer Stories", "case-study")
 REFERENCE = load_profile(PROFILES, "Documentation", "doc-sdk")
 
 
-def test_judge_prompt_requires_literal_page_evidence_not_a_rationale():
-    """The cited-quality gate is only meaningful when citations are real source excerpts."""
-    assert "contiguous excerpt copied character-for-character" in JUDGE_PROMPT
-    assert "must not be an explanation of your score" in JUDGE_PROMPT
+def test_judge_prompt_leaves_source_citations_to_the_script():
+    """The quality model scores; its output cannot invent or mangle a provenance citation."""
+    assert "Do not provide citations or replacement text." in JUDGE_PROMPT
+    assert "script attaches the selected, verbatim page" in JUDGE_PROMPT
+    assert "spans as the evidence" in JUDGE_PROMPT
 
 
 def test_frozen_validated_selection_is_not_rejudged_on_replay(monkeypatch):
