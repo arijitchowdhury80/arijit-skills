@@ -99,13 +99,12 @@ def test_frozen_validated_selection_is_not_rejudged_on_replay(monkeypatch):
         def complete(self, *args, **kwargs):
             raise AssertionError("a frozen selection must not call writer or judge")
 
-    start = main_content_start(body)
-    key = pipeline.key_of({
-        "selection_content_hash": __import__("hashlib").sha256(
-            canonicalise(body[start:]).text.encode()).hexdigest(),
-        "profile_version": CASE_STUDY.version,
-        "prompt_version": pipeline.PROMPT_VERSION,
-    })
+    # This test is about frozen replay, not the separate prompt-hash contract. Pin the live
+    # helper so the fixture cannot accidentally recreate a pre-filter menu by hand.
+    monkeypatch.setattr(pipeline, "selection_content_hash", lambda *args: "a" * 64)
+    key = pipeline.key_of({"selection_content_hash": "a" * 64,
+                           "profile_version": CASE_STUDY.version,
+                           "prompt_version": pipeline.PROMPT_VERSION})
     frozen = {key: {"selected_candidate_ids": {
         "abstract": [c.index for c in selected.abstract],
         "highlights": [c.index for c in selected.highlights]}, "frozen_from_run": "a12"}}
@@ -117,6 +116,19 @@ def test_frozen_validated_selection_is_not_rejudged_on_replay(monkeypatch):
     assert row["status"] == "PASS"
     assert row["selection_origin"] == "registry"
     assert "validated frozen selection" in row["judge_skipped"]
+
+
+def test_selection_contract_includes_record_description_after_pool_filter():
+    """Same page bytes can yield a different legal menu when indexed text differs."""
+    body = body_for(0)
+    cands, _ = split_candidates(body, already_indexed="")
+    first = pipeline.selection_content_hash(
+        {"url": "/doc/a", "title": "API method", "description": "First indexed description",
+         "language_code": "en"}, CASE_STUDY, cands, set())
+    second = pipeline.selection_content_hash(
+        {"url": "/doc/a", "title": "API method", "description": "Second indexed description",
+         "language_code": "en"}, CASE_STUDY, cands, set())
+    assert first != second
 
 
 # ---------------------------------------------------------------------------
