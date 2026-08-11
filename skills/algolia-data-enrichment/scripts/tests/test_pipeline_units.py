@@ -14,25 +14,108 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import algolia_enrich
+
 from conftest import FakeAlgolia, FakeInference, FakeScout, TARGET_INDEX, body_for, make_records
 
-from algolia_enrichment import human_review
+from algolia_enrichment import human_review, pipeline
 from algolia_enrichment.bodysource import IngestPayload, RunCache, ScoutRefetch
-from algolia_enrichment.candidates import split_candidates
+from algolia_enrichment.candidates import Candidate, main_content_start, split_candidates
 from algolia_enrichment.canonical import canonicalise
 from algolia_enrichment.dispatch import route, sniff
 from algolia_enrichment.errors import EnrichmentError, StateError, ZeroWorkError
 from algolia_enrichment.filters import build_map, drop_reason, filter_pool, overlap
-from algolia_enrichment.model_io import assert_model_separation
+from algolia_enrichment.gates import retry_constraints
+from algolia_enrichment.model_io import JUDGE_PROMPT, assert_model_separation
 from algolia_enrichment.profiles import load_profile
 from algolia_enrichment.repair import incomplete_reason, repair_span
 from algolia_enrichment.state import RunState
 from algolia_enrichment.validate import grounding, live, payload, quality, search
 from algolia_enrichment.verdicts import classify, dead_page_reason, language_mismatch
 
+
+def test_span_distance_retry_uses_the_profile_limit_not_a_hidden_global_window():
+    """A Case Study retry must not retain a 9,000-character-away candidate.
+
+    The Case Study profile gates abstracts at 8,000 characters. A historical 10,000-character
+    retry window let the writer select a still-invalid distant sentence on its next attempt.
+    """
+    near = Candidate(1, "Near case-study fact.", "Near case-study fact.", 100, 121)
+    far = Candidate(2, "Far case-study fact.", "Far case-study fact.", 12_000, 12_020)
+    earlier = Candidate(3, "Earlier case-study fact.", "Earlier case-study fact.", 0, 25)
+    anchor = Candidate(4, "Anchor case-study fact.", "Anchor case-study fact.", 2_648, 2_674)
+    sel = type("Selection", (), {"abstract": [anchor, far], "highlights": []})()
+    failures = ["abstract spans span ~9000 characters of the original page (limit 8000) -- "
+                "stitched from unrelated parts of the document"]
+
+    banned, _ = retry_constraints(failures, sel, [earlier, anchor, far], "Acme", set(),
+                                  max_span_distance=8_000)
+
+    assert far.index in banned
+    assert earlier.index in banned
+
+
+def test_repair_output_keeps_the_best_prior_result_not_the_last_random_attempt():
+    """A failed retry must never erase a previously repairable PASS."""
+    prior = [
+        {"objectID": "recovered", "status": "PASS", "abstract_spans_stored": ["good"]},
+        {"objectID": "still-open", "status": "QUARANTINED_BY_GATE"},
+    ]
+    latest = [
+        {"objectID": "recovered", "status": "QUARANTINED_BY_GATE"},
+        {"objectID": "still-open", "status": "PASS", "abstract_spans_stored": ["fixed"]},
+    ]
+
+    merged = algolia_enrich.merge_repair_results(prior, latest)
+    by_id = {row["objectID"]: row for row in merged}
+
+    assert by_id["recovered"]["status"] == "PASS"
+    assert by_id["still-open"]["status"] == "PASS"
+
 PROFILES = Path(__file__).resolve().parents[1] / "profiles"
 CASE_STUDY = load_profile(PROFILES, "Customer Stories", "case-study")
 REFERENCE = load_profile(PROFILES, "Documentation", "doc-sdk")
+
+
+def test_judge_prompt_requires_literal_page_evidence_not_a_rationale():
+    """The cited-quality gate is only meaningful when citations are real source excerpts."""
+    assert "contiguous excerpt copied character-for-character" in JUDGE_PROMPT
+    assert "must not be an explanation of your score" in JUDGE_PROMPT
+
+
+def test_frozen_validated_selection_is_not_rejudged_on_replay(monkeypatch):
+    """A stochastic judge must not relabel an unchanged, already-approved contract."""
+    body = body_for(0)
+    cands, canon = split_candidates(body, already_indexed="How Acme 0 rebuilt discovery.")
+    selected = type("Selection", (), {"abstract": cands[:2], "highlights": cands[2:6]})()
+    att = pipeline.Attempt(ok=True, sel=selected,
+                           abstract_spans=[c.text for c in selected.abstract],
+                           highlight_spans=[c.text for c in selected.highlights])
+    monkeypatch.setattr(pipeline, "evaluate_selection", lambda *args, **kwargs: att)
+    monkeypatch.setattr(pipeline, "route", lambda *args: {"agrees": True})
+
+    class NoModelCalls:
+        def complete(self, *args, **kwargs):
+            raise AssertionError("a frozen selection must not call writer or judge")
+
+    start = main_content_start(body)
+    key = pipeline.key_of({
+        "selection_content_hash": __import__("hashlib").sha256(
+            canonicalise(body[start:]).text.encode()).hexdigest(),
+        "profile_version": CASE_STUDY.version,
+        "prompt_version": pipeline.PROMPT_VERSION,
+    })
+    frozen = {key: {"selected_candidate_ids": {
+        "abstract": [c.index for c in selected.abstract],
+        "highlights": [c.index for c in selected.highlights]}, "frozen_from_run": "a12"}}
+    row = pipeline.process_record(
+        {"objectID": "x", "url": "/en/customers/acme", "title": "Acme story",
+         "description": "How Acme 0 rebuilt discovery.", "language_code": "en",
+         "content_hash": "raw", "markdown": body}, CASE_STUDY, NoModelCalls(),
+        writer_tier="large", judge_tier="small", selection_cache=frozen)
+    assert row["status"] == "PASS"
+    assert row["selection_origin"] == "registry"
+    assert "validated frozen selection" in row["judge_skipped"]
 
 
 # ---------------------------------------------------------------------------

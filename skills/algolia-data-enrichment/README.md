@@ -82,7 +82,7 @@ is world-readable and a corpus run spawns one curl per page.
 ## Quickstart
 
 ```bash
-cd skills/algolia-data-enrichment/scripts
+cd .claude/.claude/skills/algolia-data-enrichment/scripts
 WS=/path/to/your/project
 
 # 1. What is in the index, and is every page_type profiled?
