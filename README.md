@@ -40,6 +40,7 @@ chmod +x install-skill.sh
 skills/
 ├── algolia-audit-skills/     ← 23 skills — full audit pipeline + intelligence modules
 ├── algolia-branding-skills/  ← 13 skills — brand content & marketing collateral
+├── algolia-data-enrichment/  ←  1 skill  — grounded index enrichment (CLI + Python package)
 └── general-skills/           ←  6 skills — general sales, WorkOS, project, media, and knowledge tools
 ```
 
@@ -186,6 +187,33 @@ workspace setup.
 | `algolia-ui-copy` | Writes UI microcopy: buttons, tooltips, error messages, empty states, onboarding. |
 | `algolia-boilerplate` | Returns approved company descriptions, taglines, and boilerplate copy. |
 | `algolia-shared-reference` | **Not directly invocable.** The single source of truth the 13 skills read at runtime: tokens, approved stats, product names, messaging, and Algolia's Figma section library. |
+
+---
+
+## `algolia-data-enrichment/` — Grounded Index Enrichment
+
+Adds `abstract_enriched` and `keyhighlights_enriched` to Algolia index records, where every
+stored string is cut out of the source page by a script rather than written by a model. The LLM
+returns integers into a numbered menu; it never emits content, so fabrication is unrepresentable
+rather than merely unlikely.
+
+Unlike the other entries here, this is not a single `SKILL.md` — it is a 17-command CLI over an
+internal Python package with 163 tests, and it has its own installer.
+
+```bash
+cd skills/algolia-data-enrichment
+./install-skill.sh
+```
+
+| | |
+|---|---|
+| Writes | only to a named parallel index. Zero production search results changed |
+| Verification | 163 tests + 4 evaluation gates, including an independently written grounding checker |
+| Docs | [README](skills/algolia-data-enrichment/README.md) · [architecture](skills/algolia-data-enrichment/docs/ARCHITECTURE.md) · [commands](skills/algolia-data-enrichment/docs/COMMANDS.md) · [operations](skills/algolia-data-enrichment/docs/OPERATIONS.md) · [design decisions](skills/algolia-data-enrichment/docs/DESIGN-DECISIONS.md) |
+| Source materials | the build [spec, goal prompt and eval log](skills/algolia-data-enrichment/docs/source/) are versioned with it |
+
+Needs Python 3.10+, PyYAML, and credentials in your project's `.env.local` — an Algolia app and
+admin key, a Scout key for page fetching, and an inference endpoint for the writer and judge.
 
 ---
 
