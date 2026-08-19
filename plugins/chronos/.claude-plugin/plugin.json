@@ -1,7 +1,7 @@
 {
   "name": "chronos",
   "version": "1.0.2",
-  "description": "Google Workspace + meeting-scheduling composite plugin. gws handles raw Workspace mechanics (Gmail, Drive, Docs, Sheets, Slides, Calendar CRUD); meeting-scheduler is the higher-level workflow (contact resolution, cross-timezone freebusy, slot-ranking) built on top of gws's calendar commands.",
+  "description": "Google Workspace + meeting-scheduling composite plugin. 'algolia-workspace-skill' (formerly 'gws') handles branded email/comms composition plus raw Workspace mechanics (Gmail, Drive, Docs, Sheets, Slides, Calendar); meeting-scheduler is the higher-level scheduling workflow built on its calendar commands. The underlying CLI binary is still named 'gws'.",
   "author": {
     "name": "Arijit Chowdhury"
   }

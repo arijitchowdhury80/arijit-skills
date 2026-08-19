@@ -11,7 +11,7 @@
       "name": "chronos",
       "version": "1.0.2",
       "source": "./plugins/chronos",
-      "description": "Google Workspace + meeting-scheduling composite plugin (gws mechanics + meeting-scheduler orchestration)"
+      "description": "Google Workspace + meeting-scheduling composite plugin (algolia-workspace-skill branded-comms + Workspace mechanics, plus meeting-scheduler orchestration). CLI binary remains 'gws'."
     }
   ]
 }
