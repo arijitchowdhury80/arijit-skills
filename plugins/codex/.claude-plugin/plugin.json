@@ -1,0 +1,8 @@
+{
+  "name": "codex",
+  "version": "1.1.0-arijit.1",
+  "description": "Adversarial-review fork of the OpenAI Codex plugin: Codex Adversarial Review + Adversarial Review Max (forced per-unit coverage). Plain code-review removed; Codex task/rescue delegation retained.",
+  "author": {
+    "name": "Arijit Chowdhury (fork of OpenAI codex-plugin-cc)"
+  }
+}

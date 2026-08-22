@@ -12,6 +12,12 @@
       "version": "1.0.2",
       "source": "./plugins/chronos",
       "description": "Google Workspace + meeting-scheduling composite plugin (algolia-workspace-skill branded-comms + Workspace mechanics, plus meeting-scheduler orchestration). CLI binary remains 'gws'."
+    },
+    {
+      "name": "codex",
+      "version": "1.1.0-arijit.1",
+      "source": "./plugins/codex",
+      "description": "Adversarial-review fork of the OpenAI Codex plugin: /codex:adversarial-review (standard) + /codex:adversarial-review-max (hardened, forced per-unit coverage) + Codex task/rescue delegation. Plain code-review and the stop-time review gate removed."
     }
   ]
 }
