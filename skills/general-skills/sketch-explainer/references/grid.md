@@ -20,10 +20,18 @@ A structured grid of cells on a white background, hand-drawn in whiteboard sketc
 
 ### Variant B: 2×2 Quadrant
 - Four equal quadrants divided by two perpendicular hand-drawn axes
-- Axis labels at the ends of each line (e.g., "Simple ←→ Complex", "Low ↑ High")
+- Use labeled axes when the position represents two measured dimensions (e.g., "Simple ←→ Complex", "Low ↑ High")
+- For a staged 2×2 process, replace measurement axes with directional arrows that show reading order across and down the matrix
 - Each quadrant has a distinct pastel background fill and a bold label in the corner
-- Items or concepts are placed as small labeled dots or chips within the appropriate quadrant
+- Each quadrant represents one semantic category or stage; related business labels, technical labels, data objects, and icons reuse that quadrant's color
+- Items or concepts are placed as small labeled dots, cards, or chips within the appropriate quadrant
 - Title in the center where axes cross, or at the very top
+
+**Dual-audience stage anatomy:**
+- Large primary heading: the business meaning or outcome
+- Smaller secondary subheading: the technical implementation or owner
+- 2–4 compact supporting items: signals, data contracts, actions, or outputs
+- One simple icon that conveys the business meaning before the technical detail is read
 
 **Structure (Card Grid):**
 - Title: large sketchy handwritten lettering at the top
@@ -72,6 +80,8 @@ Sketch aesthetic: slightly imperfect lines, hand-lettered labels, educational wh
 
 ## Color assignment guidance
 
-- Card Grid: assign one pastel per column or per row to create grouping. Rotate: salmon → yellow → green → blue → lavender.
-- 2×2 Quadrant: one pastel per quadrant (salmon, yellow, green, blue).
+- Card Grid: assign one pastel per semantic column, row, or category. Reuse that color for every occurrence of that category; do not rotate colors for decoration.
+- 2×2 Quadrant: one pastel per semantic quadrant (salmon, yellow, green, blue or lavender). Reuse each quadrant color for all stage-owned labels, technical components, data objects, and callouts.
+- Add a compact color legend when categories recur outside their quadrant.
+- Use charcoal for neutral boundaries and cross-stage arrows so the stage colors remain meaningful.
 - Card borders and axis lines: dark charcoal, hand-drawn weight.
