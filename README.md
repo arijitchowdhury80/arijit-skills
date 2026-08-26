@@ -6,6 +6,20 @@ A suite of portable AI skills for Claude Code, Codex, Hermes, and related agent 
 
 ---
 
+## Featured Documentation
+
+### Sketch Explainer
+
+Professional hand-drawn explainers for business and technical audiences, with semantic color systems, executive restraint, exact brand assets, cross-asset visual consistency, and baseline-safe revisions.
+
+**[Open the complete Sketch Explainer guide →](skills/general-skills/sketch-explainer/README.md)**
+
+| Personalized concierge engagement | Three-judge quality framework |
+|---|---|
+| [![Personalized concierge engagement](skills/general-skills/sketch-explainer/examples/how-personalized-concierge-engagement-works.png)](skills/general-skills/sketch-explainer/examples/how-personalized-concierge-engagement-works.png) | [![Three-judge quality framework](skills/general-skills/sketch-explainer/examples/how-judges-work.png)](skills/general-skills/sketch-explainer/examples/how-judges-work.png) |
+
+---
+
 ## Quick Install
 
 ```bash
