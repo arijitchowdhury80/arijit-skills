@@ -1,133 +1,116 @@
-# Algolia design tokens
+# Algolia design tokens — SSOT
 
-`verified: 2026-08-05` · Sources: live algolia.com, Algolia Figma landing-page library
-(`5DkPHASwX5HwFgG0WFEDhS`), Frontify typography page
+`verified: 2026-08-19` · Source of truth: **Algolia Brand & Style Guide on Frontify**
+(https://algolia.frontify.com/document/1, public). Harvested with Scout. Sourced
+inventory: `algolia-design-system-harvest-a6ff9b/harvest/frontify/PHASE1-FINDINGS.md`.
 
-There are **two themes**. Both are correct. They serve different surfaces, and mixing them is the
-most common way branded output goes wrong.
+> **This is the 2026 Xenon rebrand.** Primary blue is **Xenon Blue `#0067F7`**, not the
+> retired Nebula Blue `#003DFF`. Import `colors_and_type.css` in this directory rather
+> than retyping values. `[FRONTIFY]` = read on Frontify. `[DERIVED]` = implementation
+> default not published on Frontify.
 
 ---
 
-## Pick your theme first
+## Brand palette — [FRONTIFY], verified 2026-08-19
 
-| Theme | Use for | Skills that default to it |
+**Primary**
+
+| Token | Value | Frontify name | Role |
+|---|---|---|---|
+| `--xenon-blue` / `--algolia-blue` | `#0067F7` | Blue (Xenon Blue) | Primary brand, logo, CTA, links |
+| `--xenon-900` / `--ink` | `#000033` | Dark Blue / Xenon 900 | Headlines, dark surfaces |
+| `--algolia-purple` | `#8572F6` | Purple | Real primary — **not retired** |
+| `--algolia-teal` | `#21C9C4` | Teal | |
+
+**Accent**
+
+| Token | Value | Frontify name |
 |---|---|---|
-| `marketing` | Public-facing web. Landing pages, blog, social cards, email, decks, case studies, partner pages | `algolia-landing`, `algolia-blog`, `algolia-social`, `algolia-email`, `algolia-deck`, `algolia-case-study`, `algolia-partner` |
-| `deliverable` | Documents and app surfaces. Reports, one-pagers, leave-behinds, product UI | `algolia-one-pager`, `algolia-brief`, `algolia-ui-copy` |
+| `--algolia-lime` | `#CEFF00` | Lime (electric-lime) |
+| `--algolia-cyan` | `#5FFBFB` | Cyan |
 
-If you are unsure: will a prospect see this on the open web? → `marketing`. Is it a document you
-hand someone? → `deliverable`.
+**Backgrounds** (the brand's named set, for light AND dark modes)
 
----
-
-## Theme: `marketing`
-
-Matches what algolia.com actually serves today. Full CSS custom properties in
-`colors_and_type.css` in this directory — import that file rather than retyping these.
-
-**Color**
-
-| Token | Value | Role |
+| Token | Value | Frontify name |
 |---|---|---|
-| `--algolia-blue` | `#003DFF` | Nebula Blue / "kelly blue". Primary CTA, links, accent |
-| `--algolia-blue-700` | `#0031cc` | Hover, pressed |
-| `--ink` | `#021046` | Headlines |
-| `--gray-700` | `#2f3447` | Body text |
-| `--bg-hero-dark` | `#0e1224` | Dark hero and CTA bands, footer |
-| `--bg-canvas` | `#f7f8fb` | Section wash |
-| `--gray-200` | `#e1e4ec` | Card and section borders |
+| `--bg-white` | `#FFFFFF` | White |
+| `--bg-light-gray` | `#F6F6F6` | Light Gray |
+| `--bg-dark-blue` | `#000033` | Dark Blue |
 
-**Four approved section backgrounds**, per the Figma library: **navy, kelly blue, white, gray.**
-Nothing else. A section sits on one of those four.
+Color-range scale (named on Frontify): **Xenon 900 → Blue → Purple → Teal → Lime.**
 
-**Gradient accents** — cyan `#00B6FF`, teal `#00C29A`, blue. Used as soft color-blur decoration
-behind hero and footer bands. Never as flat fills, never behind body text.
+### Do NOT use — excluded
 
-**No purple in `marketing`.** `#5468FF` is Algolia's pre-2023 accent. It does not appear on
-algolia.com or anywhere in the Figma library. `algolia-brand-check --theme marketing` fails on it.
-
-**Surfaces** — mostly flat white. No full-bleed photographic backgrounds, no textures, no grain,
-no protection gradients behind type.
+- **Frontify template placeholders** (their stock example swatches, never Algolia):
+  `Green #00FF11`, `Everglade #123123`, `Conifer #BADA55`.
+- **Retired Nebula palette**: `#003DFF` (old primary), `#021046`, `#0e1224`,
+  teal `#00C29A`, cyan `#00B6FF`.
+- **Previously fabricated accents** (were self-labeled "from algolia.com hero blobs",
+  never on Frontify): `#8A4FFF`, `#FF4F81`, `#FF7A59`, `#FFD64D`.
 
 ---
 
-## Theme: `deliverable`
+## Typography — [FRONTIFY]
 
-The established report and dashboard system. Existing reports and internal tooling are built on these
-exact values — do not "modernize" them, or previously shipped output stops matching.
-
-| Token | Value | Role |
-|---|---|---|
-| `--color-primary` | `#003DFF` | Primary CTA, links |
-| `--color-accent` | `#5468FF` | Accent — valid in this theme only |
-| `--color-text` | `#23263B` | **Space Gray** — headings and body |
-| `--color-muted` | `#6B7280` | Secondary text |
-| `--color-bg` | `#F5F5F7` | Page background |
-| `--color-border` | `#E5E7EB` | Card and section borders |
-| `--topbar-bg` | `#23263B` | Dark topbar |
-
-Severity system: critical `#DC2626`, moderate `#D97706`, positive `#059669`, each with tint and
-border variants.
-
-Hero gradient: `linear-gradient(135deg, #0D1240 0%, #21243D 45%, #001A8A 100%)`.
-
-> **Naming note.** "Space Gray" is the current, valid name for `#23263B` in this theme — it is not
-> retired, and it is **not** `#21243D`. `#21243D` survives only as a midpoint of the hero gradient
-> above; it is not a text or surface colour in either theme. Do not treat the name and that hex as
-> interchangeable. The `marketing` theme has no Space Gray: its body colour is `#2f3447` and its
-> headline ink is `#021046`, so the name should not appear in marketing guidance at all.
+- **Sora**, three weights only: **300 (Light) / 400 (Regular) / 600 (SemiBold)**, style
+  **normal**. No italics, no 700+.
+- Delivery: Google Fonts. `font-family: "Sora", sans-serif;`
+- **Never**: Inter, Roboto, DM Sans, Arial, system, serif. (algolia.com loads Inter for
+  site chrome only — that is plumbing, not brand type. `algolia-brand-check` fails on it.)
+- Mono (implementation, [DERIVED]): JetBrains Mono.
+- Scale, line-height, letter-spacing: **[DERIVED]** — Frontify publishes no size scale.
+  See `colors_and_type.css`. Display type tight (`-0.02em`, `1.05`); body 16px / 1.5.
 
 ---
 
-## Typography — both themes
+## Logo — [FRONTIFY]
 
-**Sora.** Weights 300 (Light), 400 (Regular), 600 (SemiBold). Nothing heavier, no italics — the
-brand spec ships only these three styles.
+Real files: `brand-core/assets/logo/` (SVG + EPS + PNG + AI source; from the official
+"Algolia Logo Pack 2022").
 
-```
-https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600&display=swap
-```
-
-**Never use: Inter, Roboto, DM Sans, Arial, system fonts, serif fonts.**
-
-> **On Inter.** algolia.com does load Inter alongside Sora, and applies it to site chrome —
-> figcaptions, the mobile-menu toggle, the OneTrust cookie banner. That is site plumbing, not brand
-> typography. Every piece of Algolia content in the Figma library is Sora. Do not read Inter's
-> presence on the site as permission to emit it. `algolia-brand-check` fails on Inter.
-
-Mono: `JetBrains Mono` for `marketing` code samples, `SF Mono`/`Fira Code` for `deliverable`.
-
-**Scale** — `marketing` uses the fluid clamp scale in `colors_and_type.css`. `deliverable` uses the
-fixed scale: H1 56px/300/-2px, H2 36px/300/-2px, H3 28px/400/-1px, H4 22px/600, H5 18px/600,
-body 16px/400/1.6, label 14px/600/0.12em.
-
-Display type is tight: `-0.02em` letter-spacing, `1.05` line-height. Body is 16px / 1.5.
+- Built in **Xenon Blue**. Variants: **Full Xenon** (preferred, light bg) · **White
+  text** (dark bg) · **Full white** (blue/photographic bg).
+- Containers: **without (preferred)** · rounded · circle · square.
+- **Never** redraw, recolour, distort, rotate, stretch, skew, or add effects. Use the
+  latest file. Check contrast.
+- Co-branding: Algolia + partner divided by an "&", same safe-zone rules.
+- **Vintage caveat**: the only official logo files are the 2022 pack in `#003DFF`; the
+  colour spec has moved to Xenon `#0067F7`. Ship the official file as-is (never recolour);
+  the colour TOKEN is Xenon. Flag to Brand for a re-issued logo pack.
 
 ---
 
-## Shape and motion — both themes
+## Iconography — [FRONTIFY] + [DERIVED substitute]
 
-- **Radii:** 4 / 6 / 8 / 12 / 16 / 20 / 999. Cards 12–16px, inputs 8px, buttons 8–10px.
-- **Pills (`999px`) are for tags, status badges, and category chips only.** Never a primary CTA.
-- **Cards:** white, 1px `#e1e4ec` border, `--shadow-sm` at rest, lifting to `--shadow-lg` with
-  `translateY(-2px)` on hover. No left-border accent stripe, no gradient interior.
-- **Spacing:** 4px grid. Marketing sections breathe — 80–96px vertical rhythm. Cards 24–32px padding.
-- **Motion:** `cubic-bezier(.2,.7,.2,1)`, 120–320ms. Buttons darken ~10% on hover. No bounces,
-  no springs, no scroll theatrics.
-- **Focus rings:** 2–3px `#003DFF`, 2px offset. Always visible.
+- Algolia's own product feature icons (~33: A/B Testing, AI Search, Crawler,
+  InstantSearch, Personalization, Recommend, Rules…). Partial set in
+  `assets/icons/` (Frontify serves them as a lazy-load gallery; full pull is a follow-up).
+- Approved substitute [DERIVED]: **Lucide** — single-colour line icons, ~24px, brand blue
+  or Xenon 900, ~1.5px stroke. Never emoji as icons.
 
-## Logos
+---
 
-**Not redistributed with these skills.** Pull the current logo pack from Frontify
-(`algolia.frontify.com`) — every Algolia employee has access.
+## Photography & digital assets — [FRONTIFY]
 
-- Wordmark on light backgrounds; white variant on dark or photographic backgrounds.
-- Mark only when space is constrained: favicons, app icons, avatars.
-- Minimum clear space around the wordmark: the height of the "a".
-- **Never redraw, recolor, stretch, or combine the mark with another logo into a single lockup.**
+- **Photography**: customer-industry shots, used with a colour overlay from the palette.
+  Real files `assets/photography/` (Dunelm, Gymshark, Mercari, Swedol,
+  TeachersPayTeachers, The Times, Ubisoft, Viacom18).
+- **Digital assets**: 232 Algolia-owned illustrations / product-UI examples (light + dark
+  background sets) in `assets/illustrations/`. "All images belong to Algolia."
 
-## Iconography
+---
 
-Single-color SVG line icons, ~24px, brand blue or dark ink, ~1.5px stroke. Algolia's own set lives
-behind their CDN. **Lucide** is the approved substitute — it matches stroke weight and corner
-treatment. Never use emoji as icons. A Unicode arrow in a CTA link ("Learn more →") is fine.
+## Slide template — [FRONTIFY]
+
+"Slide Template 2026". Google Slides master + PowerPoint version (links in
+PHASE1-FINDINGS). Contact Brand@Algolia.com. The P4 HTML slide master derives its visual
+language from this template.
+
+---
+
+## Shape & motion — [DERIVED]
+
+Frontify publishes no radius/shadow/spacing/motion spec. Defaults in `colors_and_type.css`:
+radii 4/6/8/12/16/20/999 (pills for tags/badges only, never CTA); 4px spacing grid;
+low-spread shadows tinted with Xenon 900; motion `cubic-bezier(.2,.7,.2,1)`, 120–320ms;
+focus rings 2–3px Xenon Blue.

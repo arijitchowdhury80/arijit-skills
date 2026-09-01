@@ -6,7 +6,7 @@
 `verified: 2026-07-15` — **derived from archived page renders, not re-pulled live.** See
 *Re-verifying* at the bottom. Treat structure as reliable and exact pixel values as approximate.
 
-Theme: `marketing`. See `tokens.md`.
+Palette: the single 2026 Xenon palette. See `tokens.md` / `colors_and_type.css`. Use token names, never inline hexes, when building.
 
 This is Algolia's own modular section library: named, swappable hero / body / footer blocks that
 assemble into a landing page per campaign or per prospect. **Build from this catalog. Do not invent
@@ -18,10 +18,10 @@ section structures.** A page is a stack of these, not a bespoke layout.
 
 Every section sits on exactly one of four backgrounds:
 
-**navy** · **kelly blue** (`#003DFF`) · **white** · **gray**
+**dark-blue** (`--bg-dark-blue` `#000033`) · **Xenon Blue band** (`--xenon-blue` `#0067F7`) · **white** (`--bg-white`) · **light-gray** (`--bg-light-gray` `#F6F6F6`)
 
 Alternate for rhythm. Two adjacent sections should not share a background unless they read as one
-block. Dark sections take white type; light sections take `#021046` headlines and `#2f3447` body.
+block. Dark sections take on-dark type (`--fg-on-dark`); light sections take ink headlines (`--ink` `#000033`) and body text (`--fg1`).
 
 ---
 
@@ -33,7 +33,7 @@ block. Dark sections take white type; light sections take `#021046` headlines an
 | **Title and subtitle only** | Navy, centered. Algolia wordmark above, H1, single line of detail beneath. CTAs optional. | Events, dinners, announcements — anything where the title *is* the message. |
 | **Form in hero, single column** | Navy. Headline, supporting paragraph, source attribution on the left. Form stacked in one column on the right. | Gated content with 4+ fields. |
 | **Form in hero, two column** | Navy. Headline and longer body left. Form in a **white card** with paired fields, two across. | Gated content where the form should feel light. The white card is what makes a long form approachable. |
-| **Kelly blue full-bleed** | Entire hero `#003DFF`. Centered wordmark, small uppercase eyebrow, very large H1 (often the prospect's name), one line of body, single white CTA. Full site nav retained above. | Named-account and ABM pages. The highest-impact variant. |
+| **Xenon Blue full-bleed** | Entire hero `--xenon-blue` (`#0067F7`). Centered wordmark, small uppercase eyebrow, very large H1 (often the prospect's name), one line of body, single white CTA. Full site nav retained above. | Named-account and ABM pages. The highest-impact variant. |
 
 **Nav is optional on every hero.** The Figma notes call this out explicitly — remove it for
 campaign pages where the only valid action is the CTA.
@@ -62,7 +62,7 @@ CTA pattern: primary is a filled button, secondary is a white or outlined button
 
 | Variant | Structure |
 |---|---|
-| **Plain CTA footer** | Kelly blue `#003DFF` band: headline left, "Request demo" + "Get started" right as white buttons. Navy nav block beneath in five columns — Solutions, Developers, Integrations, Industries, Company. |
+| **Plain CTA footer** | Xenon Blue `--xenon-blue` (`#0067F7`) band: headline left, "Request demo" + "Get started" right as white buttons. Dark-blue nav block beneath in five columns — Solutions, Developers, Integrations, Industries, Company. |
 | **Alt footer** | Same layout, but the CTA band carries the blue→cyan→teal gradient blob treatment instead of flat blue. |
 
 **Footers, including the navigation block, can be removed entirely** — same note as the hero nav.

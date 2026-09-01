@@ -1,9 +1,10 @@
 #!/bin/bash
 # Algolia Branding Skills — installer for Claude Code
 #
-# Installs the 13 branding skills plus their shared reference library into
-# ~/.claude/skills/. Self-contained: no MCP servers, no API keys, no workspace
-# setup. Run it from this directory.
+# Installs three skills into ~/.claude/skills/: the content generator
+# (algolia-create), the compliance gate (algolia-brand-check), and the shared
+# reference library they both read (algolia-shared-reference). Self-contained:
+# no MCP servers, no API keys, no workspace setup. Run it from this directory.
 
 set -e
 
@@ -50,19 +51,18 @@ echo "────────────────────────�
 echo "  Installed: $COUNT"
 echo "────────────────────────────────────────────────────"
 echo ""
-echo "  /algolia-brand-check    Audit content for brand compliance"
-echo "  /algolia-algolialize    Transform any content into Algolia brand"
-echo "  /algolia-boilerplate    Approved company descriptions"
+echo "  /algolia-create         Create or rebrand any Algolia content"
+echo "                          (blog · email · landing · social · deck ·"
+echo "                           one-pager · case-study · ui-copy · brief ·"
+echo "                           partner · boilerplate)"
+echo "  /algolia-brand-check    Audit content for brand compliance (the gate)"
 echo ""
-echo "  /algolia-blog  /algolia-email  /algolia-landing  /algolia-social"
-echo "  /algolia-deck  /algolia-one-pager  /algolia-case-study"
-echo "  /algolia-brief  /algolia-partner  /algolia-ui-copy"
-echo ""
-echo "  Brand data lives in one place:"
+echo "  One source of truth — brand data + content recipes live here:"
 echo "    $SKILLS_DIR/algolia-shared-reference/brand-core/"
-echo "  Edit approved-stats.md there and every skill picks it up."
+echo "  Edit a value once (e.g. approved-stats.md) and every output picks it up."
 echo ""
-echo "  Logos are NOT bundled. Pull them from Frontify:"
+echo "  This is the 2026 Xenon brand (primary #0067F7). One palette, no themes."
+echo "  Logos/photography are NOT bundled — pull them from Frontify:"
 echo "    https://algolia.frontify.com"
 echo ""
 echo "Restart Claude Code, then type / to see the commands."
