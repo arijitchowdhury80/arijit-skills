@@ -32,17 +32,17 @@ A horizontal or vertical chain of numbered steps on a white background, hand-dra
 ## Prompt structure
 
 ```
-[Title] — hand-drawn whiteboard step diagram titled "[Topic]" in large sketchy lettering at the top.
+[Title] — hand-painted watercolor step diagram titled "[Topic]" in large hand-lettered ink lettering at the top.
 
-White background. [Horizontal ribbon / Vertical stack] layout with [N] numbered steps connected by hand-drawn arrows. Pastel color scheme.
+Textured cold-press watercolor-paper background, warm off-white. [Horizontal ribbon / Vertical stack] layout with [N] numbered steps connected by hand-inked wobbly arrows. Each step is a soft, translucent, LIGHT watercolor wash (pale tint, gentle gradient, feathered edges, slight bloom — not a flat fill). The whole composition sits inside the canvas with generous margins on all sides; nothing cropped or running off the edge. Use a PORTRAIT canvas for 5–8 vertical steps.
 
-Step 1 ([color]): Large bold "1" in corner. Label: "[step name]". Caption: "[what happens]". Icon: [icon description].
-Step 2 ([color]): Large bold "2" in corner. Label: "[step name]". Caption: "[what happens]". Icon: [icon description].
+Step 1 (pale [color] wash): Large hand-lettered "1" in corner. Label: "[step name]". Caption: "[what happens]". Icon: [loose hand-painted icon].
+Step 2 (pale [color] wash): Large hand-lettered "2" in corner. Label: "[step name]". Caption: "[what happens]". Icon: [loose hand-painted icon].
 [... continue for each step]
 
-Connecting arrows between each step are thick and slightly wobbly, pointing [right / down].
+Connecting arrows between each step are hand-inked and slightly wobbly, pointing [right / down].
 
-Sketch aesthetic: slightly imperfect lines, hand-lettered labels, educational whiteboard style. No gradients, no drop shadows, no corporate polish.
+Hand-painted watercolor on textured cold-press paper: light translucent washes with soft gradients and feathered edges, gentle blooms, hand-lettered ink labels, luminous and airy. No flat fills, no drop shadows, no digital gloss.
 ```
 
 ## Color assignment guidance

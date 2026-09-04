@@ -38,16 +38,30 @@ For those cases, propose an editable architecture-diagram workflow instead.
 ## Prompt Rules
 
 Every prompt should specify:
-- White background
-- Hand-drawn sketch aesthetic
-- Slightly imperfect lines
-- Hand-lettered labels
-- Pastel palette from the skill
+- Textured cold-press **watercolor-paper** background, warm off-white (never flat pure white)
+- **Hand-painted watercolor aesthetic** — translucent washes, soft feathered edges, gentle blooms
+- **Light, airy, diluted tints** with a soft gradient inside each wash (paper glowing through); never dull or over-saturated flat fills
+- Hand-lettered ink labels (charcoal/sepia), legible
+- Loose hand-painted icons with visible brush strokes
 - Clear layout format
 - Element labels, icons, and captions
-- No gradients
-- No drop shadows
-- No corporate polish
+- **Full composition inside the frame — generous margins on all sides, nothing cropped or running off the edge**
+- No flat solid fills, no drop shadows, no digital gloss/corporate polish
+
+**Framing note (prevents the #1 failure — content cut off):** the image model will crop a busy layout if not told otherwise. Always state that the whole diagram must fit within the canvas with padding around every edge, and match orientation to the layout — **portrait for tall vertical stacks (5–8 steps), landscape for horizontal ribbons/wheels/grids.**
+
+## Brand Palette Override (v2 uplift)
+
+When a diagram must match a specific brand/site, override the default pastels with that brand's palette and name each element's fill color EXPLICITLY in the prompt (per-box), rather than saying "pastel palette." Explicit per-box colors are what produce a clean, on-brand result.
+
+Proven recipe (verified 2026-07: the "One Audit, Two Fixes" diagram regenerated for scratchpad.chowmes.com's fresh palette):
+- Warm off-white paper background (not stark white) reads more premium and matches paper-toned sites.
+- Assign one soft pastel fill per box, named directly (e.g. "soft blush-coral fill", "sunshine-yellow fill", "fresh pastel-green fill", "sky-blue fill", "soft lilac fill", "white fill").
+- One small icon per box, named (magnifying-glass, shield-check, broom, gear-and-check).
+- End with: "clean and cheerful, neat legible hand-lettered labels, generous whitespace, no gradients, no drop shadows, no corporate polish."
+- Keep bullet text to 1-4 words so the image model renders it legibly (image models garble long text). ALWAYS view the generated image and check every label is legible + correct before shipping — regenerate if any text is garbled.
+
+Model: `generate_image.py` uses OpenAI `gpt-image-2` (falls back to `gpt-image-1`, then Gemini `gemini-3.1-flash-image-preview` if configured). Needs `OPENAI_API_KEY` in `~/.claude/skills/sketch-explainer/.config/.env.local`. Overrides: `SKETCH_IMAGE_SIZE` (portrait `1024x1536` for tall stacks; landscape `1536x1024` otherwise), `SKETCH_IMAGE_QUALITY`.
 
 ## Variant Rules
 

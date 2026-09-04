@@ -13,16 +13,18 @@ This is an image explainer skill, not a technical architecture documentation ski
 
 ## The Target Visual Style
 
-The output should look like a smart teacher drew it on a whiteboard — clean, informal, educational, and visually clear. Hand-drawn but intentional. Not a corporate slide. Not a technical architecture doc. A beautiful diagram you'd want to photograph and share.
+The output should look like a **hand-painted watercolor explainer** — soft, luminous, and educational, as if a smart teacher painted it in a watercolor sketchbook. Hand-painted and hand-lettered, intentional but organic. Not a corporate slide. Not a flat marker diagram. Not a technical architecture doc. A beautiful painting you'd want to photograph and share.
 
 **Core style rules (apply to all formats):**
-- White background
-- Hand-drawn / sketch aesthetic throughout — slightly imperfect lines, wobbly edges, hand-lettered labels
-- Pastel color palette (see Palette Reference below) — these exact colors, always
-- Title: large, slightly imperfect handwritten-style lettering at the top
-- Minimal sketch icons inside elements: gear, arrow, magnifying glass, clock, microchip, dumbbell, waveform, stacked layers, checkmark, etc.
-- No gradients, no drop shadows, no corporate polish
-- Overall feel: friendly, approachable, educational
+- **Textured watercolor-paper background** — visible cold-press paper grain/tooth, warm off-white, faint deckle feel. Never flat pure white, never a screen-flat fill.
+- **Everything is watercolor** — each shape is a soft, translucent watercolor **wash**, never a flat solid fill. Real watercolor behavior: a gentle gradient inside every wash (pigment pooling a touch deeper at the edges, lighter and paper-bright in the center), soft feathered edges, slight blooms and uneven pigment.
+- **Keep washes LIGHT and airy** — pale, diluted tints (think 20–40% pigment, lots of water) with the paper glowing through. Never dull, heavy, or over-saturated.
+- **Hand-lettered labels** — natural handwriting in dark charcoal/sepia ink, as if penned over the dry wash. Legible.
+- **Loose hand-painted icons** with visible brush strokes: gear, arrow, magnifying glass, clock, stacked layers, checkmark, etc. One per element.
+- Connectors/arrows: hand-inked, slightly wobbly.
+- **Full composition inside the frame** — the entire diagram sits within the canvas with generous margins on all four sides. Nothing cropped, nothing running off the edge.
+- No drop shadows, no vector flatness, no digital gloss. It must read as physical watercolor on paper.
+- Overall feel: friendly, luminous, hand-made, educational.
 
 ## Step 1: Choose the right format
 
@@ -61,7 +63,8 @@ The prompt must:
 - Open with the format type and title
 - Declare the white background and hand-drawn sketch aesthetic
 - Describe each element (layers/nodes/steps/spokes/cells/branches) specifically, including color, label, icon, and any caption
-- Close with the mood/tone line: "sketch aesthetic: slightly imperfect lines, hand-lettered labels, educational whiteboard style. No gradients, no drop shadows, no corporate polish."
+- State the framing explicitly: "entire composition fits within the canvas with generous margins on all sides, nothing cropped or running off the edge."
+- Close with the mood/tone line: "hand-painted watercolor on textured cold-press paper: light translucent washes with soft gradients and feathered edges, gentle blooms, hand-lettered ink labels, luminous and airy. No flat fills, no drop shadows, no digital gloss."
 
 If the user asks for options, variations, or multiple images, create two distinct prompt variants for each topic before generating images:
 - **Variant A**: clearer, simpler, more instructional
@@ -103,9 +106,23 @@ python /path/to/sketch-explainer/scripts/generate_image.py "<image prompt>"
 
 The script saves the image to `sketch_explainer_output/sketch_<timestamp>.png` in the current working directory (creating the folder if needed). After running, tell the user where the image was saved.
 
+**Backends:** the script uses **OpenAI GPT Image** (`gpt-image-2`, falling back to `gpt-image-1`) as the primary generator, and **Google Gemini** ("Nano-banana") only as a fallback if OpenAI is unavailable or errors.
+
 **Requirements:**
-- `GEMINI_API_KEY` environment variable must be set
-- `google-genai` Python package must be installed (`pip install google-genai`)
+- `OPENAI_API_KEY` (primary). Optional `GEMINI_API_KEY` enables the fallback.
+- No extra package for OpenAI — the script calls the REST API via `curl`.
+- `google-genai` Python package (`pip install google-genai`) is needed only for the Gemini fallback.
+
+**Secure key setup (key never lives in the skill folder, git, argv, or chat):**
+The script reads keys from `~/.claude/skills/sketch-explainer/.config/.env.local` first, then the process environment. This `.config/` folder is gitignored so the key never gets committed. Create it once:
+```bash
+mkdir -p ~/.claude/skills/sketch-explainer/.config && chmod 700 ~/.claude/skills/sketch-explainer/.config
+printf 'OPENAI_API_KEY=%s\n' "YOUR_KEY" > ~/.claude/skills/sketch-explainer/.config/.env.local
+chmod 600 ~/.claude/skills/sketch-explainer/.config/.env.local
+```
+The key is passed to `curl` through a temporary chmod-600 config file, so it never appears in the process argument list.
+
+**Optional overrides** (env or the `.env` file): `SKETCH_IMAGE_SIZE` (default `1536x1024`; W & H divisible by 16), `SKETCH_IMAGE_QUALITY` (default `high`; `low`|`medium`|`high`|`auto` — higher costs more).
 
 Do not store API keys inside the skill folder. If the script fails due to a missing API key or package, show the error and display the Image Prompt so the user can still use it manually.
 
@@ -113,14 +130,14 @@ Do not store API keys inside the skill folder. If the script fails due to a miss
 
 ## Palette Reference
 
-These colors are fixed — always use these for the whiteboard aesthetic:
-- `#F4A896` — salmon/peach (warm, prominent, use for top layer / center / start nodes)
-- `#F7E08A` — soft yellow
-- `#A8D5A2` — sage green
-- `#A8C5DA` — slate blue
-- `#C5B8E8` — lavender/purple (cool, receding, use for bottom layer / hidden / end nodes)
+These are the base hues. **Always render them as light, translucent watercolor washes with a soft gradient — never as flat solid colors.** Dilute heavily (roughly 20–40% pigment, lots of water) so the paper glows through; each wash sits a touch deeper where the brush pooled and lighter/paper-bright toward the center.
+- `#F4A896` — salmon/peach → paint as a **pale peach-coral wash** (warm, prominent: top layer / center / start nodes)
+- `#F7E08A` — soft yellow → **pale butter-yellow wash**
+- `#A8D5A2` — sage green → **pale mint-sage wash**
+- `#A8C5DA` — slate blue → **pale sky-blue wash**
+- `#C5B8E8` — lavender/purple → **pale lilac wash** (cool, receding: bottom layer / hidden / end nodes)
 
-For topics with fewer elements than colors, pick the most fitting subset — don't force all five.
+Treat these hex values as the *target tint*, not a fill color — the finished wash should read lighter than the hex chip. For topics with fewer elements than colors, pick the most fitting subset — don't force all five.
 
 ---
 

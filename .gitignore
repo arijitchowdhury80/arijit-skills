@@ -41,3 +41,9 @@ deno.lock
 *.log
 *.simple.bak.html
 detect-search-workspace/
+
+# Secrets — never commit API keys / env files
+.env
+.env.*
+!.env.example
+.config/
