@@ -1,33 +1,116 @@
 {
   "skill_name": "prompt-shaper",
+  "notes": "Positive cases expect the full contract (inventory, gap questions, shaped prompt, coverage map, routing, no execution). Negative cases expect the skill NOT to run. Each positive case lists assertions that a grader can check against the output text. Runs live in evals/runs/ with date, case id, and PASS/FAIL per assertion.",
   "evals": [
     {
       "id": 0,
       "name": "buried-priority",
+      "kind": "positive",
       "prompt": "so for prism i keep thinking the audit takes too long, the browser phase specifically, like petsmart took forever, i want some kind of progress thing that tells me where it is, maybe telegram since hermes is right there, or just a file i can tail, i dont know you pick. also when it fails midway i have to restart the whole thing which sucks, it should resume from where it died. resume is more important actually, do that first. oh and dont touch the scoring logic that part works, took forever to get right. i need this before my next audit which is probably next week. keep it simple, no new services.",
       "expected_output": "Numbered inventory; gap questions asked before any prompt; shaped prompt with resume prioritized over progress-visibility; scoring-logic freeze + no-new-services + deadline captured as constraints; verbatim original_input; coverage map; routing rec; no execution.",
-      "files": []
+      "assertions": [
+        "requirements list resume before progress visibility",
+        "constraints include: scoring logic unchanged, no new services, deadline next week",
+        "original_input present and verbatim",
+        "precedence line present directly above original_input",
+        "no tool call executes the task"
+      ]
     },
     {
       "id": 1,
       "name": "self-corrections",
+      "kind": "positive",
       "prompt": "i want to add a weekly digest email to my gws setup, send it friday evening no wait sunday evening is better, that summarizes my calendar for the coming week plus any unread emails that look important, use the tone of voice skill for the writing, actually no scratch that, tone skill is for outbound stuff to customers, this is just for me so plain writing is fine, and it must never send anything to anyone else, only to me at arijit.chowdhury@gmail.com. maybe also pull in my kanban tasks from hermes into the digest? not sure if that is easy, if it is a pain just skip it, not worth it.",
-      "expected_output": "Both self-corrections honored (sunday not friday; plain writing not tone skill — dead options never appear as requirements); conditional kanban scope preserved as conditional; only-to-me constraint captured; inventory + questions-first + original_input + coverage map + routing; no execution.",
-      "files": []
+      "expected_output": "Both self-corrections honored (sunday not friday; plain writing not tone skill, dead options never appear as requirements); conditional kanban scope preserved as conditional; only-to-me constraint captured; inventory + questions-first + original_input + coverage map + routing; no execution.",
+      "assertions": [
+        "requirements say Sunday evening; Friday appears only inside original_input",
+        "requirements do not invoke the tone-of-voice skill",
+        "kanban item is marked conditional/optional, not dropped and not required",
+        "constraint: recipient is only arijit.chowdhury@gmail.com",
+        "precedence line present directly above original_input"
+      ]
     },
     {
       "id": 2,
       "name": "haiku-dispatch",
+      "kind": "positive",
       "prompt": "i need a sweep across all my algolia intel skill outputs, basically all the json files sitting in the audit workspaces, check every one of them is valid json and has the required fields for its module type, this is totally mechanical work so use a cheap model for it, haiku or whatever, and give me back a table of what is broken and where. there are probably a lot of files. dont fix anything, just report. dont go reading the md files, just the json.",
-      "expected_output": "Recognizes explicit haiku/cheap-tier dispatch target; shaped prompt written FOR haiku per reference.md (explicit numbered steps, unambiguous output format, no reliance on judgment); report-only and json-only constraints captured; inventory + original_input + coverage map + routing (haiku, low effort); no execution.",
-      "files": []
+      "expected_output": "Recognizes explicit haiku/cheap-tier dispatch target; reads reference/general.md and reference/claude-haiku.md; shaped prompt gives Haiku a precise definition of done and exact output shape (table columns, file set, pass/fail rule) rather than a hand-written numbered procedure; includes the early-stopping guard; report-only and json-only constraints captured; effort wording is 'default medium, low acceptable for this mechanical sweep, measure' rather than a bare fixed level; no show-your-reasoning language; inventory + original_input + coverage map + routing; no execution.",
+      "assertions": [
+        "routing names haiku / T1",
+        "effort wording references the model default and measuring, not a bare fixed level",
+        "shaped prompt specifies exact table columns and a pass/fail rule",
+        "shaped prompt does NOT contain a numbered step-by-step procedure for the executor",
+        "shaped prompt contains an early-stopping guard sentence",
+        "no 'think step by step', '<thinking>', or 'show your reasoning' text anywhere",
+        "constraints: report only, no edits; json files only, no md"
+      ],
+      "baseline_2026_10_12": "evals/runs/2026-10-12-baseline-eval2-haiku-dispatch.md: applied old rule verbatim ('Target is haiku, so it gets explicit numbered steps'), effort fixed at 'low'."
     },
     {
       "id": 3,
       "name": "embedded-doc",
+      "kind": "positive",
       "prompt": "my colleague sent me this spec, pasting it below, i think we should build what it describes but only the csv export part, not the pdf part, pdf is overkill for now, and whatever we build has to plug into the existing report-designer output pipeline not replace it. also she wants column selection which i think is fine but make it optional not required. here is the spec: --- EXPORT FEATURE SPEC v0.3 --- Purpose: allow users to export audit results from the deliverable page. Requirements: R1. Export formats: CSV and PDF. R2. CSV export must include all scored areas with columns: area_name, score, max_score, evidence_count, severity. R3. PDF export renders the full deck as paginated A4. R4. User may select which columns appear in CSV output via a checkbox panel. R5. Exports respect the current filter state of the page. R6. File naming: {company}-audit-export-{date}.{ext}. R7. Export button lives in the header bar next to the share control. Non-goals: scheduled exports, email delivery. Open question from spec author: should zero-evidence areas be included by default? --- END SPEC ---",
-      "expected_output": "Pasted spec placed at TOP of shaped prompt per long-context rule; PDF (R3) explicitly out-of-scope while CSV requirements retained; column selection kept but downgraded to optional; pipeline-integration constraint captured; spec author's open question surfaced as a gap question; inventory + original_input + coverage map + routing; no execution.",
-      "files": []
+      "expected_output": "Pasted spec placed at TOP of shaped prompt per long-context rule and wrapped in pasted_content tags with a matching random id on open and close; context carries the pasted-content caution sentence; PDF (R3) explicitly out-of-scope while CSV requirements retained; column selection kept but downgraded to optional; pipeline-integration constraint captured; spec author's open question surfaced as a gap question; inventory + original_input + coverage map + routing; no execution.",
+      "assertions": [
+        "spec appears at the top of the shaped prompt, before <context>",
+        "spec is wrapped in <pasted_content id=\"...\"> with the same id on the closing tag",
+        "context includes the pasted-content caution sentence",
+        "out_of_scope names PDF / R3",
+        "column selection (R4) is marked optional",
+        "zero-evidence default is asked as a gap question, not assumed silently"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "fable-dispatch-with-echo-request",
+      "kind": "positive",
+      "prompt": "ok big one. i want to hand the whole explore-algolia case study pipeline refactor to fable since its the hardest thing on my plate, the ingest is flaky, matches are wrong like 10% of the time, and the badge projection step sometimes writes to the wrong record. i want it to really think hard, show me its reasoning as it goes so i can follow, be super thorough, go beyond the basics, and dont stop until everything is green. it can use subagents. keep the index schema as is, thats locked. and dont let it push anything to the live index without me saying so.",
+      "expected_output": "Recognizes fable / T4 target and that the user explicitly chose it; reads reference/general.md and reference/claude-fable.md; the 'show me its reasoning as it goes' ask is converted to a request for user-facing progress updates and a standalone recap (NOT reasoning echo, which would trigger a reasoning_extraction refusal), and the coverage map says so explicitly; 'think hard / super thorough / go beyond the basics' quality modifiers are NOT passed through as written (Fable overshoots) and are replaced with the act-when-you-have-enough wording; autonomy clause included with a stop condition for the live-index push; schema-locked constraint captured; subagents permitted with keep-working-while-they-run wording; effort wording is 'start at high (default), measure' not 'max'; inventory + original_input + coverage map + routing; no execution.",
+      "assertions": [
+        "routing names fable / T4 and notes the user chose it explicitly",
+        "shaped prompt asks for progress updates / recap, NOT for reasoning to be shown",
+        "coverage map explains the reasoning-echo conversion",
+        "'go beyond the basics' and 'think hard' do not appear in the shaped prompt outside original_input (the coverage map may quote them to explain the conversion)",
+        "constraints: index schema locked; no push to live index without approval",
+        "effort wording is high-default-then-measure, not max",
+        "precedence line present directly above original_input"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-short-request",
+      "kind": "negative",
+      "prompt": "rename the CHANGELOG heading for 0.4.2 to 0.4.3 and commit",
+      "expected_output": "Skill does not run. Direct request, no shaping, no inventory, no coverage map. Normal execution path.",
+      "assertions": [
+        "no inventory, no shaped prompt, no coverage map"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "negative-pasted-logs",
+      "kind": "negative",
+      "prompt": "why is this failing\n\n```\nTraceback (most recent call last):\n  File \"build_graph.py\", line 212, in <module>\n    main()\n  File \"build_graph.py\", line 180, in main\n    edges = resolve_links(nodes)\n  File \"build_graph.py\", line 97, in resolve_links\n    target = index[slug]\nKeyError: 'projects/ai-os/my-projects'\n```\n\nhappens on every run since yesterday",
+      "expected_output": "Skill does not run. Input is code-fence dominated (hook must not fire) and the request is a direct debugging question. Normal systematic-debugging path.",
+      "assertions": [
+        "no inventory, no shaped prompt, no coverage map",
+        "hook does not emit LARGE UNSTRUCTURED INPUT"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "negative-answers-to-interview",
+      "kind": "negative",
+      "context": "Previous assistant turn asked three AskUserQuestion gap questions during a prompt-shaper interview.",
+      "prompt": "1. done means every json in all 6 workspaces checked, none skipped, with a count line at the end that i can verify. 2. yes only the audit-workspaces dir, nothing under Personal. 3. no, haiku is fine, dont escalate even if a lot are broken, i just want the list. and put the table in a file not in chat, something like validation-report.md in the workspace root, overwrite is fine.",
+      "expected_output": "Skill does NOT re-run the interview or re-inventory. These are answers to in-flight questions. Fold them into the shaped prompt and re-show only the diff (Step 5 correction path).",
+      "assertions": [
+        "no new inventory",
+        "no new gap questions",
+        "shaped prompt diff shown, not a full re-shape"
+      ]
     }
   ]
 }

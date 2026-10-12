@@ -51,9 +51,13 @@ process.stdin.on('end', () => {
         prompt.length +
         ' chars, ' +
         paras +
-        ' paragraphs). Invoke the prompt-shaper skill BEFORE acting on this input — ' +
-        'unless the input is (a) answers to clarifying questions you just asked, ' +
-        '(b) a continuation of an in-flight prompt-shaper exchange, or (c) explicitly says to skip shaping.',
+        ' paragraphs). You MUST invoke the prompt-shaper skill BEFORE any other action — ' +
+        'no exploring, no tool calls, no clarifying questions first. ' +
+        'Do NOT skip because the input "looks already structured" or because you think you understand it — ' +
+        'that rationalization is the exact failure this guards against. ' +
+        'ONLY valid skips: (a) answers to clarifying questions you just asked, ' +
+        '(b) a continuation of an in-flight prompt-shaper exchange, (c) the user explicitly said to skip shaping. ' +
+        'If none of (a)(b)(c) apply, invoke prompt-shaper now.',
     },
   };
   console.log(JSON.stringify(out));
