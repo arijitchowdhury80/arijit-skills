@@ -231,7 +231,7 @@ Standalone skills that support project work, sales workflows, prompt shaping, du
 | Skill | Purpose |
 |-------|---------|
 | `partnerforge` | Partner Intelligence Platform for Algolia Sales. Finds companies using partner technologies (Adobe AEM, Amplience, Spryker, etc.) who are NOT using Algolia — displacement opportunities for co-sell motions. |
-| `prompt-shaper` | Turns long, unstructured, stream-of-consciousness input into an execution-ready prompt without losing requirements, constraints, or intent. |
+| `prompt-shaper` | Turns long, unstructured, stream-of-consciousness input into an execution-ready prompt without losing requirements, constraints, or intent. Carries per-model prompting rules (Haiku/Sonnet/Opus/Fable 5.5-series, GPT-6) in `reference/`, sourced from the vendor pages and dated. |
 | `record-knowledge` | Captures session evidence, decisions, reusable lessons, and project knowledge with a compact recording receipt. |
 | [`sketch-explainer`](skills/general-skills/sketch-explainer/README.md) | Creates professional hand-drawn explainers for business and technical audiences, with semantic color, restrained executive illustration, exact brand assets, cross-asset consistency, and baseline-safe revisions. |
 | `learn-from-yt` | Turns long videos, podcasts, courses, calls, or lectures into knowledge bases, business methodologies, SOPs, execution checklists, and downstream software/research requirements. Portable across Codex, Claude Code, and Hermes. |
