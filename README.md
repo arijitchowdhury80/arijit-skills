@@ -40,7 +40,7 @@ chmod +x install-skill.sh
 skills/
 ├── algolia-audit-skills/     ← 23 skills — full audit pipeline + intelligence modules
 ├── algolia-branding-skills/  ← 13 skills — brand content & marketing collateral
-└── general-skills/           ←  6 skills — general sales, WorkOS, project, media, and knowledge tools
+└── general-skills/           ←  7 skills — general sales, WorkOS, project, media, prompting, and knowledge tools
 ```
 
 > **Note for developers:** The installer flattens this into `~/.claude/skills/` — the subfolders are for organization only. Claude Code behavior is unchanged.
@@ -191,6 +191,7 @@ Standalone skills that support project work, research, sales workflows, and dura
 | `market-research` | Produces competitive intelligence briefs using SimilarWeb, BuiltWith, and web search. Covers market sizing, competitor positioning, and technology landscape. |
 | `partnerforge` | Partner Intelligence Platform for Algolia Sales. Finds companies using partner technologies (Adobe AEM, Amplience, Spryker, etc.) who are NOT using Algolia — displacement opportunities for co-sell motions. |
 | `project-governance` | Bootstraps complete governance for any project: STATUS.md, CHECKPOINT.md, SESSION.md, CLAUDE.md, git hooks, PRD and test plan templates. Run once per project. |
+| `prompt-shaper` | Turns a stream-of-consciousness brief into a verified, structured prompt before work starts: inventory, gap interview, shaped prompt with the original kept verbatim, coverage map, model routing, approval stop. Carries per-model prompting rules (Haiku/Sonnet/Opus/Fable 5.5-series, GPT-6) in `reference/`, sourced from the vendor pages and dated. Optional auto-trigger hook. |
 | `sketch-explainer` | Creates whiteboard-style visual explanation prompts and sketch diagrams for technical or non-technical topics. |
 | `learn-from-yt` | Turns long videos, podcasts, courses, calls, or lectures into knowledge bases, business methodologies, SOPs, execution checklists, and downstream software/research requirements. Portable across Codex, Claude Code, and Hermes. |
 
