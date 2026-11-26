@@ -69,7 +69,7 @@ def main():
     except Exception as e:
         open(d / "raw" / "transcript.md", "w").write(f"# Transcript unavailable: {e}\n"); tw = 0
     print(json.dumps({"dir": str(d), "title": m["title"], "chapters": len(m["chapters"]),
-                      "transcript_words": tw}, indent=2))
+                      "transcript_words": tw}))
 
 if __name__ == "__main__":
     main()
