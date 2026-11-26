@@ -24,6 +24,33 @@ def sh(cmd, capture=False):
 
 def slug(s): return re.sub(r'[^a-z0-9]+', '-', (s or '').lower()).strip('-')[:60] or 'video'
 
+def parse_trailing_json(stdout: str):
+    """Parse a JSON object from subprocess stdout.
+
+    Accepts compact single-line JSON, pretty-printed multi-line JSON, or a
+    trailing JSON object after other log lines.
+    """
+    text = (stdout or "").strip()
+    if not text:
+        raise ValueError("empty stdout")
+    try:
+        obj = json.loads(text)
+        if isinstance(obj, dict):
+            return obj
+    except json.JSONDecodeError:
+        pass
+    decoder = json.JSONDecoder()
+    for i in range(len(text) - 1, -1, -1):
+        if text[i] != "{":
+            continue
+        try:
+            obj, end = decoder.raw_decode(text, i)
+        except json.JSONDecodeError:
+            continue
+        if text[end:].strip() == "" and isinstance(obj, dict):
+            return obj
+    raise ValueError("no trailing JSON object in stdout")
+
 def main():
     ap = argparse.ArgumentParser(description="learn-from-yt one-chain runner")
     ap.add_argument("url")
@@ -47,7 +74,7 @@ def main():
     else:
         r = sh([PY, str(HERE / "capture.py"), a.url, "--wiki-root", str(Path(a.root) / "raw-captures")], capture=True)
         try:
-            info = json.loads(r.stdout.strip().splitlines()[-1])
+            info = parse_trailing_json(r.stdout)
             proj = Path(info["dir"]); title = info["title"]
             print(f"    captured '{title}' ({info.get('chapters',0)} chapters, {info.get('transcript_words',0)} words)")
         except Exception:
